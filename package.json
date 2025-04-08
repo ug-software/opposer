@@ -1,0 +1,30 @@
+{
+  "name": "opposer",
+  "version": "1.0.0",
+  "description": "API creator in a few steps, create your schemes, configure the server, make queries free of additional routes, using HTTP methods GET, POST, PUT, DELETE.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "--"
+  },
+  "repository": {
+    "type": "git",
+    "url": "--"
+  },
+  "keywords": [
+    "API",
+    "Schemas",
+    "Framework",
+    "Express",
+    "Node",
+    "Typescript",
+    "ORM"
+  ],
+  "author": "Uiaran Guilherme Campos de Lima",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
