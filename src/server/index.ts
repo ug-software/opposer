@@ -67,5 +67,11 @@ export default async function (props: CreateServerProps) {
     }
   );
 
-  return opposer;
+  function initialize() {
+    opposer.listen(props.port, () => {
+      console.log(`(⚡) opposer is running in port ${props.port}`);
+    });
+  }
+
+  return { opposer, initialize };
 }
