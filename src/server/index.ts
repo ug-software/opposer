@@ -1,6 +1,6 @@
 import express from "express";
-import controller from "../controller/index";
-import { CreateServerProps } from "../interfaces/server";
+import controller from "opposer/src/controller";
+import { CreateServerProps } from "opposer/src/interfaces/server";
 
 export default async function (props: CreateServerProps) {
   const opposer = express();
