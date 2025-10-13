@@ -1,4 +1,5 @@
-import { Type } from "../constants";
+import { EntitySchema } from "typeorm";
+import { Type } from "../constants/index.js";
 
 export interface SchemaDefinition {
   [key: string]: {
@@ -10,4 +11,10 @@ export interface SchemaDefinition {
     min?: number;
     max?: number;
   };
+}
+
+export interface SchemaResult {
+  validation: Record<string, any>;
+  entity: EntitySchema<unknown>;
+  definition: SchemaDefinition;
 }

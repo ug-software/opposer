@@ -1,10 +1,15 @@
 import { TypeORMError } from "typeorm";
-import { HandleInsertProps } from "../interfaces/controller";
-import { HttpStatus } from "../helpers";
+import { HandleInsertProps } from "../interfaces/controller.js";
+import { Exception, Success } from "../helpers/index.js";
+import { HttpStatus } from "../constants/index.js";
+import * as system from "../system/index.js";
+import { db } from "../database/index.js";
 
 export default async (props: HandleInsertProps) => {
   try {
-    var schema = schemas.find((x) => x.schema === props.schema);
+    var schema = (await system.getAllSchemas()).find(
+      (x) => x.name === props.schema
+    );
 
     if (!schema) {
       return Exception({
@@ -13,6 +18,15 @@ export default async (props: HandleInsertProps) => {
         message: "Unable to identify Schema",
       });
     }
+
+    if (!db) {
+      return Exception({
+        name: HttpStatus[400].name,
+        code: HttpStatus[400].code,
+        message: "Unable to connect for db.",
+      });
+    }
+
     var repository = db.getRepository(schema.entity);
 
     if (typeof props.data !== "object") {
@@ -50,6 +64,7 @@ export default async (props: HandleInsertProps) => {
       });
     }
 
+    //@ts-ignore
     const item = await repository.create(props.data).save();
 
     return Success({
