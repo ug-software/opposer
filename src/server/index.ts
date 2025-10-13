@@ -1,8 +1,24 @@
 import express from "express";
-import controller from "opposer/src/controller";
-import { CreateServerProps } from "opposer/src/interfaces/server";
+import controller from "../controller";
+import { CreateServerProps } from "../interfaces/server";
+import { DataSource } from "typeorm";
 
 export default async function (props: CreateServerProps) {
+  console.log("Inicializando banco de dados...");
+  if (!props.database) {
+    throw new Error("Necessário informar as propriedades do Banco de dados...");
+  }
+
+  console.log("Registrando entidades...");
+  var entities = [];
+
+  var datasource = new DataSource({
+    ...props.database,
+    entities,
+  });
+  await datasource.initialize();
+
+  console.log("Inicializando Servidor...");
   const opposer = express();
   let url = "/opposer";
 
