@@ -1,22 +1,14 @@
 import express from "express";
-import controller from "../controller";
-import { CreateServerProps } from "../interfaces/server";
-import { DataSource } from "typeorm";
+import controller from "../controller/index.js";
+import { CreateServerProps } from "../interfaces/server.js";
+import * as database from "../database/index.js";
 
-export default async function (props: CreateServerProps) {
+export default async function Server(props: CreateServerProps) {
   console.log("Inicializando banco de dados...");
   if (!props.database) {
     throw new Error("Necessário informar as propriedades do Banco de dados...");
   }
-
-  console.log("Registrando entidades...");
-  var entities = [];
-
-  var datasource = new DataSource({
-    ...props.database,
-    entities,
-  });
-  await datasource.initialize();
+  await database.connect(props.database);
 
   console.log("Inicializando Servidor...");
   const opposer = express();
@@ -38,6 +30,7 @@ export default async function (props: CreateServerProps) {
   // Segurança
   if (props.helmet !== false) {
     // habilitado por padrão, desabilitar passando false
+    //@ts-ignore
     const helmet = (await import("helmet")).default;
     opposer.use(helmet());
   }
@@ -50,6 +43,7 @@ export default async function (props: CreateServerProps) {
 
   // Rate limit
   if (props.rateLimit) {
+    //@ts-ignore
     const rateLimit = (await import("express-rate-limit")).default;
     opposer.use(
       rateLimit({
@@ -61,6 +55,7 @@ export default async function (props: CreateServerProps) {
 
   // Logging
   if (props.logger) {
+    //@ts-ignore
     const morgan = (await import("morgan")).default;
     opposer.use(morgan("dev"));
   }

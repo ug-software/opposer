@@ -1,9 +1,17 @@
 import { QueryBuilder } from "typeorm";
-import { HandleGetProps } from "../interfaces/controller";
-import { HttpStatus } from "../helpers";
+import { HandleGetProps } from "../interfaces/controller.js";
+import { Exception, Success } from "../helpers/index.js";
+import { HttpStatus } from "../constants/index.js";
+import * as system from "../system/index.js";
+import { HandleRequestResult } from "../interfaces/request.js";
+import { db } from "../database/index.js";
 
-export default async (props: HandleGetProps) => {
-  var schema = schemas.find((x) => x.schema === props.schema);
+export default async (
+  props: HandleGetProps
+): Promise<HandleRequestResult<unknown>> => {
+  var schema = (await system.getAllSchemas()).find(
+    (x) => x.name === props.schema
+  );
   if (!schema) {
     return Exception({
       name: HttpStatus[400].name,
@@ -12,9 +20,18 @@ export default async (props: HandleGetProps) => {
     });
   }
 
+  if (!db) {
+    return Exception({
+      name: HttpStatus[400].name,
+      code: HttpStatus[400].code,
+      message: "Unable to connect for db.",
+    });
+  }
+
   var repository = db.getRepository(schema.entity);
 
   if (props.query.type === "filter") {
+    //@ts-ignore
     var queryBuilder = {} as QueryBuilder;
 
     if (props.query.join) {
@@ -73,6 +90,7 @@ export default async (props: HandleGetProps) => {
   }
 
   if (props.query.type === "find") {
+    //@ts-ignore
     var queryBuilder = {} as QueryBuilder;
 
     if (props.query.join) {

@@ -1,22 +1,25 @@
 import { Request, Response } from "express";
-import _get from "../services/get";
-import _post from "../services/post";
-import _put from "../services/put";
-import _delete from "../services/delete";
-import { HandleRequestResult } from "../interfaces/request";
+import _get from "../services/get.js";
+import _post from "../services/post.js";
+import _put from "../services/put.js";
+import _delete from "../services/delete.js";
+import { HandleRequestResult } from "../interfaces/request.js";
 import {
   ControllerApiProps,
   HandleDeleteProps,
   HandleGetProps,
   HandleInsertProps,
   HandleUpdateProps,
-} from "../interfaces/controller";
-import { HttpStatus } from "../helpers";
+} from "../interfaces/controller.js";
+import { HttpStatus } from "../constants/index.js";
+import * as system from "../system/index.js";
 
 export default async (req: Request, res: Response) => {
   var props = req.body as ControllerApiProps;
 
-  var schema = schemas.find((x) => x.schema === props.schema);
+  var schema = (await system.getAllSchemas()).find(
+    (x) => x.entity.options.name === props.schema
+  );
   if (!schema) {
     res.status(400).json({
       name: HttpStatus[400].name,
@@ -70,6 +73,7 @@ export default async (req: Request, res: Response) => {
     return;
   }
 
+  //@ts-ignore
   res.status(result.error.code).json(result.error);
   return;
 };

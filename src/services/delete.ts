@@ -1,8 +1,21 @@
-import { HttpStatus } from "../helpers";
-import { HandleDeleteProps } from "../interfaces/controller";
+import { HttpStatus } from "../constants/index.js";
+import { Exception, Success } from "../helpers/index.js";
+import { HandleDeleteProps } from "../interfaces/controller.js";
+import * as system from "../system/index.js";
+import { db } from "../database/index.js";
 
 export default async (props: HandleDeleteProps) => {
-  var schema = schemas.find((x) => x.schema === props.schema);
+  var schema = (await system.getAllSchemas()).find(
+    (x) => x.name === props.schema
+  );
+
+  if (!db) {
+    return Exception({
+      name: HttpStatus[400].name,
+      code: HttpStatus[400].code,
+      message: "Unable to connect for db.",
+    });
+  }
 
   if (schema) {
     var repository = db.getRepository(schema.entity);

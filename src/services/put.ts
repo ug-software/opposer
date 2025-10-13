@@ -1,14 +1,27 @@
-import { HttpStatus } from "../helpers";
-import { HandleUpdateProps } from "../interfaces/controller";
+import { Exception, Success } from "../helpers/index.js";
+import { HandleUpdateProps } from "../interfaces/controller.js";
+import { HttpStatus } from "../constants/index.js";
+import * as system from "../system/index.js";
+import { db } from "../database/index.js";
 
 export default async (props: HandleUpdateProps) => {
-  var schema = schemas.find((x) => x.schema === props.schema);
+  var schema = (await system.getAllSchemas()).find(
+    (x) => x.name === props.schema
+  );
 
   if (!schema) {
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
       message: "Unabled find schema",
+    });
+  }
+
+  if (!db) {
+    return Exception({
+      name: HttpStatus[400].name,
+      code: HttpStatus[400].code,
+      message: "Unable to connect for db.",
     });
   }
 

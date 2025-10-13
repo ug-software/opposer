@@ -1,12 +1,28 @@
 {
     "name": "opposer",
-    "description": "Opposer is fast Api REST Full, database manager.",
-    "scripts": {},
+    "version": "1.0.0",
+    "type": "module",
+    "exports": {
+        ".": {
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
+        }
+    },
+    "main": "./lib/cjs/index.cjs",
+    "module": "./lib/esm/index.js",
+    "types": "./lib/esm/index.d.ts",
+    "scripts": {
+        "build": "npm run build:esm && npm run build:cjs",
+        "build:esm": "tsc -p tsconfig.esm.json",
+        "build:cjs": "tsc -p tsconfig.cjs.json"
+    },
+    "files": ["lib"],
     "dependencies": {
         "cors": "^2.8.5",
         "express": "^4.21.2",
         "pg": "^8.14.1",
-        "typeorm": "^0.3.27"
+        "typeorm": "^0.3.27",
+        "yup": "^1.7.1"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",
