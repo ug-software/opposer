@@ -15,7 +15,7 @@ export function getFileName(
 }
 
 export async function getAllSchemas(): Promise<
-  { name: string } & SchemaResult[]
+  ({ name: string } & SchemaResult)[]
 > {
   var root = process.cwd();
 
@@ -24,10 +24,10 @@ export async function getAllSchemas(): Promise<
 
   return await Promise.all(
     schemaFiles.map(async (schemaPathName) => {
-      var name = getFileName(schemaPathName);
-      var schema: SchemaResult = await import(
-        path.resolve(schemasPath, schemaPathName)
-      );
+      var name = getFileName(schemaPathName, false);
+
+      var schema: SchemaResult = //@ts-ignore
+        (await import(path.resolve(schemasPath, schemaPathName))).default;
 
       return {
         name,

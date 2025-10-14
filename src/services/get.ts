@@ -10,7 +10,7 @@ export default async (
   props: HandleGetProps
 ): Promise<HandleRequestResult<unknown>> => {
   var schema = (await system.getAllSchemas()).find(
-    (x) => x.name === props.schema
+    (x) => x.entity.name === props.schema
   );
   if (!schema) {
     return Exception({

@@ -18,7 +18,7 @@ export default async (req: Request, res: Response) => {
   var props = req.body as ControllerApiProps;
 
   var schema = (await system.getAllSchemas()).find(
-    (x) => x.entity.options.name === props.schema
+    (x) => x.entity.name === props.schema
   );
   if (!schema) {
     res.status(400).json({

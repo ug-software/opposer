@@ -6,7 +6,6 @@ var db: null | DataSource = null;
 export { db };
 export default async function (props: DataSourceOptions) {
   var entities = (await system.getAllSchemas()).map((x) => x.entity);
-
   var databaseConnection = new DataSource({
     ...props,
     entities,

@@ -8,7 +8,7 @@ import { db } from "../database/index.js";
 export default async (props: HandleInsertProps) => {
   try {
     var schema = (await system.getAllSchemas()).find(
-      (x) => x.name === props.schema
+      (x) => x.entity.name === props.schema
     );
 
     if (!schema) {
@@ -28,6 +28,8 @@ export default async (props: HandleInsertProps) => {
     }
 
     var repository = db.getRepository(schema.entity);
+
+    console.log("repository", repository);
 
     if (typeof props.data !== "object") {
       return Exception({
@@ -64,12 +66,10 @@ export default async (props: HandleInsertProps) => {
       });
     }
 
-    //@ts-ignore
-    const item = await repository.create(props.data).save();
+    const item = repository.create(props.data);
+    await repository.save(item);
 
-    return Success({
-      item,
-    });
+    return Success(item);
   } catch (err) {
     var error = err as TypeORMError;
     return Exception({
