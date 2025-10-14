@@ -16,7 +16,9 @@
         "build:esm": "tsc -p tsconfig.esm.json",
         "build:cjs": "tsc -p tsconfig.cjs.json"
     },
-    "files": ["lib"],
+    "files": [
+        "lib"
+    ],
     "dependencies": {
         "cors": "^2.8.5",
         "express": "^4.21.2",

@@ -28,8 +28,7 @@ export default async function Server(props: CreateServerProps) {
   }
 
   // Segurança
-  if (props.helmet !== false) {
-    // habilitado por padrão, desabilitar passando false
+  if (props.helmet) {
     //@ts-ignore
     const helmet = (await import("helmet")).default;
     opposer.use(helmet());
@@ -37,6 +36,7 @@ export default async function Server(props: CreateServerProps) {
 
   // CORS
   if (props.cors) {
+    //@ts-ignore
     const cors = (await import("cors")).default;
     opposer.use(cors({ origin: "*" }));
   }
@@ -80,7 +80,7 @@ export default async function Server(props: CreateServerProps) {
 
   function initialize() {
     opposer.listen(props.port, () => {
-      console.log(`(⚡) opposer is running in port ${props.port}`);
+      console.log(`⚡opposer is running in port ${props.port}`);
     });
   }
 

@@ -376,4 +376,5 @@ export enum Type {
   boolean = "boolean",
   array = "array",
   date = "date",
+  relation = "relation",
 }
