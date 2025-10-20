@@ -2,13 +2,16 @@ import express from "express";
 import controller from "../controller/index.js";
 import { CreateServerProps } from "../interfaces/server.js";
 import * as database from "../database/index.js";
+import * as system from "../system/index.js";
+
+const settings = system.getSettingsFile();
 
 export default async function Server(props: CreateServerProps) {
   console.log("Inicializando banco de dados...");
-  if (!props.database) {
+  if (!settings.database) {
     throw new Error("Necessário informar as propriedades do Banco de dados...");
   }
-  await database.connect(props.database);
+  await database.connect(settings.database);
 
   console.log("Inicializando Servidor...");
   const opposer = express();

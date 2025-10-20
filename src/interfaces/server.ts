@@ -1,5 +1,3 @@
-import { DataSourceOptions } from "typeorm";
-
 export interface CreateServerProps {
   port: number;
   url?: string;
@@ -14,5 +12,4 @@ export interface CreateServerProps {
     windowMs: number;
     max: number;
   };
-  database: DataSourceOptions;
 }

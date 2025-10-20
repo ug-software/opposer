@@ -10,12 +10,13 @@ import {
   JoinColumn,
 } from "typeorm";
 import { SchemaDefinition, SchemaResult } from "../interfaces/schema.js";
-import * as yup from "yup";
 import { Type } from "../constants/index.js";
+
+import Field from "./field.js";
 
 export default function Schema(
   name: string,
-  definition: SchemaDefinition
+  definition: (f: Field) => SchemaDefinition
 ): SchemaResult {
   var validation: Record<string, any> = {};
 
@@ -29,8 +30,9 @@ export default function Schema(
   //define o nome da classe
   Object.defineProperty(entity, "name", { value: name });
 
-  for (const [key, field] of Object.entries(definition)) {
-    let schema: any;
+  const definitions = definition(new Field());
+  for (const [key, field] of Object.entries(definitions)) {
+    /*let schema: any;
 
     switch (field.type) {
       case "string":
@@ -85,52 +87,54 @@ export default function Schema(
     }
 
     //repassa o schema de validaçao
-    validation[key] = schema;
+    validation[key] = schema;*/
 
     //decorators
+    var relation = field._settings.relation;
+
     //@ts-ignore
     if (field.type === Type.relation) {
-      if (!field.relation) {
+      if (!relation) {
         throw new Error(
           "[relation]: Unabled properties for relationship tables in schema"
         );
       }
 
-      switch (field.relation.type) {
+      switch (relation.type) {
         case "one-to-many":
-          OneToMany(field.relation.target, field.relation.inverseSide, {
-            cascade: field.relation.cascade,
+          OneToMany(relation.target, relation.inverseSide, {
+            cascade: relation.cascade,
           })(entity.prototype, key);
 
           break;
 
         case "many-to-one":
-          ManyToOne(field.relation.target, field.relation.inverseSide, {
-            cascade: field.relation.cascade,
+          ManyToOne(relation.target, relation.inverseSide, {
+            cascade: relation.cascade,
           })(entity.prototype, key);
 
-          if (field.relation.joinColumn) {
+          if (relation.joinColumn) {
             JoinColumn()(entity.prototype, key);
           }
           break;
 
         case "one-to-one":
-          OneToOne(field.relation.target, field.relation.inverseSide, {
-            nullable: field.required,
-            cascade: field.relation.cascade,
+          OneToOne(relation.target, relation.inverseSide, {
+            nullable: field._settings.required,
+            cascade: relation.cascade,
           })(entity.prototype, key);
 
-          if (field.relation.joinColumn) {
+          if (relation.joinColumn) {
             JoinColumn()(entity.prototype, key);
           }
           break;
 
         case "many-to-many":
-          ManyToMany(field.relation.target, field.relation.inverseSide, {
-            cascade: field.relation.cascade,
+          ManyToMany(relation.target, relation.inverseSide, {
+            cascade: relation.cascade,
           })(entity.prototype, key);
 
-          if (field.relation.joinTable) {
+          if (relation.joinTable) {
             JoinTable()(entity.prototype, key);
           }
           break;
@@ -150,9 +154,9 @@ export default function Schema(
             : field.type === "jsonb"
             ? "jsonb"
             : "timestamp",
-        length: field.length,
-        default: field.default,
-        nullable: !field.required,
+        length: field._settings.length,
+        default: field._settings.default,
+        nullable: !field._settings.required,
       });
 
       // aplica o decorator manualmente
@@ -164,6 +168,6 @@ export default function Schema(
     //@ts-ignore
     entity,
     validation,
-    definition,
+    definitions,
   };
 }
