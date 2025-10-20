@@ -2,6 +2,9 @@
     "name": "opposer",
     "version": "1.0.0",
     "type": "module",
+    "bin": {
+      "opposer": "./bin/opposer.js"
+    },
     "exports": {
         ".": {
             "import": "./lib/esm/index.js",

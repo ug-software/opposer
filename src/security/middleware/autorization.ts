@@ -1,0 +1,50 @@
+import { Request, Response, NextFunction } from "express";
+import { Exception } from "../../helpers/index.js";
+import { HttpStatus } from "../../constants/index.js";
+import { db } from "../../database/connect.js";
+import k from "../schema/k.js";
+
+export default async (req: Request, res: Response, next: NextFunction) => {
+  var api = req.headers["opposer-authorization"];
+
+  if (!api) {
+    return res.send(
+      Exception({
+        ...HttpStatus[401],
+        message: "[autorization] - Unatorazed in system.",
+      })
+    );
+  }
+
+  if (!db) {
+    return res.send(
+      Exception({
+        ...HttpStatus[403],
+        message: "[system] - Don't finded database conection.",
+      })
+    );
+  }
+
+  var kRepository = db.getRepository(k.entity);
+  var authorization = await kRepository.findOne({ where: { k: api } });
+
+  if (!authorization) {
+    return res.send(
+      Exception({
+        ...HttpStatus[403],
+        message: "[autorization] - Unatorazed in system.",
+      })
+    );
+  }
+
+  if (new Date() > new Date(authorization.ex)) {
+    return res.send(
+      Exception({
+        ...HttpStatus[403],
+        message: "[autorization] - Unatorazed in system.",
+      })
+    );
+  }
+
+  next();
+};
