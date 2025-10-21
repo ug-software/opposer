@@ -1,34 +1,42 @@
-import { Column, Entity, OneToMany } from "typeorm";
-import Schema from "../../database/schema.js";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Field } from "../../decorators/index.js";
 import f from "../../database/field.js";
 import Role from "./rl.js";
-
 @Entity("urs")
-export default class User extends Schema {
+export default class User {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
 
   @Column({ type: "varchar" })
-  fn = f.object().string("").required("");
+  @Field(() => f().string("").required(""))
+  fn!: string;
 
   @Column({ type: "varchar" })
-  lm = f.object().string("").required("");
+  @Field(() => f().string("").required(""))
+  lm!: string;
 
   @Column({ type: "varchar" })
-  em = f.object().string("").required("").match(RegExp(""), "");
+  @Field(() => f().string("").required("").match(RegExp(""), ""))
+  em!: string;
 
   @Column({ type: "varchar" })
-  ps = f.object().string("").required("");
-  
+  @Field(() => f().string("").required(""))
+  ps!: string;
+
   @Column({ type: "boolean", default: true })
-  ac = f.object().boolean("");
-  
+  @Field(() => f().boolean(""))
+  ac!: boolean;
+
   @Column({ type: "date", default: new Date() })
-  ct = f.object().date("");
-  
+  @Field(() => f().date(""))
+  ct!: string;
+
   @Column({ type: "date", default: new Date() })
-  ut = f.object().date("");
+  @Field(() => f().date(""))
+  ut!: Date;
 
   @OneToMany(() => Role, (role) => role.usr)
-  rl!: Role;
+  rl!: Role[];
 }
 
 /*

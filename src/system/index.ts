@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
-import { SchemaResult } from "../interfaces/schema";
-import { OpposerSystemConfigOptions } from "../interfaces/system";
+import { SchemaResult } from "../interfaces/schema.js";
+import { OpposerSystemConfigOptions, ClassType } from "../interfaces/system.js";
 
 export function getFileName(
   filePath: string,
@@ -15,7 +15,7 @@ export function getFileName(
 }
 
 export async function getAllSchemas(): Promise<
-  ({ name: string } & SchemaResult)[]
+  { name: string; entity: any }[]
 > {
   var root = process.cwd();
 
@@ -26,14 +26,25 @@ export async function getAllSchemas(): Promise<
     schemaFiles.map(async (schemaPathName) => {
       var name = getFileName(schemaPathName, false);
 
-      var schema: SchemaResult = //@ts-ignore
+      var entity: SchemaResult = //@ts-ignore
         (await import(path.resolve(schemasPath, schemaPathName))).default;
 
       return {
         name,
-        ...schema,
+        entity,
       };
     })
+  );
+}
+
+export async function getAllReducers(): Promise<ClassType<any>[]> {
+  const root = process.cwd();
+  const reducersPath = path.resolve(root, "src", "reducers");
+
+  const reducerFiles = getAllFiles(reducersPath);
+  return await Promise.all(
+    //@ts-ignore
+    reducerFiles.map(async (filePath) => (await import(filePath)).default)
   );
 }
 
@@ -51,4 +62,23 @@ export function getSettingsFile(): OpposerSystemConfigOptions {
       "[system] - Could not find or read opposer-settings.json in project root. Verify the file and try again."
     );
   }
+}
+
+function getAllFiles(dir: string): string[] {
+  let results: string[] = [];
+  const list = fs.readdirSync(dir, { withFileTypes: true });
+
+  list.forEach((file) => {
+    const filePath = path.resolve(dir, file.name);
+    if (file.isDirectory()) {
+      results = results.concat(getAllFiles(filePath)); // entra na subpasta
+    } else if (
+      file.isFile() &&
+      (file.name.endsWith(".js") || file.name.endsWith(".ts"))
+    ) {
+      results.push(filePath);
+    }
+  });
+
+  return results;
 }

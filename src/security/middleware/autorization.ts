@@ -5,7 +5,7 @@ import { db } from "../../database/connect.js";
 import k from "../schema/k.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
-  var api = req.headers["opposer-authorization"];
+  var api = req.headers["opposer-authorization"] as string;
 
   if (!api) {
     return res.send(
@@ -25,8 +25,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     );
   }
 
-  var kRepository = db.getRepository(k.entity);
-  var authorization = await kRepository.findOne({ where: { k: api } });
+  var kRepository = db.getRepository(k);
+  var authorization = await kRepository.findOne({ where: { hs: api } });
 
   if (!authorization) {
     return res.send(

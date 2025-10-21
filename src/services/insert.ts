@@ -1,14 +1,14 @@
 import { TypeORMError } from "typeorm";
 import { HandleInsertProps } from "../interfaces/controller.js";
-import { Exception, Success } from "../helpers/index.js";
-import { HttpStatus } from "../constants/index.js";
-import * as system from "../system/index.js";
-import { db } from "../database/index.js";
+import { Exception, Success } from "..//helpers/index.js";
+import { HttpStatus } from "..//constants/index.js";
+import * as system from "..//system/index.js";
+import { db } from "..//database/index.js";
 
 export default async (props: HandleInsertProps) => {
   try {
     var schema = (await system.getAllSchemas()).find(
-      (x) => x.entity.name === props.schema
+      (x) => x.name === props.schema
     );
 
     if (!schema) {
@@ -28,8 +28,6 @@ export default async (props: HandleInsertProps) => {
     }
 
     var repository = db.getRepository(schema.entity);
-
-    console.log("repository", repository);
 
     if (typeof props.data !== "object") {
       return Exception({
@@ -66,8 +64,15 @@ export default async (props: HandleInsertProps) => {
       });
     }
 
+    if (Array.isArray(props.data)) {
+      var items = props.data.map((x) => repository.create(x));
+      await repository.insert(items);
+
+      return Success(items);
+    }
+
     const item = repository.create(props.data);
-    await repository.save(item);
+    await repository.insert(item);
 
     return Success(item);
   } catch (err) {

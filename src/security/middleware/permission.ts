@@ -36,11 +36,11 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     );
   }
 
-  var userRepository = db.getRepository(usr.entity);
-  var currentUser = (await userRepository.findOne({
-    where: { uuid: decoded.usr },
+  var userRepository = db.getRepository(usr);
+  var currentUser = await userRepository.findOne({
+    where: { id: decoded.usr },
     relations: ["rl"],
-  })) as undefined | { rl: { mt: string; sm: string }[] };
+  });
 
   if (!currentUser) {
     return res.send(
