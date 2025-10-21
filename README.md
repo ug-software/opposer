@@ -147,7 +147,51 @@ Como havia comentado, neste momento o Opposer tem a possibilidade de utilizar so
 
 Feito isto podemos para desenvolvimento rodar o comando `` npx tsx ./src/index.ts ``, ele inicializará o servidor e você verá `` ⚡ Opposer is running in port 3838 ``. Pronto temos nosso serviço no ar e poderemos acessar fazendo requisições em `` /opposer ``. Já podemos inserir, deletar, buscar ou atualizar nossos autores e livros;
 
-Dito isto vamos para a segunda parte do nosso exemplo básico. O Opposer foi projetado para fácilitar o desenvolvimento do back-end, do gerênciamento dos dados, suas consultas são a base para flexibilidade ao obter os dados e robustes para inserir podendo usar relacionamentos, arrays, jsons dados validos graças ao Typeorm***. Todos os métodos são ``post`` e precisam da chave de api ( descreverei mais a frente no tópico de segurança ). Para obter os dados dos autores, queremos uma lista com todos sem filtro algum, poderemos obter da segunte forma:
+Dito isto vamos para a segunda parte do nosso exemplo básico. O Opposer foi projetado para fácilitar o desenvolvimento do back-end, do gerênciamento dos dados, suas consultas são a base para flexibilidade ao obter os dados e robustes para inserir podendo usar relacionamentos, arrays, json dados validos graças ao Typeorm***. Todos os métodos são ``post`` e precisam da chave de api ( descreverei mais a frente no tópico de segurança ). 
+
+#### Inserção:
+
+Vamos inserir alguns livros e autores ? Vamos começar com os autores, para poder inserir um registro utilizando nosso servidor podemos rodar a seguinte requisição:
+
+		(async () => {
+
+			const  authors  =  await  fetch("http://localhost:3838/opposer", {
+				method: "POST",
+				body: JSON.stringify({
+				method: "insert",
+				schema: "author",
+				data: [
+						{
+							firstName: "Carl",
+							lastName: "Sagan",
+							age: 62,
+							address: {
+								street: "SN",
+								number: 0,
+							},
+						},
+						{
+							firstName: "Joaquim Maria",
+							lastName: "Machado de Assis",
+							age: 69,
+							address: {
+								street: "SN",
+								number: 0,
+							},
+						},
+					],
+				}),
+			});
+			console.log(await  authors.json());
+		})();
+
+Inserimos nossos dois autores, vamos aproveitar e inserir alguns livros também ?! Seguiremos definindo já na inserção quem serão nossos autores, passando a propriedade correspondente o `id` deles.
+
+
+
+#### Consulta:
+
+Para obter os dados dos autores, queremos uma lista com todos sem filtro algum, poderemos obter da segunte forma:
 
 		(async () => {
 			const  authors = await fetch("http://localhost:3838/opposer", {
