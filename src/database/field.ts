@@ -3,7 +3,7 @@ import { ValidationFunction, SettingsField } from "../interfaces/field";
 import { SchemaDefinition } from "../interfaces/schema";
 import { generic } from "../factory/index.js";
 
-class ToolField {
+export class ToolField {
   type!: "string" | "boolean" | "date" | "number" | "relation" | "jsonb" | null;
   _cases: ValidationFunction[] = [];
   _settings: SettingsField = {};
@@ -293,11 +293,15 @@ export default class Field {
     return new BooleanField(message);
   }
 
-  relation() {
+  /*relation() {
     return new RelationalField();
-  }
+  }*/
 
   json(fields: SchemaDefinition) {
     return new JsonField(fields);
+  }
+
+  static object() {
+    return new Field()
   }
 }
