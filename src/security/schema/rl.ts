@@ -1,17 +1,20 @@
-import Schema from "../../database/schema";
-import urs from "./urs";
+import { Column, Entity, ManyToOne } from "typeorm";
+import Schema from "../../database/schema.js";
+import f from "../../database/field.js";
+import User from "./urs.js";
 
-const rl = Schema("rl", (f) => ({
-  sm: f.string("").required(""),
-  mt: f.string("").required(""),
-  usr: f
-    .relation()
-    .manyToOne()
-    .target(() => urs.entity)
-    .inverseSide("rl"),
-}));
+@Entity("rl")
+export default class Role extends Schema {
 
-export default rl;
+  @Column({ type: "varchar" })
+  sm = f.object().string("").required("");
+
+  @Column({ type: "varchar" })
+  mt = f.object().string("").required("")
+
+  @ManyToOne(() => User, (user) => user.rl)
+  usr!: User;
+}
 
 /* 
     sm => schema,
