@@ -1,7 +1,11 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 import * as system from "../system/index.js";
 
-var db: null | DataSource = null;
+var db = new DataSource({
+  database: ":memory",
+  type: "postgres",
+  entities: [],
+});
 
 export { db };
 export default async function (props: DataSourceOptions) {

@@ -1,7 +1,5 @@
-import { ObjectType } from "typeorm";
 import { ValidationFunction, SettingsField } from "../interfaces/field";
 import { SchemaDefinition } from "../interfaces/schema";
-import { generic } from "../factory/index.js";
 
 export class ToolField {
   type!: "string" | "boolean" | "date" | "number" | "relation" | "jsonb" | null;
@@ -183,73 +181,6 @@ class DateField extends ToolField {
   }
 }
 
-class RelationalField extends ToolField {
-  constructor() {
-    super();
-
-    this.type = "relation";
-    this._settings.relation = {
-      type: null,
-      inverseSide: "",
-      target: () => generic(),
-    };
-  }
-
-  target(target: () => ObjectType<unknown>) {
-    this._settings.relation!.target = target;
-
-    return this;
-  }
-
-  oneToOne() {
-    this._settings.relation!.type = "one-to-one";
-
-    return this;
-  }
-
-  manyToMany() {
-    this._settings.relation!.type = "many-to-many";
-
-    return this;
-  }
-
-  oneToMany() {
-    this._settings.relation!.type = "one-to-one";
-
-    return this;
-  }
-
-  manyToOne() {
-    this._settings.relation!.type = "many-to-one";
-
-    return this;
-  }
-
-  inverseSide(target: string) {
-    this._settings.relation!.inverseSide = target;
-
-    return this;
-  }
-
-  joinColumn(isJoin: boolean) {
-    this._settings.relation!.joinColumn = isJoin;
-
-    return this;
-  }
-
-  joinTable(isJoinTable: boolean) {
-    this._settings.relation!.joinTable = isJoinTable;
-
-    return this;
-  }
-
-  cascade(isCascade: boolean) {
-    this._settings.relation!.cascade = isCascade;
-
-    return this;
-  }
-}
-
 class JsonField extends ToolField {
   private _children: SchemaDefinition = {};
 
@@ -276,7 +207,7 @@ class JsonField extends ToolField {
   }
 }
 
-export default class Field {
+export class Field {
   string(message: string) {
     return new StringField(message);
   }
@@ -300,8 +231,8 @@ export default class Field {
   json(fields: SchemaDefinition) {
     return new JsonField(fields);
   }
+}
 
-  static object() {
-    return new Field()
-  }
+export default function () {
+  return new Field();
 }

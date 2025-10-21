@@ -1,19 +1,23 @@
 import express from "express";
-import controller from "../controller/index.js";
-import { CreateServerProps } from "../interfaces/server.js";
+import DatabaseController from "../controller/database.js";
+import DispatchController from "../controller/dispatch.js";
+import { CreateServerProps, ServerInstance } from "../interfaces/server.js";
 import * as database from "../database/index.js";
 import * as system from "../system/index.js";
 
 const settings = system.getSettingsFile();
 
-export default async function Server(props: CreateServerProps) {
-  console.log("Inicializando banco de dados...");
+export default async function Server(
+  props: CreateServerProps
+): Promise<ServerInstance> {
+  console.log("-> Initializing database connection.");
+
   if (!settings.database) {
-    throw new Error("Necessário informar as propriedades do Banco de dados...");
+    throw new Error("-> It is necessary to inform database properties.");
   }
   await database.connect(settings.database);
 
-  console.log("Inicializando Servidor...");
+  console.log("-> Initializing server.");
   const opposer = express();
   let url = "/opposer";
 
@@ -21,8 +25,8 @@ export default async function Server(props: CreateServerProps) {
     url = props.url;
   }
 
-  // Middleware de parsing
-  opposer.use(express.json()); // JSON sempre ativo
+  // parsing Middleware
+  opposer.use(express.json()); // JSON forever active
   if (props.urlencoded) {
     opposer.use(express.urlencoded({ extended: true }));
   }
@@ -30,7 +34,7 @@ export default async function Server(props: CreateServerProps) {
     opposer.use(express.text());
   }
 
-  // Segurança
+  // Security
   if (props.helmet) {
     //@ts-ignore
     const helmet = (await import("helmet")).default;
@@ -41,7 +45,7 @@ export default async function Server(props: CreateServerProps) {
   if (props.cors) {
     //@ts-ignore
     const cors = (await import("cors")).default;
-    opposer.use(cors({ origin: "*" }));
+    opposer.use(cors({ ...props.cors }));
   }
 
   // Rate limit
@@ -63,10 +67,13 @@ export default async function Server(props: CreateServerProps) {
     opposer.use(morgan("dev"));
   }
 
-  // Rotas
-  opposer.post(url, controller);
+  // Routes
+  opposer.post(url, DatabaseController);
 
-  // Middleware de erro
+  // Reducers
+  opposer.post("/reducer/:reducer", DispatchController);
+
+  // Error Middleware
   opposer.use(
     (
       err: any,
@@ -83,7 +90,7 @@ export default async function Server(props: CreateServerProps) {
 
   function initialize() {
     opposer.listen(props.port, () => {
-      console.log(`⚡opposer is running in port ${props.port}`);
+      console.log(`⚡Opposer is running in port ${props.port}`);
     });
   }
 

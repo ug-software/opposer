@@ -1,18 +1,30 @@
 import { Column, Entity } from "typeorm";
 import Schema from "../../database/schema.js";
-import f from "../../database/field.js"
+import f from "../../database/field.js";
+import { Field } from "../../decorators/index.js";
 
-@Entity('k')
+@Entity("ke")
 export default class Key extends Schema {
-
   @Column({ type: "varchar" })
-  hs = f.object().string("Campos necessariamente string").required("Campo obrigatorio");
+  @Field(() =>
+    f().string("Campos necessariamente string").required("Campo obrigatorio")
+  )
+  hs!: string;
 
   @Column({ type: "date", default: new Date() })
-  ct = f.object().date("Campo necessariamente Date").default(new Date());
+  @Field(() => f().date("Campo necessariamente Date").default(new Date()))
+  ct!: Date;
 
-  @Column({ type: "date", default: new Date(new Date().getFullYear() + 1, new Date().getMonth(), new Date().getDate()) })
-  ex = f.object().date("Campo necessariamente Date")
+  @Column({
+    type: "date",
+    default: new Date(
+      new Date().getFullYear() + 1,
+      new Date().getMonth(),
+      new Date().getDate()
+    ),
+  })
+  @Field(() => f().date("Campo necessariamente Date"))
+  ex!: Date;
 }
 
 /*
