@@ -14,6 +14,8 @@ import {
 import { HttpStatus } from "../constants/index.js";
 import * as system from "../system/index.js";
 
+export function Controller() {}
+
 export default async (req: Request, res: Response) => {
   var props = req.body as ControllerApiProps;
 

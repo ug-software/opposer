@@ -1,22 +1,35 @@
-import Schema from "../../database/schema";
-import rl from "./rl";
+import { Column, Entity, OneToMany } from "typeorm";
+import Schema from "../../database/schema.js";
+import f from "../../database/field.js";
+import Role from "./rl.js";
 
-const urs = Schema("urs", (f) => ({
-  fn: f.string("").required(""),
-  lm: f.string("").required(""),
-  em: f.string("").required("").match(RegExp(""), ""),
-  ps: f.string("").required(""),
-  ac: f.boolean("").default(true),
-  ct: f.date("").default(new Date()),
-  ut: f.date("").default(new Date()),
-  rl: f
-    .relation()
-    .cascade(true)
-    .oneToMany()
-    .target(() => rl.entity),
-}));
+@Entity("urs")
+export default class User extends Schema {
 
-export default urs;
+  @Column({ type: "varchar" })
+  fn = f.object().string("").required("");
+
+  @Column({ type: "varchar" })
+  lm = f.object().string("").required("");
+
+  @Column({ type: "varchar" })
+  em = f.object().string("").required("").match(RegExp(""), "");
+
+  @Column({ type: "varchar" })
+  ps = f.object().string("").required("");
+  
+  @Column({ type: "boolean", default: true })
+  ac = f.object().boolean("");
+  
+  @Column({ type: "date", default: new Date() })
+  ct = f.object().date("");
+  
+  @Column({ type: "date", default: new Date() })
+  ut = f.object().date("");
+
+  @OneToMany(() => Role, (role) => role.usr)
+  rl!: Role;
+}
 
 /*
     fn => firstName,
