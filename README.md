@@ -1,8 +1,6 @@
 # Opposer
 
-Opposer é um ecosistema gerenciador em formato de api, para gestão de dados, criação de metodos capazes de tranformar dados em formato Reducer. Desenvolvido para ser rápido em solucionar o acesso e manutenção de dados, seja em inserção, deleção, consulta, páginado ou não ao banco.
-
-Atualmente suporta somente Postgress, porém em próximas versões estará disponivel em outros bancos de dados.
+Opposer é um ecosistema gerenciador em formato de api, para gestão de dados, criação de metodos capazes de tranformar dados em formato Handler. Desenvolvido para ser rápido em solucionar o acesso e manutenção de dados, seja em inserção, deleção, consulta, páginado ou não ao banco.
 
 #### Para começar é necessário instalar 
 1. Opposer:
@@ -18,19 +16,19 @@ Atualmente suporta somente Postgress, porém em próximas versões estará dispo
 
 #### Vamos criar um gerenciador de livros, com duas entidades, Livros e Autores.
 
-Só é possivel para o opposer gerênciar de forma fácil a criação do servidor por causa de sua organização, ele necessáriamente é feito para mapeamento por pastas então criaremos dentro do `` /src `` duas pastas a ``` /schemas ``` onde estará nossas entidades e validações e ``` /reducers ``` onde estará nossas classes com ações customizadas ou serviços necessários dentro da api, no final nossa estrutura de pastas estará desta forma:
+Só é possivel para o opposer gerênciar de forma fácil a criação do servidor por causa de sua organização, ele necessáriamente é feito para mapeamento por pastas então criaremos dentro do `` /src `` duas pastas a ``` /schemas ``` onde estará nossas entidades e validações e ``` /handlers ``` onde estará nossas classes com ações customizadas ou serviços necessários dentro da api, no final nossa estrutura de pastas estará desta forma:
 	
 		project/
 		├── src/
 		│   ├── schemas/     # Entidades de Schemas de validações.
-		│   ├── reducers/    # Reducers responsaveis por customizações.
+		│   ├── handler/     # Funções responsaveis por customizações.
 		|   └── index.ts     # Nossa porta de entrada para o Servidor.
 		├── opposer-settings.json
 		├── tsconfig.json
 		└── package.json
  
 
-Vamos criar nossos Schemas, eles são declarados com decorators então é necessário que em seu `` tsconfig.json `` esteja com as frags `` "emitDecoratorMetadata": true `` e `` "experimentalDecorators": true ``;
+Vamos criar nossos Schemas, eles são declarados com decorators então é necessário que em seu `` tsconfig.json `` esteja com as flags `` "emitDecoratorMetadata": true `` e `` "experimentalDecorators": true ``;
 
 Para o schema de Autor teremos em `` src/schemas/author.ts `` o seguinte código:
 
@@ -138,12 +136,12 @@ Há também a configuração do nosso arquivo matriz o ``opposer-settings.json `
 				"username": "opposer",
 				"password": "opposer",
 				"database": "opposer",
-				"synchronize": true,
-				"logging": true
+				"synchronize": true, // para desenvolvimento, recomendado em produção é false.
+				"logging": true // verte no console o log das consultas.
 			}
 		}
 
-Como havia comentado, neste momento o Opposer tem a possibilidade de utilizar somente Postgress e é neste lugar que colocaremos nossa configuração, é possivel também deixar no ``env``, caso ele não ache aqui, ele buscará lá, as configurações são as mesmas do Typeorm então neste momento caso sua configuração não bata com esse exemplo, você pode consultar a própria documentação do [Typeorm](https://typeorm.io/docs). 
+É possivel também deixar no ``env``, caso ele não ache aqui, ele buscará lá, as configurações são as mesmas do Typeorm então neste momento caso sua configuração não bata com esse exemplo, você pode consultar a própria documentação do [Typeorm](https://typeorm.io/docs). 
 
 Feito isto podemos para desenvolvimento rodar o comando `` npx tsx ./src/index.ts ``, ele inicializará o servidor e você verá `` ⚡ Opposer is running in port 3838 ``. Pronto temos nosso serviço no ar e poderemos acessar fazendo requisições em `` /opposer ``. Já podemos inserir, deletar, buscar ou atualizar nossos autores e livros;
 
@@ -254,3 +252,8 @@ Se quisermos pegar os livros de cada autor junto com eles ?, conseguimos também
 		})();
 
 E o nosso retorno trará os livros juntos com cada autor, a também possibilidade de buscar os livros e então seus autores ( uma busca reversa ). Podemos buscar de forma páginada, buscar somente um com ``find``, os métodos nesta parte cridas foram inspiradas no ``javascript`` com suas funções de consulta por array, então pode ser que por agora não tenha uma forma de chegar de forma tão granulada ao dado, mas nas próximas releases existira, consulte na sessão de consulta os outros parametros que podemos utilizar na consulta.
+
+#### Handlers
+
+Digamos que em nosso projeto tenhamos metodos ou funções que gostariamos e que somente com os metodos que o Opposer disponibilize não são totalmente viaveis, e seria necessário então metodos especificos, digamos que queremos mostrar os ulltimos cinco livros publicados em nossa página principal, podemos fazer isso com handlers.
+
