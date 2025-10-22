@@ -1,6 +1,6 @@
-import { Action, Reducer } from "../../decorators/index.js";
+import { Action, Handler } from "../../decorators/index.js";
 
-@Reducer("auth")
+@Handler("auth")
 export default class Auth {
   @Action()
   register() {}
@@ -29,7 +29,7 @@ export default class Auth {
 
 /*
     {
-        reducer: auth,
+        handler: auth,
         action: register,
         payload: {
             em: "",

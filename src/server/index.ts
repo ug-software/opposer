@@ -70,8 +70,8 @@ export default async function Server(
   // Routes
   opposer.post(url, DatabaseController);
 
-  // Reducers
-  opposer.post("/reducer/:reducer", DispatchController);
+  // Handlers
+  opposer.post("/handler/:handler", DispatchController);
 
   // Error Middleware
   opposer.use(

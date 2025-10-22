@@ -1,24 +1,24 @@
 import { Request, Response } from "express";
-import * as reducer from "../reducers/index.js";
+import * as handler from "../handlers/index.js";
 import { HttpStatus } from "../constants/index.js";
-import { RequestReducerBody } from "../interfaces/reducers.js";
+import { RequestHandlerBody } from "../interfaces/handlers.js";
 
 export default async (req: Request, res: Response) => {
-  var reducerName = req.params.reducer;
-  var { action, paylod } = req.body as RequestReducerBody;
+  var handlerName = req.params.handler;
+  var { action, paylod } = req.body as RequestHandlerBody;
 
-  if (!reducerName) {
+  if (!handlerName) {
     return res.status(400).json({
       ...HttpStatus[400],
-      message: "Unable to identify reducer name.",
+      message: "Unable to identify handler name.",
     });
   }
 
-  var reducers = await reducer.loadReducers();
-  if (!reducers[reducerName]) {
+  var handlers = await handler.loadHandlers();
+  if (!handlers[handlerName]) {
     return res.status(400).json({
       ...HttpStatus[400],
-      message: "Impossible to find reducer.",
+      message: "Impossible to find handler.",
     });
   }
 
@@ -29,15 +29,15 @@ export default async (req: Request, res: Response) => {
     });
   }
 
-  var __reducer = reducers[reducerName];
-  if (!__reducer.actions.find((x) => x.name === action)) {
+  var __handler = handlers[handlerName];
+  if (!__handler.actions.find((x) => x.name === action)) {
     return res.status(400).json({
       ...HttpStatus[400],
       message: "Unable to find action method.",
     });
   }
 
-  var result = await new __reducer.handler()[reducer.toCamelCase(action)](
+  var result = await new __handler.handler()[handler.toCamelCase(action)](
     paylod
   );
 

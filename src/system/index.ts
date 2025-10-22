@@ -37,14 +37,14 @@ export async function getAllSchemas(): Promise<
   );
 }
 
-export async function getAllReducers(): Promise<ClassType<any>[]> {
+export async function getAllHandlers(): Promise<ClassType<any>[]> {
   const root = process.cwd();
-  const reducersPath = path.resolve(root, "src", "reducers");
+  const handlersPath = path.resolve(root, "src", "handlers");
 
-  const reducerFiles = getAllFiles(reducersPath);
+  const handlersFiles = getAllFiles(handlersPath);
   return await Promise.all(
     //@ts-ignore
-    reducerFiles.map(async (filePath) => (await import(filePath)).default)
+    handlersFiles.map(async (filePath) => (await import(filePath)).default)
   );
 }
 

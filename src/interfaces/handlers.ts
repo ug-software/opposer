@@ -1,8 +1,8 @@
 import { ClassType } from "./system.js";
 
-export interface ResultGetAllReducers {
+export interface ResultGetAllHandlers {
   [key: string]: {
-    reducer: {
+    metadata: {
       name: string;
     };
     actions: {
@@ -12,7 +12,7 @@ export interface ResultGetAllReducers {
   };
 }
 
-export interface RequestReducerBody {
+export interface RequestHandlerBody {
   action: string;
   paylod: any;
 }
