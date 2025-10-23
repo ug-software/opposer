@@ -57,8 +57,9 @@ const removeFilesNotNecessaries = (cb) => {
 const createAndSaveTag = (cb) => {
   var release_version = process.env.RELEASE;
   execSync(`git tag v${release_version}`);
+  
+  execSync(`git push origin release/${release_version}`);
   execSync(`git push origin v${release_version}`);
-
   cb()
 }
 
