@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import _get from "../services/get.js";
-import _post from "../services/post.js";
-import _put from "../services/put.js";
+import _insert from "../services/insert.js";
+import _update from "../services/update.js";
 import _delete from "../services/delete.js";
 import { HandleRequestResult } from "../interfaces/request.js";
 import {
@@ -18,7 +18,7 @@ export default async (req: Request, res: Response) => {
   var props = req.body as ControllerApiProps;
 
   var schema = (await system.getAllSchemas()).find(
-    (x) => x.entity.name === props.schema
+    (x) => x.name === props.schema
   );
   if (!schema) {
     res.status(400).json({
@@ -51,13 +51,13 @@ export default async (req: Request, res: Response) => {
 
     case "insert":
       var insertBody = req.body as HandleInsertProps;
-      result = await _post(insertBody);
+      result = await _insert(insertBody);
 
       break;
 
     case "update":
       var updateBody = req.body as HandleUpdateProps;
-      result = await _put(updateBody);
+      result = await _update(updateBody);
 
       break;
 

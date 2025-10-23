@@ -2,8 +2,11 @@
     "name": "opposer",
     "version": "1.0.0",
     "type": "module",
+    "main": "./lib/cjs/index.cjs",
+    "module": "./lib/esm/index.js",
+    "types": "./lib/esm/index.d.ts",
     "bin": {
-      "opposer": "./bin/opposer.js"
+        "opposer": "./lib/bin/opposer.js"
     },
     "exports": {
         ".": {
@@ -11,11 +14,8 @@
             "require": "./lib/cjs/index.js"
         }
     },
-    "main": "./lib/cjs/index.cjs",
-    "module": "./lib/esm/index.js",
-    "types": "./lib/esm/index.d.ts",
     "scripts": {
-        "build": "npm run build:esm && npm run build:cjs",
+        "build": "gulp build",
         "build:esm": "tsc -p tsconfig.esm.json",
         "build:cjs": "tsc -p tsconfig.cjs.json"
     },
@@ -24,15 +24,18 @@
     ],
     "dependencies": {
         "cors": "^2.8.5",
+        "del": "^8.0.1",
         "express": "^4.21.2",
-        "pg": "^8.14.1",
-        "typeorm": "^0.3.27",
-        "yup": "^1.7.1"
+        "gulp": "^5.0.1",
+        "gulp-typescript": "^6.0.0-alpha.1",
+        "typeorm": "^0.3.27"
     },
     "devDependencies": {
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.1",
+        "@types/gulp": "^4.0.17",
         "@types/node": "^22.13.14",
+        "pg": "^8.14.1",
         "typescript": "^5.8.2"
     }
 }

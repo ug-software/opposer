@@ -6,7 +6,7 @@ import { db } from "../database/index.js";
 
 export default async (props: HandleDeleteProps) => {
   var schema = (await system.getAllSchemas()).find(
-    (x) => x.entity.name === props.schema
+    (x) => x.name === props.schema
   );
 
   if (!db) {
