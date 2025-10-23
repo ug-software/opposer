@@ -49,7 +49,10 @@ const changeBranch = (cb) => {
   cb();
 }
 
-const removeFilesNotNecessaries = (cb) => { cb() }//deleteAsync([".vscode", "src", "node_modules", ".gitignore", "gulpfile.ts", "package-lock.json", "tsconfig.cjs.json", "tsconfig.esm.json", "tsconfig.json"]);
+const removeFilesNotNecessaries = (cb) => { 
+  deleteAsync([".vscode", "src", "node_modules", ".gitignore", "gulpfile.ts", "package-lock.json", "tsconfig.cjs.json", "tsconfig.esm.json", "tsconfig.json"])  
+  cb() 
+};
 
 const createAndSaveTag = (cb) => {
   var release_version = process.env.RELEASE;
