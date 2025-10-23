@@ -71,7 +71,7 @@ const commitReleaseAndPublishe = (cb) => {
 }
 
 const changeBranchForDevelop = (cb) => {
-  execSync(`git checkout -b develop`, { stdio: "inherit" });
+  execSync(`git checkout develop`, { stdio: "inherit" });
 
   cb()
 }
