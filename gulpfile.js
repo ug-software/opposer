@@ -50,7 +50,7 @@ const changeBranch = (cb) => {
 }
 
 const removeFilesNotNecessaries = (cb) => { 
-  deleteAsync([".vscode", "src", "node_modules", ".gitignore", "gulpfile.ts", "package-lock.json", "tsconfig.cjs.json", "tsconfig.esm.json", "tsconfig.json"])  
+  deleteAsync([".vscode", "src", "node_modules", ".gitignore", "gulpfile.js", "package-lock.json", "tsconfig.cjs.json", "tsconfig.esm.json", "tsconfig.json"])  
   cb() 
 };
 
@@ -64,13 +64,15 @@ const createTag = (cb) => {
 }
 
 const commitReleaseAndPublishe = (cb) => {
-  var release_version = process.env.RELEASE;
+  var release = process.env.RELEASE;
   var description = process.env.DESC;
 
+  execSync(`npm version ${release}`, { stdio: "inherit" });
+  
   execSync("git add --all", { stdio: "inherit" });
   execSync(`git commit -m "${description}"`, { stdio: "inherit" });
-  execSync(`git push origin release/${release_version}`, { stdio: "inherit" });
-  execSync(`git push origin v${release_version}`, { stdio: "inherit" });
+  execSync(`git push origin release/${release}`, { stdio: "inherit" });
+  execSync(`git push origin v${release}`, { stdio: "inherit" });
   cb()
 }
 
