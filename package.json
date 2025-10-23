@@ -1,6 +1,6 @@
 {
     "name": "opposer",
-    "version": "1.0.9",
+    "version": "1.0.10",
     "type": "module",
     "main": "./lib/cjs/index.cjs",
     "module": "./lib/esm/index.js",
