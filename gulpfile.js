@@ -67,7 +67,7 @@ const commitReleaseAndPublishe = (cb) => {
   var release = process.env.RELEASE;
   var description = process.env.DESC;
 
-  execSync(`npm version ${release}`, { stdio: "inherit" });
+  execSync(`npm version ${release} --no-git-tag-version`, { stdio: "inherit" });
   
   execSync("git add --all", { stdio: "inherit" });
   execSync(`git commit -m "${description}"`, { stdio: "inherit" });
