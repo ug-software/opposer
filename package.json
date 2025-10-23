@@ -1,6 +1,6 @@
 {
     "name": "opposer",
-    "version": "1.0.0",
+    "version": "1.0.12",
     "type": "module",
     "main": "./lib/cjs/index.cjs",
     "module": "./lib/esm/index.js",
@@ -17,20 +17,21 @@
     "scripts": {
         "build": "gulp build",
         "build:esm": "tsc -p tsconfig.esm.json",
-        "build:cjs": "tsc -p tsconfig.cjs.json"
+        "build:cjs": "tsc -p tsconfig.cjs.json",
+        "release": "RELEASE=1.0.4 DESC='Latest version' npx gulp release"
     },
     "files": [
         "lib"
     ],
     "dependencies": {
         "cors": "^2.8.5",
-        "del": "^8.0.1",
         "express": "^4.21.2",
-        "gulp": "^5.0.1",
-        "gulp-typescript": "^6.0.0-alpha.1",
         "typeorm": "^0.3.27"
     },
     "devDependencies": {
+        "del": "^8.0.1",
+        "gulp": "^5.0.1",
+        "gulp-typescript": "^6.0.0-alpha.1",
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.1",
         "@types/gulp": "^4.0.17",
