@@ -54,12 +54,12 @@ const removeFilesNotNecessaries = (cb) => {
   cb() 
 };
 
-const createAndSaveTag = (cb) => {
+const clear = gulp.series([removeFilesNotNecessaries])
+
+const createTag = (cb) => {
   var release_version = process.env.RELEASE;
   execSync(`git tag v${release_version}`);
   
-  execSync(`git push origin release/${release_version}`);
-  execSync(`git push origin v${release_version}`);
   cb()
 }
 
@@ -69,24 +69,25 @@ const commitReleaseAndPublishe = (cb) => {
 
   execSync("git add --all", { stdio: "inherit" });
   execSync(`git commit -m "${description}"`, { stdio: "inherit" });
+  execSync(`git push origin release/${release_version}`, { stdio: "inherit" });
   execSync(`git push origin v${release_version}`, { stdio: "inherit" });
-
   cb()
 }
 
-const changeBranchForDevelop = (cb) => {
+const changeBranchForDevelopAndStashRelease = (cb) => {
   execSync(`git checkout develop`, { stdio: "inherit" });
-
+  execSync(`git add --all`, { stdio: "inherit" });
+  execSync(`git stash`, { stdio: "inherit" });
   cb()
 }
 
 export const release = gulp.series(
   build,
   changeBranch,
-  removeFilesNotNecessaries,
-  createAndSaveTag,
+  clear,
+  createTag,
   commitReleaseAndPublishe,
-  changeBranchForDevelop
+  changeBranchForDevelopAndStashRelease
 );
 
 /*------ release --------*/
