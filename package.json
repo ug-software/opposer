@@ -1,6 +1,12 @@
 {
     "name": "opposer",
+    "description": "Opposer é um ecosistema gerenciador em formato de api, para gestão de dados, criação de metodos capazes de tranformar dados em formato Handler. Desenvolvido para ser rápido em solucionar o acesso e manutenção de dados, seja em inserção, deleção, consulta, páginado ou não ao banco.",
     "version": "1.0.0",
+    "author": {
+        "name": "Uiaran Guilherme Campos de Lima",
+        "email": "uiaran@hotmail.com",
+        "url": "https://ui-dev.com"
+    },
     "type": "module",
     "main": "./lib/cjs/index.cjs",
     "module": "./lib/esm/index.js",
@@ -23,11 +29,7 @@
         "lib"
     ],
     "dependencies": {
-        "cors": "^2.8.5",
-        "del": "^8.0.1",
         "express": "^4.21.2",
-        "gulp": "^5.0.1",
-        "gulp-typescript": "^6.0.0-alpha.1",
         "typeorm": "^0.3.27"
     },
     "devDependencies": {
@@ -35,7 +37,11 @@
         "@types/express": "^5.0.1",
         "@types/gulp": "^4.0.17",
         "@types/node": "^22.13.14",
+        "typescript": "^5.8.2",
         "pg": "^8.14.1",
-        "typescript": "^5.8.2"
+        "cors": "^2.8.5",
+        "del": "^8.0.1",
+        "gulp": "^5.0.1",
+        "gulp-typescript": "^6.0.0-alpha.1"
     }
 }
