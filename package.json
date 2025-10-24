@@ -24,18 +24,21 @@
         "lib"
     ],
     "dependencies": {
+        "bcrypt": "^6.0.0",
         "cors": "^2.8.5",
         "express": "^4.21.2",
+        "jsonwebtoken": "^9.0.2",
         "typeorm": "^0.3.27"
     },
     "devDependencies": {
-        "del": "^8.0.1",
-        "gulp": "^5.0.1",
-        "gulp-typescript": "^6.0.0-alpha.1",
+        "@types/bcrypt": "^6.0.0",
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.1",
         "@types/gulp": "^4.0.17",
         "@types/node": "^22.13.14",
+        "del": "^8.0.1",
+        "gulp": "^5.0.1",
+        "gulp-typescript": "^6.0.0-alpha.1",
         "pg": "^8.14.1",
         "typescript": "^5.8.2"
     }

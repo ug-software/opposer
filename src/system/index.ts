@@ -1,5 +1,4 @@
 import { OpposerSystemConfigOptions, ClassType } from "../interfaces/system.js";
-import { SchemaResult } from "../interfaces/schema.js";
 import { pathToFileURL } from "url";
 import path from "path";
 import fs from "fs";
@@ -28,6 +27,7 @@ export async function getAllSchemas(): Promise<
       const filePath = path.resolve(schemasPath, schemaPathName);
       const fileUrl = pathToFileURL(filePath).href;
 
+      //@ts-ignore
       const entity: any = (await import(fileUrl)).default;
 
       return { name, entity };
@@ -39,15 +39,13 @@ export async function getAllHandlers(): Promise<ClassType<any>[]> {
   const root = process.cwd();
   const handlersPath = path.resolve(root, "src", "handlers");
 
-  
-
   const handlersFiles = getAllFiles(handlersPath);
   return await Promise.all(
     handlersFiles.map(async (filePath) => {
       const fileUrl = pathToFileURL(filePath).href;
 
       //@ts-ignore
-      return (await import(fileUrl)).default
+      return (await import(fileUrl)).default;
     })
   );
 }

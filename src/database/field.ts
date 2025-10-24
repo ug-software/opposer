@@ -1,5 +1,6 @@
 import { ValidationFunction, SettingsField } from "../interfaces/field";
 import { SchemaDefinition } from "../interfaces/schema";
+import * as fieldDecorator from "../decorators/field.js";
 
 export class ToolField {
   type!: "string" | "boolean" | "date" | "number" | "relation" | "jsonb" | null;
@@ -42,6 +43,10 @@ class NumberField extends ToolField {
 
   required(message: string) {
     this._cases.push((value: unknown) => {
+      if (!value) {
+        return message;
+      }
+
       if ((value as number).toString().trim() === "") {
         return message;
       }
@@ -93,6 +98,10 @@ class StringField extends ToolField {
 
   required(message: string) {
     this._cases.push((value: unknown) => {
+      if (!value) {
+        return message;
+      }
+
       if ((value as string).trim() === "") {
         return message;
       }
@@ -230,6 +239,25 @@ export class Field {
 
   json(fields: SchemaDefinition) {
     return new JsonField(fields);
+  }
+
+  static validate(schema: any, values: Record<string, any>) {
+    var errors: Record<string, string[]> = {};
+    var schemas = fieldDecorator.getFieldsMetadata(schema) as {
+      name: string;
+      schema: ToolField;
+    }[];
+
+    for (var field of schemas) {
+      var value = values[field.name];
+      var __errors = field.schema.validate(value, values);
+
+      if (Array.isArray(__errors) && __errors.length > 0) {
+        errors[field.name] = __errors;
+      }
+    }
+
+    return errors;
   }
 }
 

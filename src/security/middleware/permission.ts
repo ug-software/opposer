@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { Exception } from "../../helpers/index.js";
 import { HttpStatus } from "../../constants/index.js";
-import * as Jwt from "../../security/jwt/index.js";
+import jwt from "../../security/jwt/index.js";
 import { db } from "../../database/connect.js";
-import usr from "../../security/schema/urs.js";
+import usr from "../schema/usr.js";
 import { ControllerApiProps } from "../../interfaces/controller.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
@@ -16,7 +16,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
   const request = req.body as ControllerApiProps;
   const [_, token] = authorization.split(" ");
-  const decoded = await Jwt.validate(token);
+  const decoded = await jwt.validate.access(token);
 
   if (typeof decoded === "string" || !decoded) {
     return res.send(
@@ -38,7 +38,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
   var userRepository = db.getRepository(usr);
   var currentUser = await userRepository.findOne({
-    where: { id: decoded.usr },
+    where: { id: decoded.id },
     relations: ["rl"],
   });
 

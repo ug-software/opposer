@@ -13,6 +13,7 @@ import {
 } from "../interfaces/controller.js";
 import { HttpStatus } from "../constants/index.js";
 import * as system from "../system/index.js";
+import { Field } from "../database/field.js";
 
 export default async (req: Request, res: Response) => {
   var props = req.body as ControllerApiProps;
@@ -25,6 +26,15 @@ export default async (req: Request, res: Response) => {
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
       message: "Unable to identify Schema.",
+    });
+    return;
+  }
+
+  var erros = Field.validate(schema, props);
+  if (Object.keys(erros).length > 0) {
+    res.status(400).json({
+      erros,
+      message: "Data not valid for method, verify erros and try again.",
     });
     return;
   }
