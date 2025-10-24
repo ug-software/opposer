@@ -19,7 +19,7 @@
         "build:esm": "tsc -p tsconfig.esm.json",
         "build:cjs": "tsc -p tsconfig.cjs.json",
         "release": "RELEASE=1.0.4 DESC='Latest version' npx gulp release",
-        "preview": "npx tsx src/__test/index.ts"
+        "preview": "npx tsx src/_test/index.ts"
     },
     "files": [
         "lib"
