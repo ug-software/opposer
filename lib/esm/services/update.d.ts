@@ -7,7 +7,7 @@ declare const _default: (props: HandleUpdateProps) => Promise<{
     readonly error: {
         name: string;
         code: number;
-        message: string;
+        message: any;
     };
 }>;
 export default _default;

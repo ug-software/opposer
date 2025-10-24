@@ -38,6 +38,7 @@ export declare class Field {
     number(message: string): NumberField;
     boolean(message: string): BooleanField;
     json(fields: SchemaDefinition): JsonField;
+    static validate(schema: any, values: Record<string, any>): Record<string, string[]>;
 }
 export default function (): Field;
 export {};

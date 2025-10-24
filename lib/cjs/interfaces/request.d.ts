@@ -7,7 +7,7 @@ export interface HandleRequestResultError {
     error: {
         name: string;
         code: number;
-        message: string;
+        message: any;
     };
 }
 export type HandleRequestResult<R> = HandleRequestResultSuccess<R> | HandleRequestResultError;

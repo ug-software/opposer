@@ -8,6 +8,6 @@ export declare function Exception(error: HandleRequestResultError["error"]): {
     readonly error: {
         name: string;
         code: number;
-        message: string;
+        message: any;
     };
 };

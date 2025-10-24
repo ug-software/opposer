@@ -1,6 +1,23 @@
 import { DataSourceOptions } from "typeorm";
 export interface OpposerSystemConfigOptions {
-    jwt: string;
+    port: number;
+    url?: string;
+    text?: boolean;
+    urlencoded?: boolean;
+    helmet?: boolean;
+    logger?: boolean;
+    rateLimit?: {
+        windowMs: number;
+        max: number;
+    };
+    auth: boolean | {
+        exposeChangePassword: boolean;
+    };
+    jwt: {
+        access: string;
+        refresh: string;
+        recover: string;
+    };
     database: DataSourceOptions;
 }
 export interface ClassType<T> {
