@@ -21,21 +21,21 @@ export default async function Server(
   const opposer = express();
   let url = "/opposer";
 
-  if (props.url) {
-    url = props.url;
+  if (settings.url) {
+    url = settings.url;
   }
 
   // parsing Middleware
   opposer.use(express.json()); // JSON forever active
-  if (props.urlencoded) {
+  if (settings.urlencoded) {
     opposer.use(express.urlencoded({ extended: true }));
   }
-  if (props.text) {
+  if (settings.text) {
     opposer.use(express.text());
   }
 
   // Security
-  if (props.helmet) {
+  if (settings.helmet) {
     //@ts-ignore
     const helmet = (await import("helmet")).default;
     opposer.use(helmet());
@@ -49,19 +49,19 @@ export default async function Server(
   }
 
   // Rate limit
-  if (props.rateLimit) {
+  if (settings.rateLimit) {
     //@ts-ignore
     const rateLimit = (await import("express-rate-limit")).default;
     opposer.use(
       rateLimit({
-        windowMs: props.rateLimit.windowMs || 15 * 60 * 1000, // 15 minutos por padrão
-        max: props.rateLimit.max || 100, // máximo 100 requests por IP
+        windowMs: settings.rateLimit.windowMs || 15 * 60 * 1000, // 15 minutos por padrão
+        max: settings.rateLimit.max || 100, // máximo 100 requests por IP
       })
     );
   }
 
   // Logging
-  if (props.logger) {
+  if (settings.logger) {
     //@ts-ignore
     const morgan = (await import("morgan")).default;
     opposer.use(morgan("dev"));
@@ -89,8 +89,8 @@ export default async function Server(
   );
 
   function initialize() {
-    opposer.listen(props.port, () => {
-      console.log(`⚡Opposer is running in port ${props.port}`);
+    opposer.listen(settings.port, () => {
+      console.log(`⚡Opposer is running in port ${settings.port}`);
     });
   }
 

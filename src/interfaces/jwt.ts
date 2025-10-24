@@ -5,6 +5,14 @@ export interface ErrorJwt {
 }
 
 export interface SignJwt {
-  usr: string;
-  uuid: string;
+  id: string;
+  fn: string;
+  ln: string;
+  lg: string;
+}
+
+export interface ForgetJwt {
+  lg: string;
+  ip: string;
+  ag: string;
 }

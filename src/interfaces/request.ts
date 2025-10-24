@@ -10,7 +10,7 @@ export interface HandleRequestResultError {
   error: {
     name: string; // Nome do erro
     code: number; // Código do erro (ex: HTTP status)
-    message: string; // Mensagem amigável
+    message: any; // Mensagem amigável
   };
 }
 

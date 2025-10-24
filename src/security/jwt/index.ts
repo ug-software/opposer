@@ -1,21 +1,32 @@
 //@ts-ignore
 import * as jwt from "jsonwebtoken";
-import { ErrorJwt, SignJwt } from "../../interfaces/jwt";
+import { ErrorJwt, ForgetJwt, SignJwt } from "../../interfaces/jwt";
 import * as System from "../../system";
 
 const settings = System.getSettingsFile();
+const accessJwt = process.env.ACCESS_JWT
+  ? process.env.ACCESS_JWT
+  : settings.jwt.access;
 
-export async function validate(token: string) {
+const refreshJwt = process.env.REFRESH_JWT
+  ? process.env.REFRESH_JWT
+  : settings.jwt.refresh;
+
+const recoverJwt = process.env.RECOVER_JWT
+  ? process.env.RECOVER_JWT
+  : settings.jwt.recover;
+
+async function access(token: string) {
+  if (!accessJwt) {
+    throw new Error(
+      "[jwt] - Don't finded token for access jwt, generate running 'npx opposer jwt generate' or consulting documentation."
+    );
+  }
+
   try {
-    const secret = process.env.PRIVATE_KEY
-      ? process.env.PRIVATE_KEY
-      : settings.jwt;
-    const user = jwt.verify(token, secret) as SignJwt;
+    const user = jwt.verify(token, accessJwt) as SignJwt;
 
-    return {
-      usr: user.usr,
-      uuid: user.uuid,
-    };
+    return user;
   } catch (err) {
     var erro = err as ErrorJwt;
     if (erro.name === "TokenExpiredError") {
@@ -28,23 +39,81 @@ export async function validate(token: string) {
   }
 }
 
-export async function sign({ usr, uuid }: SignJwt) {
-  const secret: string | null = null;
+async function refresh(token: string) {
+  if (!refreshJwt) {
+    throw new Error(
+      "[jwt] - Don't finded token for refresh jwt, generate running 'npx opposer jwt generate' or consulting documentation."
+    );
+  }
 
-  if (!secret) {
+  try {
+    const user = jwt.verify(token, refreshJwt) as SignJwt;
+
+    return user;
+  } catch (err) {
+    var erro = err as ErrorJwt;
+    if (erro.name === "TokenExpiredError") {
+      return erro.message;
+    }
+
+    if (erro.name === "JsonWebTokenError") {
+      return "Check your data and try again.";
+    }
+  }
+}
+
+async function sign(payload: SignJwt) {
+  if (!accessJwt) {
     throw new Error(
       "[jwt] - Don't finded token secret, generate running 'npx opposer jwt generate' or consulting documentation."
     );
   }
 
-  const token = jwt.sign({ usr, uuid }, secret, { expiresIn: "10h" });
-  return token;
+  const token = jwt.sign(payload, accessJwt, { expiresIn: "15m" });
+  const refresh = jwt.sign({ id: payload.id }, refreshJwt, {
+    expiresIn: "10d",
+  });
+  return { token, refresh };
 }
 
-export async function verify(token: string) {
+async function forget(payload: ForgetJwt) {
+  if (!recoverJwt) {
+    throw new Error(
+      "[jwt] - Don't finded token secret for recover password, generate running 'npx opposer jwt generate' or consulting documentation."
+    );
+  }
+
+  const token = jwt.sign(payload, accessJwt, { expiresIn: "5m" });
+  return { token };
+}
+
+async function recover(token: string) {
+  if (!recoverJwt) {
+    throw new Error(
+      "[jwt] - Don't finded token for recover password, generate running 'npx opposer jwt generate' or consulting documentation."
+    );
+  }
+
   try {
-    const secret = process.env.PRIVATE_KEY
-      ? process.env.PRIVATE_KEY
+    const user = jwt.verify(token, recoverJwt) as ForgetJwt;
+
+    return user;
+  } catch (err) {
+    var erro = err as ErrorJwt;
+    if (erro.name === "TokenExpiredError") {
+      return erro.message;
+    }
+
+    if (erro.name === "JsonWebTokenError") {
+      return "Check your data and try again.";
+    }
+  }
+}
+
+async function verify(token: string) {
+  try {
+    const secret = process.env.ACCESS_JWT
+      ? process.env.ACCESS_JWT
       : settings.jwt;
     jwt.verify(token, secret);
     return true;
@@ -55,7 +124,9 @@ export async function verify(token: string) {
     }
 
     if (erro.name === "JsonWebTokenError") {
-      return "Check your data and try again";
+      return "Check your data and try again.";
     }
   }
 }
+
+export default { verify, sign, forget, validate: { access, refresh, recover } };
