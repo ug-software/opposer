@@ -1,0 +1,21 @@
+{
+    "port": 3838,
+    "auth": true,
+    "schemas": "src/_test/",
+    "handlers": "src/_test/",
+    "jwt": {
+        "access": "65daeef14590981b57e2093ade879687",
+        "refresh": "65daeef14590981b57e2093ade879687",
+        "recover": "65daeef14590981b57e2093ade879687"
+    },
+    "database": {
+        "type": "postgres",
+        "host": "localhost",
+        "port": 5432,
+        "username": "opposer",
+        "password": "opposer",
+        "database": "opposer",
+        "synchronize": true,
+        "logging": true
+    }
+}
