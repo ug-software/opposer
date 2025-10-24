@@ -1,5 +1,4 @@
-import Schema from "../../database/schema.js";
-export default class Key extends Schema {
+export default class Key {
     hs: string;
     ct: Date;
     ex: Date;
