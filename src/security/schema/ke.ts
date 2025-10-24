@@ -1,4 +1,4 @@
-import { Column, Entity } from "typeorm";
+import { Column, CreateDateColumn, Entity } from "typeorm";
 import Schema from "../../database/schema.js";
 import f from "../../database/field.js";
 import { Field } from "../../decorators/index.js";
@@ -7,12 +7,11 @@ import { Field } from "../../decorators/index.js";
 export default class Key extends Schema {
   @Column({ type: "varchar" })
   @Field(() =>
-    f().string("Campos necessariamente string").required("Campo obrigatorio")
+    f().string("key is string.").required("key is required.")
   )
   hs!: string;
 
-  @Column({ type: "date", default: new Date() })
-  @Field(() => f().date("Campo necessariamente Date").default(new Date()))
+  @CreateDateColumn()
   ct!: Date;
 
   @Column({
@@ -23,7 +22,7 @@ export default class Key extends Schema {
       new Date().getDate()
     ),
   })
-  @Field(() => f().date("Campo necessariamente Date"))
+  @Field(() => f().date("expires is date."))
   ex!: Date;
 }
 
