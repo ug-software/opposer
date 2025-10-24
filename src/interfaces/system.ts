@@ -1,6 +1,8 @@
 import { DataSourceOptions } from "typeorm";
 
 export interface OpposerSystemConfigOptions {
+  schemas: string;
+  handlers: string;
   port: number;
   url?: string;
   text?: boolean;

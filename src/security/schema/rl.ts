@@ -1,10 +1,13 @@
-import { Column, Entity, ManyToOne } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import f from "../../database/field.js";
 import { Field } from "../../decorators/index.js";
 import User from "./usr.js";
 
 @Entity("rl")
 export default class Role {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
   @Column({ type: "varchar" })
   @Field(() => f().string("schema is string.").required("schema is required."))
   sm!: string;

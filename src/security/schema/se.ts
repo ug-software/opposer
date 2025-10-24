@@ -1,7 +1,10 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity("se")
 export default class Session {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
   @Column({ type: "varchar" })
   usr!: string;
 

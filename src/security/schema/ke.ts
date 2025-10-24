@@ -1,10 +1,17 @@
-import { Column, CreateDateColumn, Entity } from "typeorm";
-import Schema from "../../database/schema.js";
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import f from "../../database/field.js";
 import { Field } from "../../decorators/index.js";
 
 @Entity("ke")
 export default class Key {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
   @Column({ type: "varchar" })
   @Field(() => f().string("key is string.").required("key is required."))
   hs!: string;
