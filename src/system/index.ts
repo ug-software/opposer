@@ -1,7 +1,8 @@
+import { OpposerSystemConfigOptions, ClassType } from "../interfaces/system.js";
+import { SchemaResult } from "../interfaces/schema.js";
+import { pathToFileURL } from "url";
 import path from "path";
 import fs from "fs";
-import { SchemaResult } from "../interfaces/schema.js";
-import { OpposerSystemConfigOptions, ClassType } from "../interfaces/system.js";
 
 export function getFileName(
   filePath: string,
@@ -17,22 +18,19 @@ export function getFileName(
 export async function getAllSchemas(): Promise<
   { name: string; entity: any }[]
 > {
-  var root = process.cwd();
-
-  var schemasPath = path.resolve(root, "src", "schemas");
+  const root = process.cwd();
+  const schemasPath = path.resolve(root, "src", "schemas");
   const schemaFiles = fs.readdirSync(schemasPath);
 
   return await Promise.all(
     schemaFiles.map(async (schemaPathName) => {
-      var name = getFileName(schemaPathName, false);
+      const name = getFileName(schemaPathName, false);
+      const filePath = path.resolve(schemasPath, schemaPathName);
+      const fileUrl = pathToFileURL(filePath).href;
 
-      var entity: SchemaResult = //@ts-ignore
-        (await import(path.resolve(schemasPath, schemaPathName))).default;
+      const entity: any = (await import(fileUrl)).default;
 
-      return {
-        name,
-        entity,
-      };
+      return { name, entity };
     })
   );
 }
@@ -41,10 +39,16 @@ export async function getAllHandlers(): Promise<ClassType<any>[]> {
   const root = process.cwd();
   const handlersPath = path.resolve(root, "src", "handlers");
 
+  
+
   const handlersFiles = getAllFiles(handlersPath);
   return await Promise.all(
-    //@ts-ignore
-    handlersFiles.map(async (filePath) => (await import(filePath)).default)
+    handlersFiles.map(async (filePath) => {
+      const fileUrl = pathToFileURL(filePath).href;
+
+      //@ts-ignore
+      return (await import(fileUrl)).default
+    })
   );
 }
 
