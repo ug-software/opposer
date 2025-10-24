@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { Exception } from "../../helpers/index.js";
 import { HttpStatus } from "../../constants/index.js";
 import { db } from "../../database/connect.js";
-import k from "../schema/k.js";
+import ke from "../schema/ke.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
   var api = req.headers["opposer-authorization"] as string;
@@ -25,8 +25,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     );
   }
 
-  var kRepository = db.getRepository(k);
-  var authorization = await kRepository.findOne({ where: { hs: api } });
+  var keRepository = db.getRepository(ke);
+  var authorization = await keRepository.findOne({ where: { hs: api } });
 
   if (!authorization) {
     return res.send(

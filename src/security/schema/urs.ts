@@ -1,38 +1,36 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Field } from "../../decorators/index.js";
 import f from "../../database/field.js";
 import Role from "./rl.js";
+
 @Entity("urs")
 export default class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
 
   @Column({ type: "varchar" })
-  @Field(() => f().string("").required(""))
+  @Field(() => f().string("first name is string.").required("first name is required."))
   fn!: string;
 
   @Column({ type: "varchar" })
-  @Field(() => f().string("").required(""))
+  @Field(() => f().string("last name is string.").required("last name is required."))
   lm!: string;
 
   @Column({ type: "varchar" })
-  @Field(() => f().string("").required("").match(RegExp(""), ""))
+  @Field(() => f().string("e-mail is string.").required("e-mail is required.").match(RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/), "invalid email format."))
   em!: string;
 
   @Column({ type: "varchar" })
-  @Field(() => f().string("").required(""))
+  @Field(() => f().string("password is string.").required("password is required."))
   ps!: string;
 
   @Column({ type: "boolean", default: true })
-  @Field(() => f().boolean(""))
   ac!: boolean;
 
-  @Column({ type: "date", default: new Date() })
-  @Field(() => f().date(""))
+  @CreateDateColumn()
   ct!: string;
 
-  @Column({ type: "date", default: new Date() })
-  @Field(() => f().date(""))
+  @UpdateDateColumn()
   ut!: Date;
 
   @OneToMany(() => Role, (role) => role.usr)

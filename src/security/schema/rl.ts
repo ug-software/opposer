@@ -7,11 +7,11 @@ import User from "./urs.js";
 @Entity("rl")
 export default class Role extends Schema {
   @Column({ type: "varchar" })
-  @Field(() => f().string("").required(""))
+  @Field(() => f().string("schema is string.").required("schema is required."))
   sm!: string;
 
   @Column({ type: "varchar" })
-  @Field(() => f().string("").required(""))
+  @Field(() => f().string("method is string.").required("method is required."))
   mt!: string;
 
   @ManyToOne(() => User, (user) => user.rl)
