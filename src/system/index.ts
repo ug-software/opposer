@@ -2,6 +2,11 @@ import { OpposerSystemConfigOptions, ClassType } from "../interfaces/system.js";
 import { pathToFileURL } from "url";
 import path from "path";
 import fs from "fs";
+import ChangeRequestPassword from "../security/schema/crp.js";
+import Key from "../security/schema/ke.js";
+import Role from "../security/schema/rl.js";
+import Session from "../security/schema/se.js";
+import User from "../security/schema/usr.js";
 
 export function getFileName(
   filePath: string,
@@ -17,11 +22,16 @@ export function getFileName(
 export async function getAllSchemas(): Promise<
   { name: string; entity: any }[]
 > {
+  const settings = getSettingsFile();
   const root = process.cwd();
-  const schemasPath = path.resolve(root, "src", "schemas");
-  const schemaFiles = fs.readdirSync(schemasPath);
 
-  return await Promise.all(
+  let schemasPath = path.resolve(root, "src", "schemas");
+  if (settings.schemas) {
+    schemasPath = path.resolve(root, settings.schemas, "schemas");
+  }
+
+  const schemaFiles = fs.readdirSync(schemasPath);
+  const allSchemas = await Promise.all(
     schemaFiles.map(async (schemaPathName) => {
       const name = getFileName(schemaPathName, false);
       const filePath = path.resolve(schemasPath, schemaPathName);
@@ -33,11 +43,30 @@ export async function getAllSchemas(): Promise<
       return { name, entity };
     })
   );
+
+  if (settings.auth) {
+    allSchemas.push(
+      ...[
+        { name: "crp", entity: ChangeRequestPassword },
+        { name: "ke", entity: Key },
+        { name: "rl", entity: Role },
+        { name: "se", entity: Session },
+        { name: "usr", entity: User },
+      ]
+    );
+  }
+
+  return allSchemas;
 }
 
 export async function getAllHandlers(): Promise<ClassType<any>[]> {
+  const settings = getSettingsFile();
   const root = process.cwd();
-  const handlersPath = path.resolve(root, "src", "handlers");
+  let handlersPath = path.resolve(root, "src", "handlers");
+
+  if (settings.handlers) {
+    handlersPath = path.resolve(root, settings.handlers, "handlers");
+  }
 
   const handlersFiles = getAllFiles(handlersPath);
   return await Promise.all(

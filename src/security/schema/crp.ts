@@ -1,7 +1,10 @@
-import { Column, Entity } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 Entity("crp");
 export default class ChangeRequestPassword {
+  @PrimaryGeneratedColumn("uuid")
+  id!: string;
+
   @Column({ type: "varchar" })
   lg!: string;
 
