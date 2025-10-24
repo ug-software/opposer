@@ -4,11 +4,9 @@ import f from "../../database/field.js";
 import { Field } from "../../decorators/index.js";
 
 @Entity("ke")
-export default class Key extends Schema {
+export default class Key {
   @Column({ type: "varchar" })
-  @Field(() =>
-    f().string("key is string.").required("key is required.")
-  )
+  @Field(() => f().string("key is string.").required("key is required."))
   hs!: string;
 
   @CreateDateColumn()
