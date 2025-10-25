@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import * as handler from "../handlers/index.js";
+import * as helper from "../handlers/index.js";
 import { HttpStatus } from "../constants/index.js";
 import { RequestHandlerBody } from "../interfaces/handlers.js";
 import * as system from "../system/index.js";
@@ -8,7 +8,7 @@ const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
   var handlerName = req.params.handler;
-  var { action, paylod } = req.body as RequestHandlerBody;
+  var { method, paylod } = req.body as RequestHandlerBody;
 
   if (!handlerName) {
     return res.status(400).json({
@@ -17,9 +17,9 @@ export default async (req: Request, res: Response) => {
     });
   }
 
-  var handlers = await handler.loadHandlers();
+  var handlers = await helper.loadHandlers();
   var auth = {
-    actions: [
+    methods: [
       { name: "register" },
       { name: "login" },
       { name: "refresh" },
@@ -32,7 +32,7 @@ export default async (req: Request, res: Response) => {
   };
 
   if (typeof settings.auth === "object" && settings.auth.exposeChangePassword) {
-    auth.actions.push(
+    auth.methods.push(
       ...[{ name: "change-password" }, { name: "forgot-password" }]
     );
   }
@@ -48,22 +48,22 @@ export default async (req: Request, res: Response) => {
     });
   }
 
-  if (!action) {
+  if (!method) {
     return res.status(400).json({
       ...HttpStatus[400],
-      message: "Unable to identify action name.",
+      message: "Unable to identify method name.",
     });
   }
 
-  var __handler = handlers[handlerName];
-  if (!__handler.actions.find((x) => x.name === action)) {
+  var __meta = handlers[handlerName];
+  if (!__meta.methods.find((x) => x.name === method)) {
     return res.status(400).json({
       ...HttpStatus[400],
       message: "Unable to find action method.",
     });
   }
 
-  var result = await new __handler.handler()[handler.toCamelCase(action)](
+  var result = await new __meta.handler()[helper.toCamelCase(method)](
     paylod
   );
 
