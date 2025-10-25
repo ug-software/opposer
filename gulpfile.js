@@ -50,7 +50,7 @@ const changeBranch = (cb) => {
 }
 
 const removeFilesNotNecessaries = () => { 
-  return deleteAsync([".vscode", "src", "node_modules", ".gitignore", "gulpfile.js", "package-lock.json", "tsconfig.cjs.json", "tsconfig.esm.json", "tsconfig.json"])  
+  return deleteAsync([".vscode", "src", "node_modules", ".gitignore", "gulpfile.js", "package-lock.json", "tsconfig.cjs.json", "tsconfig.esm.json", "tsconfig.json", "opposer-settings.json"])  
 };
 
 const clear = gulp.series([removeFilesNotNecessaries])

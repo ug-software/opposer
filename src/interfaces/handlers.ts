@@ -5,7 +5,7 @@ export interface ResultGetAllHandlers {
     metadata: {
       name: string;
     };
-    actions: {
+    methods: {
       name: string;
     }[];
     handler: ClassType<any>;
@@ -13,6 +13,6 @@ export interface ResultGetAllHandlers {
 }
 
 export interface RequestHandlerBody {
-  action: string;
+  method: string;
   paylod: any;
 }
