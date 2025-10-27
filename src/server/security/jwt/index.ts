@@ -1,5 +1,5 @@
 //@ts-ignore
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { ErrorJwt, ForgetJwt, SignJwt } from "../../../interfaces/jwt";
 import * as System from "../../../system";
 
@@ -69,7 +69,7 @@ async function sign(payload: SignJwt) {
     );
   }
 
-  const token = jwt.sign(payload, accessJwt, { expiresIn: "15m" });
+  const token = jwt.sign({ ...payload }, accessJwt, { expiresIn: "15m" });
   const refresh = jwt.sign({ id: payload.id }, refreshJwt, {
     expiresIn: "10d",
   });
