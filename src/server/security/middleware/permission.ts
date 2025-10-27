@@ -7,18 +7,18 @@ import usr from "../schema/usr.js";
 import { ControllerApiProps } from "../../../interfaces/controller.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
-  const authorization = req.headers.authorization;
-  if (!authorization) {
-    return res.send(
-      Exception({ ...HttpStatus[403], message: "Unabled autorization key." })
-    );
-  }
-
   const request = req.body as ControllerApiProps;
 
   //skep session method
   if (["login", "register"].includes(request.method)) {
     return next();
+  }
+
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res.send(
+      Exception({ ...HttpStatus[403], message: "Unabled autorization key." })
+    );
   }
 
   const [_, token] = authorization.split(" ");
