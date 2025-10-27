@@ -1,6 +1,6 @@
-import * as crypto from "../../helpers/crypto.js";
-import * as system from "../../helpers/system.js";
 import { DataSource } from "typeorm";
+import * as system from "../../../esm/system/index.js";
+import * as crypto from "../../helpers/crypto.js";
 
 export const command = "generate api-key";
 export const desc = "Generates a random Api key.";

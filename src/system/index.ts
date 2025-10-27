@@ -2,11 +2,11 @@ import { OpposerSystemConfigOptions, ClassType } from "../interfaces/system.js";
 import { pathToFileURL } from "url";
 import path from "path";
 import fs from "fs";
-import ChangeRequestPassword from "../security/schema/crp.js";
-import Key from "../security/schema/ke.js";
-import Role from "../security/schema/rl.js";
-import Session from "../security/schema/se.js";
-import User from "../security/schema/usr.js";
+import ChangeRequestPassword from "../server/security/schema/crp.js";
+import Key from "../server/security/schema/ke.js";
+import Role from "../server/security/schema/rl.js";
+import Session from "../server/security/schema/se.js";
+import User from "../server/security/schema/usr.js";
 
 export function getFileName(
   filePath: string,
@@ -95,7 +95,7 @@ export function getSettingsFile(): OpposerSystemConfigOptions {
   }
 }
 
-function getAllFiles(dir: string): string[] {
+export function getAllFiles(dir: string): string[] {
   let results: string[] = [];
   const list = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -112,4 +112,13 @@ function getAllFiles(dir: string): string[] {
   });
 
   return results;
+}
+
+export function saveSettingsFile(settings: JSON) {
+  const root = process.cwd();
+  const configPath = path.resolve(root, "opposer-settings.json");
+
+  return fs.writeFileSync(configPath, JSON.stringify(settings, null, 2), {
+    encoding: "utf8",
+  });
 }
