@@ -1,4 +1,4 @@
-import { ResultGetAllHandlers } from "../../interfaces/handlers.js";
+import { ResultGetAllHandlers } from "../../interfaces/controller.js";
 import * as system from "../../system/index.js";
 import * as decorator from "../decorators/index.js";
 
