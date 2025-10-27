@@ -1,8 +1,10 @@
 import { BaseEntity, FindOptionsSelect } from "typeorm";
-
+import { ClassType } from "./system.js";
 export interface ControllerApiProps {
-  method: "get" | "insert" | "update" | "delete";
+  handler?: string;
+  method: "get" | "insert" | "update" | "delete" | string;
   schema: string;
+  payload?: any;
 }
 
 export interface QueryBuilder {
@@ -63,5 +65,17 @@ export interface HandleUpdateProps {
   };
   data: {
     [key: string]: unknown;
+  };
+}
+
+export interface ResultGetAllHandlers {
+  [key: string]: {
+    metadata: {
+      name: string;
+    };
+    methods: {
+      name: string;
+    }[];
+    handler: ClassType<any>;
   };
 }

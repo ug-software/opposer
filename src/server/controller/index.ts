@@ -14,10 +14,80 @@ import {
 import { HttpStatus } from "../constants/index.js";
 import * as system from "../../system/index.js";
 import { Field } from "../database/field.js";
+import * as helper from "../handlers/index.js";
+import Auth from "../security/handler/auth.js";
+const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
   var props = req.body as ControllerApiProps;
 
+  //handler method call
+  if (props.handler) {
+    var { method, payload, handler } = props;
+
+    if (!handler) {
+      return res.status(400).json({
+        ...HttpStatus[400],
+        message: "Unable to identify handler name.",
+      });
+    }
+
+    var handlers = await helper.loadHandlers();
+    if (settings.auth) {
+      var auth = {
+        methods: [
+          { name: "register" },
+          { name: "login" },
+          { name: "refresh" },
+          { name: "logout" },
+          { name: "me" },
+        ],
+        handler: Auth,
+        metadata: { name: "auth" },
+      };
+
+      if (
+        typeof settings.auth === "object" &&
+        settings.auth.exposeChangePassword
+      ) {
+        auth.methods.push(
+          ...[{ name: "change-password" }, { name: "forgot-password" }]
+        );
+      }
+
+      handlers["auth"] = auth;
+    }
+
+    if (!handlers[handler]) {
+      return res.status(400).json({
+        ...HttpStatus[400],
+        message: "Impossible to find handler.",
+      });
+    }
+
+    if (!method) {
+      return res.status(400).json({
+        ...HttpStatus[400],
+        message: "Unable to identify method name.",
+      });
+    }
+
+    var __meta = handlers[handler];
+    if (!__meta.methods.find((x: any) => x.name === method)) {
+      return res.status(400).json({
+        ...HttpStatus[400],
+        message: "Unable to find action method.",
+      });
+    }
+
+    var result = await new __meta.handler()[helper.toCamelCase(method)](
+      payload
+    );
+
+    return res.status(200).json(result);
+  }
+
+  //database request...
   var schema = (await system.getAllSchemas()).find(
     (x) => x.name === props.schema
   );

@@ -24,6 +24,12 @@ export interface OpposerSystemConfigOptions {
     recover: string;
   };
   database: DataSourceOptions;
+  manager: {
+    firstName: string;
+    lastName: string;
+    login: string;
+    password: string;
+  };
 }
 
 export interface ClassType<T> {

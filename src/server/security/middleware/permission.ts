@@ -15,6 +15,12 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   }
 
   const request = req.body as ControllerApiProps;
+
+  //skep session method
+  if (["login", "register"].includes(request.method)) {
+    return next();
+  }
+
   const [_, token] = authorization.split(" ");
   const decoded = await jwt.validate.access(token);
 
@@ -51,6 +57,12 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     );
   }
 
+  //manager permission
+  if (currentUser.rl.some((x) => x.mt === "all" && x.sm === "all")) {
+    return next();
+  }
+
+  //granular permission
   if (
     !currentUser.rl.some(
       (x) => x.mt === request.method && x.sm === request.schema
