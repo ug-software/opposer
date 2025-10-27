@@ -32,7 +32,7 @@ export const handler = async ({ expires }) => {
     await db.initialize();
 
     await db.query(`
-          CREATE TABLE IF NOT EXISTS k (
+          CREATE TABLE IF NOT EXISTS ke (
               id SERIAL PRIMARY KEY,
               hs VARCHAR(255) NOT NULL,
               ct TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -47,7 +47,7 @@ export const handler = async ({ expires }) => {
     var hash = crypto.hash(32);
     var result = await db.query(
       `
-          INSERT INTO k (hs, ex, ct)
+          INSERT INTO ke (hs, ex, ct)
               VALUES($1, $2, NOW())
               RETURNING hs, ex
         `,

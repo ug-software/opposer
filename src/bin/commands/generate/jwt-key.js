@@ -1,5 +1,5 @@
 import * as crypto from "../../helpers/crypto.js";
-import * as system from "../../../system/index.js";
+import * as system from "../../../esm/system/index.js";
 
 export const command = "generate jwt-key";
 export const desc = "Generate a random JWT key.";
