@@ -5,10 +5,10 @@ import { db } from "../../database/connect.js";
 import ke from "../schema/ke.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
-  var api = req.headers["opposer-authorization"] as string;
+  var api = req.headers["opposer-key"] as string;
 
   if (!api) {
-    return res.send(
+    return res.status(HttpStatus[401].code).send(
       Exception({
         ...HttpStatus[401],
         message: "[autorization] - Unatorazed in system.",
@@ -17,7 +17,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   }
 
   if (!db) {
-    return res.send(
+    return res.status(HttpStatus[403].code).send(
       Exception({
         ...HttpStatus[403],
         message: "[database] - Don't finded database conection.",
@@ -29,7 +29,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   var authorization = await keRepository.findOne({ where: { hs: api } });
 
   if (!authorization) {
-    return res.send(
+    return res.status(HttpStatus[403].code).send(
       Exception({
         ...HttpStatus[403],
         message: "[autorization] - Unatorazed in system.",
@@ -38,7 +38,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   }
 
   if (new Date() > new Date(authorization.ex)) {
-    return res.send(
+    return res.status(HttpStatus[403].code).send(
       Exception({
         ...HttpStatus[403],
         message: "[autorization] - Unatorazed in system.",
