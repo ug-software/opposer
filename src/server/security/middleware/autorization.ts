@@ -20,7 +20,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     return res.send(
       Exception({
         ...HttpStatus[403],
-        message: "[system] - Don't finded database conection.",
+        message: "[database] - Don't finded database conection.",
       })
     );
   }

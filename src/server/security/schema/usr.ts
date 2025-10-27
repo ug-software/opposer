@@ -50,7 +50,7 @@ export default class User {
   ac!: boolean;
 
   @CreateDateColumn()
-  ct!: string;
+  ct!: Date;
 
   @UpdateDateColumn()
   ut!: Date;
