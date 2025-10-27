@@ -80,11 +80,11 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    var result = await new __meta.handler()[helper.toCamelCase(method)](
+    var resultHandler = await new __meta.handler()[helper.toCamelCase(method)](
       payload
     );
 
-    return res.status(200).json(result);
+    return res.status(200).json(resultHandler);
   }
 
   //database request...
