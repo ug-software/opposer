@@ -12,6 +12,10 @@
         ".": {
             "import": "./lib/esm/index.js",
             "require": "./lib/cjs/index.js"
+        },
+        "./persistent": {
+            "import": "./lib/esm/persistent/index.js",
+            "require": "./lib/cjs/persistent/index.js"
         }
     },
     "scripts": {
