@@ -16,16 +16,18 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
   const authorization = req.headers.authorization;
   if (!authorization) {
-    return res.send(
-      Exception({ ...HttpStatus[403], message: "Unabled autorization key." })
-    );
+    return res
+      .status(HttpStatus[403].code)
+      .send(
+        Exception({ ...HttpStatus[403], message: "Unabled autorization key." })
+      );
   }
 
   const [_, token] = authorization.split(" ");
   const decoded = await jwt.validate.access(token);
 
   if (typeof decoded === "string" || !decoded) {
-    return res.send(
+    return res.status(HttpStatus[403].code).send(
       Exception({
         ...HttpStatus[403],
         message: "[autorization] - Don't autorized, verify data and try again.",
@@ -34,7 +36,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   }
 
   if (!db) {
-    return res.send(
+    return res.status(HttpStatus[403].code).send(
       Exception({
         ...HttpStatus[403],
         message: "[system] - Don't finded database conection.",
@@ -49,7 +51,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   });
 
   if (!currentUser) {
-    return res.send(
+    return res.status(HttpStatus[403].code).send(
       Exception({
         ...HttpStatus[403],
         message: "[autorization] - Don't autorized, not finded user.",
@@ -68,7 +70,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
       (x) => x.mt === request.method && x.sm === request.schema
     )
   ) {
-    return res.send(
+    return res.status(HttpStatus[403].code).send(
       Exception({
         ...HttpStatus[403],
         message:
