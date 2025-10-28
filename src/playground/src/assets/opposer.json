@@ -1,0 +1,29 @@
+{
+    "schema": {
+        "user": {
+            "firstName": "string",
+            "lastName": "string",
+            "age": "number",
+            "address": {
+                "stret": "string",
+                "number": "number",
+                "contry": "string"
+            }
+        },
+        "book": {
+            "name": "string",
+            "published": "date",
+            "description": "string",
+            "author": {
+                "schema": "user"
+            }
+        }
+    },
+    "action": {
+        "get-all-user-per-country": {
+            "payload": {
+                "country": "string"
+            }
+        }
+    }
+}
