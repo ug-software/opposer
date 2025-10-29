@@ -3,10 +3,12 @@ import { HandleUpdateProps } from "../../interfaces/controller.js";
 import { HttpStatus } from "../constants/index.js";
 import * as system from "../../system/index.js";
 import { db } from "../database/index.js";
+import QueryTool from "../tools/query.js";
 
 export default async (props: HandleUpdateProps) => {
-  var schema = (await system.getAllSchemas()).find(
-    (x) => x.name === props.schema
+  var queryTool = new QueryTool();
+  var schema = (await system.getAllModels()).find(
+    (x) => x.name === props.model
   );
 
   if (!schema) {
@@ -45,7 +47,7 @@ export default async (props: HandleUpdateProps) => {
     });
   }
 
-  await repository.update(props.filter, props.data);
+  await repository.update(queryTool.renderFilter(props.filter), props.data);
 
   return Success({
     message: "Success updating item",

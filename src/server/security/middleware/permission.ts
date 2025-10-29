@@ -67,7 +67,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   //granular permission
   if (
     !currentUser.rl.some(
-      (x) => x.mt === request.method && x.sm === request.schema
+      (x) => x.mt === request.method && x.sm === request.model
     )
   ) {
     return res.status(HttpStatus[403].code).send(

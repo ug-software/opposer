@@ -7,8 +7,8 @@ import { db } from "..//database/index.js";
 
 export default async (props: HandleInsertProps) => {
   try {
-    var schema = (await system.getAllSchemas()).find(
-      (x) => x.name === props.schema
+    var schema = (await system.getAllModels()).find(
+      (x) => x.name === props.model
     );
 
     if (!schema) {

@@ -3,10 +3,12 @@ import { Exception, Success } from "../helpers/index.js";
 import { HandleDeleteProps } from "../../interfaces/controller.js";
 import * as system from "../../system/index.js";
 import { db } from "../database/index.js";
+import QueryTool from "../tools/query.js";
 
 export default async (props: HandleDeleteProps) => {
-  var schema = (await system.getAllSchemas()).find(
-    (x) => x.name === props.schema
+  var queryTool = new QueryTool();
+  var schema = (await system.getAllModels()).find(
+    (x) => x.name === props.model
   );
 
   if (!db) {
@@ -20,7 +22,7 @@ export default async (props: HandleDeleteProps) => {
   if (schema) {
     var repository = db.getRepository(schema.entity);
 
-    await repository.delete(props.filter);
+    await repository.delete(queryTool.renderFilter(props.filter));
 
     return Success({
       message: "Success remove item",
