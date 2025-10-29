@@ -1,16 +1,10 @@
-import { type ReactNode } from "react";
+import { type DrawerProps } from "@mui/material";
 import { Drawer } from "./styles";
 
-
-export default ({ children, open } : { children:  ReactNode, open: boolean }) => {
+export default (props: DrawerProps) => {
     return(
-        <Drawer 
-            variant="permanent"
-            anchor="left" 
-            open={open}
-        >
-            
-            {children}
+        <Drawer {...props}>
+            {props.children}
         </Drawer>
     );
 }

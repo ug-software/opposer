@@ -1,0 +1,27 @@
+{
+    "handlers": {
+        "book": {
+            "get-all-top-trends": {},
+            "set-view-in-top-trends": {},
+            "generate-report-per-month": {}
+        }
+    },
+    "schemas": {
+        "book": {
+            "name": "string",
+            "published": "date",
+            "description": "string",
+            "author": "$author"
+        },
+        "author": {
+            "firstName": "string",
+            "lastName": "string",
+            "age": "number",
+            "books": "$book",
+            "address": {
+                "number": "number",
+                "street": "string"
+            }
+        }
+    }
+}

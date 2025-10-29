@@ -1,54 +1,24 @@
-import {
-  Drawer as MuiDrawer,
-  styled,
-  type CSSObject,
-  type Theme,
-} from "@mui/material";
+import { styled, Drawer as MuiDrawer } from "@mui/material";
 
-const drawerWidth = 240;
-
-const openedMixin = (theme: Theme): CSSObject => ({
-  width: drawerWidth,
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  overflowX: "hidden",
-});
-
-const closedMixin = (theme: Theme): CSSObject => ({
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  overflowX: "hidden",
-  width: `calc(${theme.spacing(7)} + 1px)`,
-  [theme.breakpoints.up("sm")]: {
-    width: `calc(${theme.spacing(8)} + 1px)`,
+export const Drawer = styled(MuiDrawer)(({ open }) => ({
+  ".MuiDrawer-paper": {
+    padding: "0 5px",
+    ...(open && {
+      width: "200px",
+    }),
   },
-});
-
-export const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})(({ theme }) => ({
-  width: drawerWidth,
-  flexShrink: 0,
-  whiteSpace: "nowrap",
-  boxSizing: "border-box",
-  variants: [
-    {
-      props: ({ open }) => open,
-      style: {
-        ...openedMixin(theme),
-        "& .MuiDrawer-paper": openedMixin(theme),
-      },
+  ".MuiListItemText-root": {
+    display: open ? "block" : "none",
+  },
+  ".MuiListItemIcon-root": {
+    minWidth: open ? "35px" : "0px",
+  },
+  ".MuiListItemButton-root": {
+    borderRadius: "8px",
+  },
+  ...(!open && {
+    ".MuiButtonBase-root": {
+      padding: "12px 16px",
     },
-    {
-      props: ({ open }) => !open,
-      style: {
-        ...closedMixin(theme),
-        "& .MuiDrawer-paper": closedMixin(theme),
-      },
-    },
-  ],
+  }),
 }));
