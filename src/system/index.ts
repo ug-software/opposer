@@ -19,9 +19,7 @@ export function getFileName(
   }
 }
 
-export async function getAllSchemas(): Promise<
-  { name: string; entity: any }[]
-> {
+export async function getAllModels(): Promise<{ name: string; entity: any }[]> {
   const settings = getSettingsFile();
   const root = process.cwd();
 
