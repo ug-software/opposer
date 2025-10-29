@@ -1,6 +1,6 @@
-import "./styles.css";
 import { forwardRef, useEffect, useRef, useState, type ReactNode } from "react";
 import React from "react";
+import { ButtonSplitPane, WrapperPaneSplitComponent } from "./styles";
 
 interface WrapperDivProps extends React.HTMLAttributes<HTMLDivElement> {
     children: ReactNode
@@ -35,7 +35,7 @@ export default ({ children } : SplitPanelProps) => {
     const [left, setLeft] = useState<ReactNode | null>(null)
     const [right, setRight] = useState<ReactNode | null>(null)
 
-    const separator = useRef<HTMLButtonElement | null>(null);
+    const separator = useRef<HTMLDivElement  | null>(null);
     const paneElement = useRef<HTMLDivElement | null>(null);
     const leftElement = useRef<HTMLDivElement | null>(null);
     const rightElement = useRef<HTMLDivElement | null>(null);
@@ -95,23 +95,20 @@ export default ({ children } : SplitPanelProps) => {
     }, [separator]);
 
     return(
-        <div ref={paneElement} className="wrapper-pane-split-component">
+        <WrapperPaneSplitComponent ref={paneElement}>
           <Wrapper 
             ref={leftElement}
           >
             {left}
           </Wrapper>
 
-          <button
-            className="panel-separator"
-            ref={separator} 
-          ></button>
+          <ButtonSplitPane ref={separator} ></ButtonSplitPane>
 
           <Wrapper 
             ref={rightElement}
           >
             {right}
           </Wrapper>
-        </div>
+        </WrapperPaneSplitComponent>
     );
 }

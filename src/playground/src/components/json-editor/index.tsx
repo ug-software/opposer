@@ -1,29 +1,31 @@
-import "./styles.css";
+import React, { useState } from "react";
+import AceEditor, { type IAceEditorProps } from "react-ace";
 
-import { useEffect, useRef } from 'react';
-import JSONEditor from 'jsoneditor';
-import 'jsoneditor/dist/jsoneditor.css';
+// Importa tema e modo (obrigatório!)
+import "ace-builds/src-noconflict/mode-json";
+import "ace-builds/src-noconflict/theme-dracula";
 
-export default () => {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const editor = useRef<null | JSONEditor>(null);
+export default (props: IAceEditorProps) => {
+  const [code, setCode] = useState(`{
+  "name": "ChatGPT",
+  "type": "AI"
+}`);
 
-  useEffect(() => {
-    if(ref.current){
-        editor.current = new JSONEditor(ref.current, {
-          mode: 'code',
-          mainMenuBar: false,
-          onChange: () => {
-            if(editor.current){
-                console.log(editor.current.get());
-            }
-          },
-        });
-        editor.current.set({ hello: "world" });
-    }
-
-    return () => editor.current?.destroy();
-  }, []);
-
-  return <div ref={ref} className='json-editor-code'/>;
+  return (
+    <AceEditor
+      {...props}
+      mode="json"
+      theme="dracula"
+      name="readonly-json"
+      value={code}
+      fontSize={14}
+      width="100%"
+      highlightActiveLine={false}
+      setOptions={{
+        showLineNumbers: true,
+        tabSize: 2,
+      }}
+      editorProps={{ $blockScrolling: true }}
+    />
+  );
 }
