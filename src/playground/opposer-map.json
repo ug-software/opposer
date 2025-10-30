@@ -4,7 +4,8 @@
             "get-all-top-trends": {},
             "set-view-in-top-trends": {},
             "generate-report-per-month": {}
-        }
+        },
+        "user": {}
     },
     "schemas": {
         "book": {
