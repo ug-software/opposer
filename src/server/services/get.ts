@@ -5,12 +5,14 @@ import { HttpStatus } from "../constants/index.js";
 import * as system from "../../system/index.js";
 import { HandleRequestResult } from "../../interfaces/request.js";
 import { db } from "../database/index.js";
+import QueryTool from "../tools/query.js";
 
 export default async (
   props: HandleGetProps
 ): Promise<HandleRequestResult<unknown>> => {
-  var schema = (await system.getAllSchemas()).find(
-    (x) => x.name === props.schema
+  var queryTool = new QueryTool();
+  var schema = (await system.getAllModels()).find(
+    (x) => x.name === props.model
   );
   if (!schema) {
     return Exception({
@@ -34,9 +36,8 @@ export default async (
     //@ts-ignore
     var queryBuilder = {} as QueryBuilder;
 
-    if (props.query.join) {
-      var relations = props.query.join.map((x) => x.schema);
-      queryBuilder.relations = relations;
+    if (props.query.relation) {
+      queryBuilder.relations = queryTool.renderRelations(props.query.relation);
     }
 
     if (props.pagination) {
@@ -64,11 +65,11 @@ export default async (
     }
 
     if (props.query.select) {
-      queryBuilder.select = props.query.select;
+      queryBuilder.select = queryTool.renderSelect(props.query.select);
     }
 
     var resultFilter = await repository.find({
-      where: props.query.filter,
+      where: queryTool.renderFilter(props.query.filter),
       ...queryBuilder,
     });
 
@@ -93,9 +94,8 @@ export default async (
     //@ts-ignore
     var queryBuilder = {} as QueryBuilder;
 
-    if (props.query.join) {
-      var relations = props.query.join.map((x) => x.schema);
-      queryBuilder.relations = relations;
+    if (props.query.relation) {
+      queryBuilder.relations = queryTool.renderRelations(props.query.relation);
     }
 
     if (!props.query.find) {
@@ -107,11 +107,11 @@ export default async (
     }
 
     if (props.query.select) {
-      queryBuilder.select = props.query.select;
+      queryBuilder.select = queryTool.renderSelect(props.query.select);
     }
 
     var resultFind = await repository.findOne({
-      where: props.query.find,
+      where: queryTool.renderFilter(props.query.find),
       ...queryBuilder,
     });
 
