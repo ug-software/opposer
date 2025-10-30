@@ -3,16 +3,38 @@ import { ClassType } from "./system.js";
 export interface ControllerApiProps {
   handler?: string;
   method: "get" | "insert" | "update" | "delete" | string;
-  schema: string;
+  model: string;
   payload?: any;
 }
 
 export interface QueryBuilder {
-  [key: string]: any;
+  [key: string]:
+    | string
+    | number
+    | boolean
+    | Date
+    | {
+        $or?: { [key: string]: any }[];
+        $l?: string;
+        $il?: string;
+        $in?: (string | number | Date)[];
+        $nin?: (string | number | Date)[];
+        $btw?: [number, number];
+        $mt?: number | Date;
+        $mte?: number | Date;
+        $lt?: number | Date;
+        $lte?: number | Date;
+        $eq?: any;
+      };
+}
+
+export interface RelationBuilder {
+  model: string;
+  select: (string | RelationBuilder)[];
 }
 
 export interface HandleGetProps {
-  schema: string;
+  model: string;
   pagination:
     | {
         page: number;
@@ -20,49 +42,29 @@ export interface HandleGetProps {
       }
     | undefined;
   query: {
-    type: "find" | "filter" | "between";
-    select: FindOptionsSelect<BaseEntity> | undefined;
-    find: {
-      [key: string]: unknown;
-    };
-    filter: {
-      [key: string]: unknown;
-    };
-    between: {
-      propertie: string;
-      init: any;
-      final: any;
-    };
-    join: [
-      {
-        schema: string;
-        filter: {
-          [key: string]: unknown;
-        };
-      }
-    ];
+    type: "find" | "filter";
+    select: string[];
+    find: QueryBuilder;
+    filter: QueryBuilder;
+    relation: (string | RelationBuilder)[];
   };
 }
 
 export interface HandleDeleteProps {
-  schema: string;
-  filter: {
-    [key: string]: unknown;
-  };
+  model: string;
+  filter: QueryBuilder;
 }
 
 export interface HandleInsertProps {
-  schema: string;
+  model: string;
   data: {
     [key: string]: unknown;
   };
 }
 
 export interface HandleUpdateProps {
-  schema: string;
-  filter: {
-    [key: string]: unknown;
-  };
+  model: string;
+  filter: QueryBuilder;
   data: {
     [key: string]: unknown;
   };

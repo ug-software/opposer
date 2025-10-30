@@ -88,10 +88,8 @@ export default async (req: Request, res: Response) => {
   }
 
   //database request...
-  var schema = (await system.getAllSchemas()).find(
-    (x) => x.name === props.schema
-  );
-  if (!schema) {
+  var model = (await system.getAllModels()).find((x) => x.name === props.model);
+  if (!model) {
     res.status(400).json({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
@@ -100,7 +98,7 @@ export default async (req: Request, res: Response) => {
     return;
   }
 
-  var erros = Field.validate(schema, props);
+  var erros = Field.validate(model, props);
   if (Object.keys(erros).length > 0) {
     res.status(400).json({
       erros,

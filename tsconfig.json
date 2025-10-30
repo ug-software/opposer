@@ -12,5 +12,5 @@
     "experimentalDecorators": true
   },
   "include": ["src"],
-  "exclude": ["src/bin", "src/test"]
+  "exclude": ["src/bin", "src/test", "src/playground"]
 }

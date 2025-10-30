@@ -12,7 +12,7 @@ var db = new DataSource({
 
 export { db };
 export default async function (props: DataSourceOptions) {
-  var entities = (await system.getAllSchemas()).map((x) => x.entity);
+  var entities = (await system.getAllModels()).map((x) => x.entity);
 
   var databaseConnection = new DataSource({
     ...props,
