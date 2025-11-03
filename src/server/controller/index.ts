@@ -16,6 +16,8 @@ import * as system from "../../system/index.js";
 import { Field } from "../database/field.js";
 import * as helper from "../handlers/index.js";
 import Auth from "../security/handler/auth.js";
+import { getPayloadMetadata } from "../decorators/payload.js";
+import { ClassType } from "../../interfaces/system.js";
 const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
@@ -78,6 +80,27 @@ export default async (req: Request, res: Response) => {
         ...HttpStatus[400],
         message: "Unable to find action method.",
       });
+    }
+
+    var allDto = getPayloadMetadata(__meta.handler);
+
+    //realize validation dto
+    if (Array.isArray(allDto) && allDto.length > 0) {
+      var payloadMetadata = allDto.find(
+        (x: { name: string; dto: ClassType<any> }) =>
+          x.name === helper.toCamelCase(method)
+      );
+
+      if (payloadMetadata) {
+        var erros = Field.validate(payloadMetadata.dto, payload);
+        if (Object.keys(erros).length > 0) {
+          res.status(400).json({
+            erros,
+            message: "Data not valid for method, verify erros and try again.",
+          });
+          return;
+        }
+      }
     }
 
     var resultHandler = await new __meta.handler()[helper.toCamelCase(method)](
