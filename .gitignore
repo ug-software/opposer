@@ -1,9 +1,5 @@
-/node_modules
-/lib
-package-lock.json
-opposer-settings.json
-
-#test
-/src/test/node_modules
-/src/test/package-lock.json
-/src/test/opposer-settings.json
+**/node_modules
+**/lib
+**/package-lock.json
+**/opposer-settings.json
+**/opposer-map.json
