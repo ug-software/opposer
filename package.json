@@ -39,7 +39,7 @@
     "devDependencies": {
         "@types/bcrypt": "^6.0.0",
         "@types/cors": "^2.8.17",
-        "@types/express": "^5.0.1",
+        "@types/express": "^5.0.5",
         "@types/gulp": "^4.0.17",
         "@types/node": "^22.13.14",
         "del": "^8.0.1",

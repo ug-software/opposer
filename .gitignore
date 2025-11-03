@@ -4,6 +4,6 @@ package-lock.json
 opposer-settings.json
 
 #test
-/src/_test/node_modules
-/src/_test/package-lock.json
-/src/_test/opposer-settings.json
+/src/test/node_modules
+/src/test/package-lock.json
+/src/test/opposer-settings.json
