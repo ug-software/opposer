@@ -23,16 +23,16 @@ export async function getAllModels(): Promise<{ name: string; entity: any }[]> {
   const settings = getSettingsFile();
   const root = process.cwd();
 
-  let schemasPath = path.resolve(root, "src", "schemas");
-  if (settings.schemas) {
-    schemasPath = path.resolve(root, settings.schemas, "schemas");
+  let modelsPath = path.resolve(root, "src", "models");
+  if (settings.models) {
+    modelsPath = path.resolve(root, settings.models, "models");
   }
 
-  const schemaFiles = fs.readdirSync(schemasPath);
-  const allSchemas = await Promise.all(
+  const schemaFiles = fs.readdirSync(modelsPath);
+  const allModels = await Promise.all(
     schemaFiles.map(async (schemaPathName) => {
       const name = getFileName(schemaPathName, false);
-      const filePath = path.resolve(schemasPath, schemaPathName);
+      const filePath = path.resolve(modelsPath, schemaPathName);
       const fileUrl = pathToFileURL(filePath).href;
 
       //@ts-ignore
@@ -43,7 +43,7 @@ export async function getAllModels(): Promise<{ name: string; entity: any }[]> {
   );
 
   if (settings.auth) {
-    allSchemas.push(
+    allModels.push(
       ...[
         { name: "crp", entity: ChangeRequestPassword },
         { name: "ke", entity: Key },
@@ -54,7 +54,7 @@ export async function getAllModels(): Promise<{ name: string; entity: any }[]> {
     );
   }
 
-  return allSchemas;
+  return allModels;
 }
 
 export async function getAllHandlers(): Promise<ClassType<any>[]> {
