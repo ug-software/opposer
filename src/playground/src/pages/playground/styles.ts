@@ -5,7 +5,7 @@ import {
   ListItemButton as MuiListItemButton,
   Button,
 } from "@mui/material";
-import { green, orange, red } from "@mui/material/colors";
+import { blue, green, grey, orange, red } from "@mui/material/colors";
 
 export const WrapperHandlersAndMethods = styled(Box)({
   display: "flex",
@@ -54,23 +54,32 @@ export const LeftPanel = styled(Box)<{ isBackgroundActive?: boolean }>(
 );
 
 export const BoxStatus = styled(Box)<{
-  variant: "success" | "error" | "warning";
-}>(({ variant, theme }) => ({
+  status: number;
+}>(({ status, theme }) => ({
   marginRight: "1rem",
   padding: "4px 15px",
   borderRadius: "3px",
+  backgroundColor: grey["500"],
 
-  ...(variant === "success" && {
-    backgroundColor: green["500"],
-  }),
+  ...(status >= 200 &&
+    status < 300 && {
+      backgroundColor: green["500"],
+    }),
 
-  ...(variant === "warning" && {
-    backgroundColor: orange["500"],
-  }),
+  ...(status >= 300 &&
+    status < 400 && {
+      backgroundColor: blue[500],
+    }),
 
-  ...(variant === "error" && {
-    backgroundColor: red["500"],
-  }),
+  ...(status >= 400 &&
+    status < 500 && {
+      backgroundColor: orange["500"],
+    }),
+
+  ...(status >= 500 &&
+    status < 600 && {
+      backgroundColor: red["500"],
+    }),
 }));
 
 export const MethodTabs = styled(Box)({

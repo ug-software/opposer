@@ -18,6 +18,7 @@ import * as helper from "../handlers/index.js";
 import Auth from "../security/handler/auth.js";
 import { getPayloadMetadata } from "../decorators/payload.js";
 import { ClassType } from "../../interfaces/system.js";
+import { Exception } from "../helpers/index.js";
 const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
@@ -35,6 +36,7 @@ export default async (req: Request, res: Response) => {
     }
 
     var handlers = await helper.loadHandlers();
+
     if (settings.auth) {
       var auth = {
         methods: [
@@ -45,7 +47,7 @@ export default async (req: Request, res: Response) => {
           { name: "me" },
         ],
         handler: Auth,
-        metadata: { name: "auth" },
+        metadata: { name: "Auth" },
       };
 
       if (
@@ -53,11 +55,16 @@ export default async (req: Request, res: Response) => {
         settings.auth.exposeChangePassword
       ) {
         auth.methods.push(
-          ...[{ name: "change-password" }, { name: "forgot-password" }]
+          ...[{ name: "changePassword" }, { name: "forgotPassword" }]
         );
       }
 
-      handlers["auth"] = auth;
+      Object.defineProperty(handlers, "Auth", {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value: auth,
+      });
     }
 
     if (!handlers[handler]) {
@@ -87,8 +94,7 @@ export default async (req: Request, res: Response) => {
     //realize validation dto
     if (Array.isArray(allDto) && allDto.length > 0) {
       var payloadMetadata = allDto.find(
-        (x: { name: string; dto: ClassType<any> }) =>
-          x.name === helper.toCamelCase(method)
+        (x: { name: string; dto: ClassType<any> }) => x.name === method
       );
 
       if (payloadMetadata) {
@@ -103,11 +109,19 @@ export default async (req: Request, res: Response) => {
       }
     }
 
-    var resultHandler = await new __meta.handler()[helper.toCamelCase(method)](
-      payload
-    );
+    try {
+      var resultHandler = await new __meta.handler()[method](payload);
 
-    return res.status(200).json(resultHandler);
+      return res.status(200).json(resultHandler);
+    } catch (err) {
+      const error = err as Error;
+      return res.status(400).json(
+        Exception({
+          ...HttpStatus[400],
+          message: error.message,
+        })
+      );
+    }
   }
 
   //database request...
@@ -117,15 +131,6 @@ export default async (req: Request, res: Response) => {
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
       message: "Unable to identify Schema.",
-    });
-    return;
-  }
-
-  var erros = Field.validate(model, props);
-  if (Object.keys(erros).length > 0) {
-    res.status(400).json({
-      erros,
-      message: "Data not valid for method, verify erros and try again.",
     });
     return;
   }
@@ -141,6 +146,16 @@ export default async (req: Request, res: Response) => {
 
   if (!["get", "insert", "update", "delete"].includes(req.body.method)) {
     result.error.message = "It was not possible to identify the method used.";
+  }
+
+  if (["insert", "update"].includes(props.method)) {
+    var erros = Field.validate(model, props);
+    if (Object.keys(erros).length > 0) {
+      return res.status(400).json({
+        erros,
+        message: "Data not valid for method, verify erros and try again.",
+      });
+    }
   }
 
   switch (props.method) {

@@ -30,6 +30,14 @@ export default async (
     });
   }
 
+  if (!props.query) {
+    return Exception({
+      name: HttpStatus[400].name,
+      code: HttpStatus[400].code,
+      message: "Search not understood.",
+    });
+  }
+
   var repository = db.getRepository(schema.entity);
 
   if (props.query.type === "filter") {

@@ -11,6 +11,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
-  "include": ["src"],
+  "include": ["src", "src/playground/index.ts"],
   "exclude": ["src/bin", "src/test", "src/playground"]
 }
