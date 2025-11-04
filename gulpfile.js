@@ -4,6 +4,36 @@ import { deleteAsync } from "del";
 import chilp from "child_process";
 import path from "path";
 
+/*------ build playground --------*/
+
+const buildPlaygroundFront = (cb) => {
+  var cwd = path.join(process.cwd(), "src", "playground");
+
+  chilp.execSync("npm run build", {
+    stdio: "inherit",
+    cwd,
+  });
+  cb();
+};
+
+const movePlaygroundFiles = (cb) => {
+  const cwd = path.join(process.cwd(), "src", "playground", "build");
+
+  gulp
+    .src(`${cwd}/**/*`, { base: cwd }) // <-- importante: pattern + base
+    .pipe(gulp.dest(`${paths.dist}/cjs/playground/build`));
+
+  gulp
+    .src(`${cwd}/**/*`, { base: cwd })
+    .pipe(gulp.dest(`${paths.dist}/esm/playground/build`));
+
+  cb();
+};
+
+export const playground = series(buildPlaygroundFront, movePlaygroundFiles);
+
+/*------ build playground --------*/
+
 /*------ build --------*/
 const paths = {
   src: "src/**/*.ts",
@@ -31,46 +61,15 @@ export const buildEsm = () =>
 export const copyCli = () =>
   gulp.src(paths.cli).pipe(gulp.dest(`${paths.dist}/bin`));
 
-export const build = gulp.series(clean, buildCjs, buildEsm, copyCli);
+export const build = gulp.series(
+  clean,
+  buildCjs,
+  buildEsm,
+  copyCli,
+  playground
+);
 
 /*------ build --------*/
-
-/*------ build playground --------*/
-
-const buildPlaygroundFront = (cb) => {
-  var cwd = path.join(process.cwd(), "src", "playground");
-
-  chilp.execSync("npm run build", {
-    stdio: "inherit",
-    cwd,
-  });
-  cb();
-};
-
-const buildPlaygroundServer = (cb) => {
-  var file = path.join(process.cwd(), "src", "playground", "index.ts");
-
-  chilp.spawnSync(
-    "tsc",
-    [file, "-p", "tsconfig.json", "--outDir", "lib/playground"],
-    {
-      stdio: "inherit",
-    }
-  );
-  cb();
-};
-
-const movePlaygroundFiles = () => {
-  /*chilp.execSync("npm", ["run", "build"], {
-    stdio: "inherit",
-    cwd,
-  });*/
-  cb();
-};
-
-export const playground = series(buildPlaygroundServer);
-
-/*------ build playground --------*/
 
 /*------ release --------*/
 const changeBranch = (cb) => {
@@ -132,6 +131,7 @@ const changeBranchForDevelopAndStashRelease = (cb) => {
 
 export const release = gulp.series(
   build,
+  playground,
   changeBranch,
   clear,
   createTag,
