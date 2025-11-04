@@ -4,6 +4,12 @@ import { deleteAsync } from "del";
 import chilp from "child_process";
 import path from "path";
 
+const paths = {
+  src: "src/**/*.ts",
+  cli: "src/bin/**/*",
+  dist: "lib",
+};
+
 /*------ build playground --------*/
 
 const buildPlaygroundFront = (cb) => {
@@ -19,27 +25,22 @@ const buildPlaygroundFront = (cb) => {
 const movePlaygroundFiles = (cb) => {
   const cwd = path.join(process.cwd(), "src", "playground", "build");
 
-  gulp
-    .src(`${cwd}/**/*`, { base: cwd }) // <-- importante: pattern + base
+  const cjs = gulp
+    .src(`${cwd}/**/*`, { base: cwd })
     .pipe(gulp.dest(`${paths.dist}/cjs/playground/build`));
 
-  gulp
+  const esm = gulp
     .src(`${cwd}/**/*`, { base: cwd })
     .pipe(gulp.dest(`${paths.dist}/esm/playground/build`));
 
-  cb();
+  return merge(cjs, esm);
 };
 
-export const playground = series(buildPlaygroundFront, movePlaygroundFiles);
+export const playground = series([buildPlaygroundFront, movePlaygroundFiles]);
 
 /*------ build playground --------*/
 
 /*------ build --------*/
-const paths = {
-  src: "src/**/*.ts",
-  cli: "src/bin/**/*",
-  dist: "lib",
-};
 
 const tsCjs = ts.createProject("tsconfig.cjs.json");
 const tsEsm = ts.createProject("tsconfig.esm.json");
@@ -131,7 +132,6 @@ const changeBranchForDevelopAndStashRelease = (cb) => {
 
 export const release = gulp.series(
   build,
-  playground,
   changeBranch,
   clear,
   createTag,
