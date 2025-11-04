@@ -15,6 +15,11 @@ const paths = {
 const buildPlaygroundFront = (cb) => {
   var cwd = path.join(process.cwd(), "src", "playground");
 
+  chilp.execSync("npm install", {
+    stdio: "inherit",
+    cwd,
+  });
+
   chilp.execSync("npm run build", {
     stdio: "inherit",
     cwd,
