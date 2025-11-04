@@ -16,6 +16,10 @@
         "./persistent": {
             "import": "./lib/esm/persistent/index.js",
             "require": "./lib/cjs/persistent/index.js"
+        },
+        "./playground": {
+            "import": "./lib/esm/playground/index.js",
+            "require": "./lib/cjs/playground/index.js"
         }
     },
     "scripts": {
