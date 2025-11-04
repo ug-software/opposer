@@ -1,4 +1,5 @@
 import Server from "../../../server/index.js";
+import playground from "../../../playground/index.js";
 
 (async () => {
   var app = await Server({
@@ -6,6 +7,8 @@ import Server from "../../../server/index.js";
       origin: "*",
     },
   });
+
+  app.opposer.use("/opposer", await playground());
 
   app.initialize();
 })();

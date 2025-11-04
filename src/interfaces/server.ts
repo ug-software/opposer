@@ -1,4 +1,5 @@
 import http from "http";
+import * as core from "express-serve-static-core";
 
 export interface CreateServerProps {
   cors?: {
@@ -7,7 +8,7 @@ export interface CreateServerProps {
 }
 
 export interface ServerInstance {
-  opposer: Express.Application;
+  opposer: core.Express;
   initialize: () => void;
 }
 

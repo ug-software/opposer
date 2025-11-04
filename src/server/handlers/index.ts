@@ -28,9 +28,7 @@ export async function loadHandlers(): Promise<ResultGetAllHandlers> {
 
       handlers[handlerMetadata.name] = {
         metadata: handlerMetadata,
-        methods: Array.isArray(methodsMetadata)
-          ? methodsMetadata.map((a) => ({ name: toKebabCase(a.name) }))
-          : [],
+        methods: Array.isArray(methodsMetadata) ? methodsMetadata : [],
         handler: handler,
       };
 
