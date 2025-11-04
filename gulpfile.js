@@ -3,6 +3,7 @@ import ts from "gulp-typescript";
 import { deleteAsync } from "del";
 import chilp from "child_process";
 import path from "path";
+import merge from "merge-stream";
 
 const paths = {
   src: "src/**/*.ts",
