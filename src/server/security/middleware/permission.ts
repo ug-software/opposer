@@ -43,7 +43,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     if (handler) {
       var methods = getIsPublicMethodMetadata(handler);
 
-      if (methods.same((x: { name: string }) => x.name === request.method)) {
+      if (methods.some((x: { name: string }) => x.name === request.method)) {
         return next();
       }
     }
