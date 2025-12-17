@@ -105,4 +105,10 @@ export * from "./database/index.js";
 export * from "./constants/index.js";
 export * from "./helpers/index.js";
 export type { SchemaResult } from "../interfaces/schema.js";
-export { Method, Handler, Field, Payload } from "./decorators/index.js";
+export {
+  Method,
+  Handler,
+  Field,
+  Payload,
+  IsPublic,
+} from "./decorators/index.js";

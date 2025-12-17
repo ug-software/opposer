@@ -5,6 +5,8 @@ import jwt from "../jwt/index.js";
 import { db } from "../../database/connect.js";
 import usr from "../schema/usr.js";
 import { ControllerApiProps } from "../../../interfaces/controller.js";
+import * as system from "../../../system/index.js";
+import { getIsPublicMetadata } from "../../../server/decorators/index.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
   const request = req.body as ControllerApiProps;
@@ -12,6 +14,20 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   //skep session method
   if (["login", "register"].includes(request.method)) {
     return next();
+  }
+
+  //skep for public models
+  if (request.model) {
+    var allModels = await system.getAllModels();
+    var model = allModels.find((x) => x.name === request.model);
+
+    if (model) {
+      var isPublic = getIsPublicMetadata(model.entity);
+
+      if (isPublic) {
+        return next();
+      }
+    }
   }
 
   const authorization = req.headers.authorization;
