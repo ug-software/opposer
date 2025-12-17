@@ -6,7 +6,10 @@ import { db } from "../../database/connect.js";
 import usr from "../schema/usr.js";
 import { ControllerApiProps } from "../../../interfaces/controller.js";
 import * as system from "../../../system/index.js";
-import { getIsPublicMetadata } from "../../../server/decorators/index.js";
+import {
+  getIsPublicMetadata,
+  getIsPublicMethodMetadata,
+} from "../../../server/decorators/index.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
   const request = req.body as ControllerApiProps;
@@ -25,6 +28,20 @@ export default async (req: Request, res: Response, next: NextFunction) => {
       var isPublic = getIsPublicMetadata(model.entity);
 
       if (isPublic) {
+        return next();
+      }
+    }
+  }
+
+  //skep for public methods
+  if (request.handler) {
+    var allHandles = await system.getAllHandlers();
+    var handler = allHandles.find((x) => x.name === request.handler);
+
+    if (handler) {
+      var methods = getIsPublicMethodMetadata(handler);
+
+      if (methods.includes(request.method)) {
         return next();
       }
     }
