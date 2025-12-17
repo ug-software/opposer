@@ -40,7 +40,7 @@ export default class User {
       .string("password is string.")
       .required("password is required.")
       .match(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+=])[A-Za-z\d@$!%*?&#^()_\-+=]{8,}$/,
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9])[^\s]{8,}$/,
         "password not security, for strong password is necessary upper words, numbers and special characters."
       )
   )
