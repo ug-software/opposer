@@ -111,4 +111,5 @@ export {
   Field,
   Payload,
   IsPublic,
+  IsPublicMethod,
 } from "./decorators/index.js";
