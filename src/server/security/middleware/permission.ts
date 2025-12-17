@@ -36,12 +36,14 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   //skep for public methods
   if (request.handler) {
     var allHandles = await system.getAllHandlers();
-    var handler = allHandles.find((x) => x.name === request.handler);
+    var handler = allHandles.find(
+      (x) => x.name.toUpperCase() === request.handler?.toUpperCase()
+    );
 
     if (handler) {
       var methods = getIsPublicMethodMetadata(handler);
 
-      if (methods.includes(request.method)) {
+      if (methods.same((x: { name: string }) => x.name === request.method)) {
         return next();
       }
     }
