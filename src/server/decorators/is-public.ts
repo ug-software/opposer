@@ -2,7 +2,7 @@ import "reflect-metadata";
 
 const PUBLIC_KEY = Symbol("is-public");
 
-export function IsPublic(): ClassDecorator {
+export default function IsPublic(): ClassDecorator {
   return (target) => {
     Reflect.defineMetadata(PUBLIC_KEY, true, target);
   };
