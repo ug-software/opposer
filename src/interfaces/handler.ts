@@ -1,4 +1,4 @@
-export interface Payload<D> {
+export interface PayloadRequest<D> {
   data: D;
   headers: {
     autorization: string;

@@ -13,12 +13,12 @@ import { db } from "../../database/connect.js";
 import jwt from "../jwt/index.js";
 import Session from "../schema/se.js";
 import ChangeRequestPassword from "../schema/crp.js";
-import { Payload } from "../../../interfaces/handler.js";
+import { PayloadRequest } from "../../../interfaces/handler.js";
 
 @Handler("auth")
 export default class Auth {
   @Method()
-  async register(payload: Payload<PayloadAuthRegister>) {
+  async register(payload: PayloadRequest<PayloadAuthRegister>) {
     var errors = Field.validate(User, payload.data);
 
     if (Object.keys(errors).length > 0) {
@@ -43,7 +43,7 @@ export default class Auth {
   }
 
   @Method()
-  async login(payload: Payload<PayloadAuthLogin>) {
+  async login(payload: PayloadRequest<PayloadAuthLogin>) {
     if (!payload.data.lg) {
       return Exception({ ...HttpStatus[400], message: "Login is required" });
     }
@@ -98,7 +98,7 @@ export default class Auth {
   }
 
   @Method()
-  async refresh(payload: Payload<string>) {
+  async refresh(payload: PayloadRequest<string>) {
     if (!payload.data) {
       return Exception({
         ...HttpStatus[400],
@@ -160,7 +160,7 @@ export default class Auth {
   }
 
   @Method()
-  async logout(payload: Payload<string>) {
+  async logout(payload: PayloadRequest<string>) {
     if (!payload.data) {
       return Exception({
         ...HttpStatus[400],
@@ -180,7 +180,7 @@ export default class Auth {
   }
 
   @Method()
-  async me(payload: Payload<string>) {
+  async me(payload: PayloadRequest<string>) {
     if (!payload.data) {
       return Exception({
         ...HttpStatus[400],
@@ -201,7 +201,7 @@ export default class Auth {
   }
 
   @Method()
-  async changePassword(payload: Payload<PayloadAuthChangePassword>) {
+  async changePassword(payload: PayloadRequest<PayloadAuthChangePassword>) {
     var errors = Field.validate(User, { ps: payload.data.ps });
 
     if (Object.keys(errors).length > 0) {
@@ -250,7 +250,7 @@ export default class Auth {
   }
 
   @Method()
-  async forgotPassword(payload: Payload<PayloadAuthForgetPassword>) {
+  async forgotPassword(payload: PayloadRequest<PayloadAuthForgetPassword>) {
     if (!payload.data.lg) {
       return Exception({
         ...HttpStatus[400],
