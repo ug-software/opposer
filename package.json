@@ -20,6 +20,10 @@
         "./playground": {
             "import": "./lib/esm/playground/index.js",
             "require": "./lib/cjs/playground/index.js"
+        },
+        "./models": {
+            "import": "./lib/esm/security/index.js",
+            "require": "./lib/cjs/security/index.js"
         }
     },
     "scripts": {
