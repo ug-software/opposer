@@ -19,7 +19,7 @@ import Auth from "../security/handler/auth.js";
 import { getPayloadMetadata } from "../decorators/payload.js";
 import { ClassType } from "../../interfaces/system.js";
 import { Exception } from "../helpers/index.js";
-import { Payload } from "../../interfaces/handler.js";
+import { PayloadRequest } from "../../interfaces/handler.js";
 const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
@@ -125,7 +125,7 @@ export default async (req: Request, res: Response) => {
           userAgent: req.headers["user-agent"],
         },
         data,
-      } as Payload<any>;
+      } as PayloadRequest<any>;
 
       var resultHandler = await new __meta.handler()[method](payload);
 
