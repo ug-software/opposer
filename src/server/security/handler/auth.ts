@@ -13,12 +13,13 @@ import { db } from "../../database/connect.js";
 import jwt from "../jwt/index.js";
 import Session from "../schema/se.js";
 import ChangeRequestPassword from "../schema/crp.js";
+import { Payload } from "../../../interfaces/handler.js";
 
 @Handler("auth")
 export default class Auth {
   @Method()
-  async register(payload: PayloadAuthRegister) {
-    var errors = Field.validate(User, payload);
+  async register(payload: Payload<PayloadAuthRegister>) {
+    var errors = Field.validate(User, payload.data);
 
     if (Object.keys(errors).length > 0) {
       return Exception({
@@ -29,25 +30,25 @@ export default class Auth {
 
     var userRepository = db.getRepository(User);
 
-    if (await userRepository.findOne({ where: { lg: payload.lg } })) {
+    if (await userRepository.findOne({ where: { lg: payload.data.lg } })) {
       return Exception({
         ...HttpStatus[400],
         message: "User with this login already exists.",
       });
     }
 
-    var usr = userRepository.create(payload);
+    var usr = userRepository.create(payload.data);
     await userRepository.save(usr);
     return Success(usr);
   }
 
   @Method()
-  async login(payload: PayloadAuthLogin) {
-    if (!payload.lg) {
+  async login(payload: Payload<PayloadAuthLogin>) {
+    if (!payload.data.lg) {
       return Exception({ ...HttpStatus[400], message: "Login is required" });
     }
 
-    if (!payload.ps) {
+    if (!payload.data.ps) {
       return Exception({ ...HttpStatus[400], message: "Password is required" });
     }
 
@@ -55,7 +56,7 @@ export default class Auth {
     var sessionRepository = db.getRepository(Session);
 
     var usr = await userRepository.findOne({
-      where: { lg: payload.lg },
+      where: { lg: payload.data.lg },
     });
 
     if (!usr) {
@@ -65,7 +66,7 @@ export default class Auth {
       });
     }
 
-    if (!(await usr.comparePassword(payload.ps))) {
+    if (!(await usr.comparePassword(payload.data.ps))) {
       return Exception({
         ...HttpStatus[400],
         message: "Invalid login or password, check the data and try again.",
@@ -77,8 +78,8 @@ export default class Auth {
     // register new session init
     await sessionRepository.save({
       ac: true,
-      ag: payload.ag,
-      ip: payload.ip,
+      ag: payload.headers.userAgent,
+      ip: payload.headers.forwardedFor,
       loi: new Date(),
       rt: refresh,
       usr: usr.id,
@@ -97,8 +98,8 @@ export default class Auth {
   }
 
   @Method()
-  async refresh(payload: string) {
-    if (!payload) {
+  async refresh(payload: Payload<string>) {
+    if (!payload.data) {
       return Exception({
         ...HttpStatus[400],
         message: "Refresh token is required.",
@@ -108,7 +109,7 @@ export default class Auth {
     var sessionRepository = db.getRepository(Session);
 
     var last = await sessionRepository.findOne({
-      where: { rt: payload },
+      where: { rt: payload.data },
     });
     if (!last) {
       return Exception({
@@ -124,7 +125,7 @@ export default class Auth {
       });
     }
 
-    var usr = await jwt.validate.refresh(payload);
+    var usr = await jwt.validate.refresh(payload.data);
     if (!usr || typeof usr === "string") {
       return Exception({
         ...HttpStatus[401],
@@ -159,8 +160,8 @@ export default class Auth {
   }
 
   @Method()
-  async logout(payload: string) {
-    if (!payload) {
+  async logout(payload: Payload<string>) {
+    if (!payload.data) {
       return Exception({
         ...HttpStatus[400],
         message: "Token is required for logout user.",
@@ -170,7 +171,7 @@ export default class Auth {
     var sessionRepository = db.getRepository(Session);
 
     await sessionRepository.update(
-      { rt: payload },
+      { rt: payload.data },
       {
         ac: false,
         lou: new Date(),
@@ -179,15 +180,15 @@ export default class Auth {
   }
 
   @Method()
-  async me(payload: string) {
-    if (!payload) {
+  async me(payload: Payload<string>) {
+    if (!payload.data) {
       return Exception({
         ...HttpStatus[400],
         message: "Token is required.",
       });
     }
 
-    var usr = await jwt.validate.access(payload);
+    var usr = await jwt.validate.access(payload.data);
 
     if (typeof usr === "string") {
       return Exception({
@@ -200,8 +201,8 @@ export default class Auth {
   }
 
   @Method()
-  async changePassword(payload: PayloadAuthChangePassword) {
-    var errors = Field.validate(User, { ps: payload.ps });
+  async changePassword(payload: Payload<PayloadAuthChangePassword>) {
+    var errors = Field.validate(User, { ps: payload.data.ps });
 
     if (Object.keys(errors).length > 0) {
       return Exception({
@@ -210,14 +211,14 @@ export default class Auth {
       });
     }
 
-    if (!payload.tk) {
+    if (!payload.data.tk) {
       return Exception({
         ...HttpStatus[400],
         message: "Ticket is required for change password.",
       });
     }
 
-    var ticket = await jwt.validate.recover(payload.tk);
+    var ticket = await jwt.validate.recover(payload.data.tk);
     if (typeof ticket === "string" || !ticket) {
       return Exception({
         ...HttpStatus[401],
@@ -239,26 +240,29 @@ export default class Auth {
     }
 
     // finaly update password...
-    await userRepository.update({ lg: ticket.lg }, { ps: payload.ps });
-    await changePasswordRepository.update({ tk: payload.tk }, { ud: true });
+    await userRepository.update({ lg: ticket.lg }, { ps: payload.data.ps });
+    await changePasswordRepository.update(
+      { tk: payload.data.tk },
+      { ud: true }
+    );
 
     return Success({ message: "Succes for change password." });
   }
 
   @Method()
-  async forgotPassword(payload: PayloadAuthForgetPassword) {
-    if (!payload.lg) {
+  async forgotPassword(payload: Payload<PayloadAuthForgetPassword>) {
+    if (!payload.data.lg) {
       return Exception({
         ...HttpStatus[400],
         message: "Login is required.",
       });
     }
 
-    var { token } = await jwt.forget(payload);
+    var { token } = await jwt.forget(payload.data);
 
     var changePasswordRepository = db.getRepository(ChangeRequestPassword);
     await changePasswordRepository.save({
-      ...payload,
+      ...payload.data,
       tk: token,
       et: new Date(new Date().getTime() + 5 * 60 * 1000), // five min
     });
@@ -272,8 +276,10 @@ export default class Auth {
         handler: auth,
         method: register,
         payload: {
+          data: {
             em: "",
             ps: ""
+          }
         }
     }
 */

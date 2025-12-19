@@ -19,6 +19,7 @@ import Auth from "../security/handler/auth.js";
 import { getPayloadMetadata } from "../decorators/payload.js";
 import { ClassType } from "../../interfaces/system.js";
 import { Exception } from "../helpers/index.js";
+import { Payload } from "../../interfaces/handler.js";
 const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
@@ -110,6 +111,22 @@ export default async (req: Request, res: Response) => {
     }
 
     try {
+      const data = payload;
+
+      payload = {
+        headers: {
+          accept: req.headers.accept,
+          autorization: req.headers.authorization,
+          contentType: req.headers["content-type"],
+          forwardedFor: req.headers["x-forwarded-for"],
+          origin: req.headers.origin,
+          realIp: req.headers["x-real-ip"],
+          referer: req.headers.referer,
+          userAgent: req.headers["user-agent"],
+        },
+        data,
+      } as Payload<any>;
+
       var resultHandler = await new __meta.handler()[method](payload);
 
       return res.status(200).json(resultHandler);
