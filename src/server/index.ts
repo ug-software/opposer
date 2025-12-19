@@ -26,6 +26,8 @@ export default async function Server(
     url = settings.url;
   }
 
+  opposer.set("trust proxy", true);
+
   // parsing Middleware
   opposer.use(express.json()); // JSON forever active
   if (settings.urlencoded) {

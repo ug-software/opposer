@@ -7,7 +7,6 @@ export interface PayloadRequest<D> {
     origin: string;
     referer: string;
     userAgent: string;
-    forwardedFor: string;
-    realIp: string;
+    ip: string;
   };
 }
