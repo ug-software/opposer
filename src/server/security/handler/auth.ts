@@ -79,7 +79,7 @@ export default class Auth {
     await sessionRepository.save({
       ac: true,
       ag: payload.headers.userAgent,
-      ip: payload.headers.forwardedFor,
+      ip: payload.headers.ip,
       loi: new Date(),
       rt: refresh,
       usr: usr.id,
