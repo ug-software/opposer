@@ -22,8 +22,8 @@
             "require": "./lib/cjs/playground/index.js"
         },
         "./models": {
-            "import": "./lib/esm/security/index.js",
-            "require": "./lib/cjs/security/index.js"
+            "import": "./lib/esm/server/security/index.js",
+            "require": "./lib/cjs/server/security/index.js"
         }
     },
     "scripts": {
