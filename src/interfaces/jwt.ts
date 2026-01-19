@@ -6,6 +6,7 @@ export interface ErrorJwt {
 
 export interface SignJwt {
   id: string;
+  exp: number;
   fn: string;
   ln: string;
   lg: string;

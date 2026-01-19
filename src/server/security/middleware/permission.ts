@@ -15,7 +15,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
   const request = req.body as ControllerApiProps;
 
   //skep session method
-  if (["login", "register"].includes(request.method)) {
+  if (["login", "register", "refresh"].includes(request.method)) {
     return next();
   }
 
