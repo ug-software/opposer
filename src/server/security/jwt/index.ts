@@ -62,7 +62,7 @@ async function refresh(token: string) {
   }
 }
 
-async function sign(payload: SignJwt) {
+async function sign({ exp, ...payload }: SignJwt) {
   if (!accessJwt) {
     throw new Error(
       "[jwt] - Don't finded token secret, generate running 'npx opposer jwt generate' or consulting documentation."
