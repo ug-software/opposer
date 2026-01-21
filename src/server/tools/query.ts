@@ -18,16 +18,16 @@ export default class QueryTool {
     var __query: { [key: string]: any } = {};
 
     Object.keys(query).forEach((key) => {
-      if (typeof key !== "object") {
+      if (typeof query[key] !== "object") {
         __query[key] = query[key];
       } else {
+        if (key === "$or") {
+          return query[key];
+        }
+
         var __part: { [key: string]: any } = {};
         Object.entries(query[key]).forEach(([key, value]) => {
           switch (key) {
-            case "$or":
-              __part[key] = Or(value);
-              break;
-
             case "$l":
               __part[key] = Like(value);
               break;
