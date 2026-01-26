@@ -26,22 +26,22 @@ export default class QueryTool {
         }
 
         var __part: { [key: string]: any } = {};
-        Object.entries(query[key]).forEach(([key, value]) => {
-          switch (key) {
+        Object.entries(query[key]).forEach(([_key, value]) => {
+          switch (_key) {
             case "$l":
-              __part[key] = Like(value);
+              __part = Like(value);
               break;
 
             case "$il":
-              __part[key] = ILike(value);
+              __part = ILike(value);
               break;
 
             case "$in":
-              __part[key] = In(value);
+              __part = In(value);
               break;
 
             case "$nin":
-              __part[key] = Not(In(value));
+              __part = Not(In(value));
               break;
 
             case "$btw":
@@ -52,28 +52,31 @@ export default class QueryTool {
               }
 
               var [first, second] = value;
-              __part[key] = Between(first, second);
+              __part = Between(first, second);
               break;
 
             case "$mt":
-              __part[key] = MoreThan(value);
+              __part = MoreThan(value);
               break;
 
             case "$mte":
-              __part[key] = MoreThanOrEqual(value);
+              __part = MoreThanOrEqual(value);
               break;
 
             case "$lt":
-              __part[key] = LessThan(value);
+              __part = LessThan(value);
               break;
 
             case "$lte":
-              __part[key] = LessThanOrEqual(value);
+              __part = LessThanOrEqual(value);
               break;
 
             case "$eq":
-              __part[key] = Equal(value);
+              __part = Equal(value);
               break;
+
+            default:
+              __part[_key] = value;
           }
         });
 
