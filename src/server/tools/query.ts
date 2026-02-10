@@ -15,74 +15,92 @@ import {
 
 export default class QueryTool {
   renderFilter(query: QueryBuilder) {
-    var __query: { [key: string]: any } = {};
+    if (typeof query !== "object" && query === null) {
+      return query;
+    }
 
-    Object.keys(query).forEach((key) => {
-      if (typeof query[key] !== "object") {
-        __query[key] = query[key];
-      } else {
-        if (key === "$or") {
-          return query[key];
+    var __query: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(query)) {
+      if (typeof value !== "object" && value === null) {
+        __query[key] = value;
+        continue;
+      }
+
+      // if 'or' value abort another query...
+      if (key === "$or" && Array.isArray(value)) {
+        __query = value.map((v) => this.renderFilter(v));
+        return;
+      }
+
+      if (key.startsWith("$")) {
+        switch (key) {
+          case "$l":
+            __query[key] = Like(value);
+            break;
+
+          case "$il":
+            __query[key] = ILike(value);
+            break;
+
+          case "$in":
+            __query[key] = In(value as Array<string | Date | number>);
+            break;
+
+          case "$nin":
+            __query[key] = Not(In(value as Array<string | Date | number>));
+            break;
+
+          case "$btw":
+            if (!Array.isArray(value)) {
+              throw new Error(
+                "[database] - for using between in query necessary value is Array."
+              );
+            }
+
+            var [first, second] = value;
+            __query[key] = Between(first, second);
+            break;
+
+          case "$mt":
+            __query[key] = MoreThan(value);
+            break;
+
+          case "$mte":
+            __query[key] = MoreThanOrEqual(value);
+            break;
+
+          case "$lt":
+            __query[key] = LessThan(value);
+            break;
+
+          case "$lte":
+            __query[key] = LessThanOrEqual(value);
+            break;
+
+          case "$eq":
+            __query[key] = Equal(value);
+            break;
+
+          default:
+            __query[key] = value;
         }
 
-        var __part: { [key: string]: any } = {};
-        Object.entries(query[key]).forEach(([_key, value]) => {
-          switch (_key) {
-            case "$l":
-              __part = Like(value);
-              break;
-
-            case "$il":
-              __part = ILike(value);
-              break;
-
-            case "$in":
-              __part = In(value);
-              break;
-
-            case "$nin":
-              __part = Not(In(value));
-              break;
-
-            case "$btw":
-              if (!Array.isArray(value)) {
-                throw new Error(
-                  "[database] - for using between in query necessary value is Array."
-                );
-              }
-
-              var [first, second] = value;
-              __part = Between(first, second);
-              break;
-
-            case "$mt":
-              __part = MoreThan(value);
-              break;
-
-            case "$mte":
-              __part = MoreThanOrEqual(value);
-              break;
-
-            case "$lt":
-              __part = LessThan(value);
-              break;
-
-            case "$lte":
-              __part = LessThanOrEqual(value);
-              break;
-
-            case "$eq":
-              __part = Equal(value);
-              break;
-
-            default:
-              __part[_key] = value;
-          }
-        });
-
-        __query[key] = __part;
+        continue;
       }
-    });
+
+      if (typeof value !== "object") {
+        __query[key] = value;
+        continue;
+      }
+
+      if (value instanceof Date) {
+        __query[key] = value;
+        continue;
+      }
+
+      __query[key] = this.renderFilter(value as QueryBuilder);
+    }
 
     return __query;
   }
