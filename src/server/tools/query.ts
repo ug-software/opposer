@@ -59,7 +59,7 @@ export default class QueryTool {
             }
 
             var [first, second] = value;
-            __query[key] = Between(first, second);
+            __query = Between(first, second);
             break;
 
           case "$mt":
