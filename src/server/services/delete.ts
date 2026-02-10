@@ -22,7 +22,15 @@ export default async (props: HandleDeleteProps) => {
   if (schema) {
     var repository = db.getRepository(schema.entity);
 
-    await repository.delete(queryTool.renderFilter(props.filter));
+    const query = queryTool.renderFilter(props.filter);
+    if (!query) {
+      return Exception({
+        ...HttpStatus[400],
+        message: "necessary set query params for delete items.",
+      });
+    }
+
+    await repository.delete(query);
 
     return Success({
       message: "Success remove item",

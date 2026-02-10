@@ -16,7 +16,7 @@ import {
 export default class QueryTool {
   renderFilter(query: QueryBuilder) {
     if (typeof query !== "object" && query === null) {
-      return query;
+      return null;
     }
 
     var __query: Record<string, any> = {};
@@ -30,7 +30,7 @@ export default class QueryTool {
       // if 'or' value abort another query...
       if (key === "$or" && Array.isArray(value)) {
         __query = value.map((v) => this.renderFilter(v));
-        return;
+        return __query;
       }
 
       if (key.startsWith("$")) {
