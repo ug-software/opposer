@@ -47,7 +47,15 @@ export default async (props: HandleUpdateProps) => {
     });
   }
 
-  await repository.update(queryTool.renderFilter(props.filter), props.data);
+  const query = queryTool.renderFilter(props.filter);
+  if (!query) {
+    return Exception({
+      ...HttpStatus[400],
+      message: "necessary set query params for update items.",
+    });
+  }
+
+  await repository.update(query, props.data);
 
   return Success({
     message: "Success updating item",
