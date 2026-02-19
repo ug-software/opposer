@@ -10,6 +10,10 @@ export interface SignJwt {
   fn: string;
   ln: string;
   lg: string;
+  rl: {
+    sm: string;
+    mt: string;
+  }[];
 }
 
 export interface ForgetJwt {

@@ -70,40 +70,14 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     );
   }
 
-  if (!db) {
-    return res.status(HttpStatus[403].code).send(
-      Exception({
-        ...HttpStatus[403],
-        message: "[system] - Don't finded database conection.",
-      })
-    );
-  }
-
-  var userRepository = db.getRepository(usr);
-  var currentUser = await userRepository.findOne({
-    where: { id: decoded.id },
-    relations: ["rl"],
-  });
-
-  if (!currentUser) {
-    return res.status(HttpStatus[403].code).send(
-      Exception({
-        ...HttpStatus[403],
-        message: "[autorization] - Don't autorized, not finded user.",
-      })
-    );
-  }
-
   //manager permission
-  if (currentUser.rl.some((x) => x.mt === "all" && x.sm === "all")) {
+  if (decoded.rl.some((x) => x.mt === "all" && x.sm === "all")) {
     return next();
   }
 
   //granular permission
   if (
-    !currentUser.rl.some(
-      (x) => x.mt === request.method && x.sm === request.model
-    )
+    !decoded.rl.some((x) => x.mt === request.method && x.sm === request.model)
   ) {
     return res.status(HttpStatus[403].code).send(
       Exception({
