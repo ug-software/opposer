@@ -12,6 +12,13 @@ export interface PayloadAuthRegister {
   ps: string;
 }
 
+export interface PayloadSocialLogin {
+  id: string;
+  fn: string;
+  ln: string;
+  lg: string;
+}
+
 export interface PayloadAuthLogin {
   lg: string;
   ps: string;

@@ -5,6 +5,7 @@ import * as database from "./database/index.js";
 import * as system from "../system/index.js";
 import permission from "./security/middleware/permission.js";
 import autorization from "./security/middleware/autorization.js";
+import Auth from "./security/handler/auth.js";
 
 const settings = system.getSettingsFile();
 
@@ -103,7 +104,7 @@ export default async function Server(
   return { opposer, initialize };
 }
 
-export { default as jwt } from "./security/jwt/index.js"
+export const auth = { social: Auth.social };
 export * from "./database/index.js";
 export * from "./constants/index.js";
 export * from "./helpers/index.js";
