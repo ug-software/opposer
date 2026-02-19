@@ -103,6 +103,7 @@ export default async function Server(
   return { opposer, initialize };
 }
 
+export { default as jwt } from "./security/jwt/index.js"
 export * from "./database/index.js";
 export * from "./constants/index.js";
 export * from "./helpers/index.js";
