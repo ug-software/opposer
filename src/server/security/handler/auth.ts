@@ -65,6 +65,7 @@ export default class Auth {
 
     var usr = await userRepository.findOne({
       where: { lg: payload.data.lg },
+      relations: ["rl"],
     });
 
     if (!usr) {
@@ -87,6 +88,7 @@ export default class Auth {
       lg: usr.lg,
       ln: usr.ln,
       exp: 0,
+      rl: usr.rl.map(({ sm, mt }) => ({ sm, mt })),
     });
 
     // register new session init
@@ -288,10 +290,7 @@ export default class Auth {
     const usr = payload.data;
     var sessionRepository = db.getRepository(Session);
     var { token, refresh } = await jwt.sign({
-      fn: usr.fn,
-      id: usr.id,
-      lg: usr.lg,
-      ln: usr.ln,
+      ...usr,
       exp: 0,
     });
 
