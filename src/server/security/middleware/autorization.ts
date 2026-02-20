@@ -5,7 +5,7 @@ import { db } from "../../database/connect.js";
 import ke from "../schema/ke.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
-  var api = req.headers["opposer-key"] as string;
+  var api = (req.headers["opposer-key"] || req.cookies.opposer_key) as string;
 
   if (!api) {
     return res.status(HttpStatus[401].code).send(
