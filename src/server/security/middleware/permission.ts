@@ -81,25 +81,31 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     });
 
     if (!last) {
-      return Exception({
-        ...HttpStatus[401],
-        message: "Don't find session.",
-      });
+      return res.status(HttpStatus[401].code).send(
+        Exception({
+          ...HttpStatus[401],
+          message: "Don't find session.",
+        })
+      );
     }
 
     if (!last.ac) {
-      return Exception({
-        ...HttpStatus[401],
-        message: "Refresh expired.",
-      });
+      return res.status(HttpStatus[401].code).send(
+        Exception({
+          ...HttpStatus[401],
+          message: "Refresh expired.",
+        })
+      );
     }
 
     decoded = await jwt.validate.refresh(refresh);
     if (!decoded || typeof decoded === "string") {
-      return Exception({
-        ...HttpStatus[401],
-        message: "Invalid token.",
-      });
+      return res.status(HttpStatus[401].code).send(
+        Exception({
+          ...HttpStatus[401],
+          message: "Invalid token.",
+        })
+      );
     }
 
     //cancel last session and update in database;
