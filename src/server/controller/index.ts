@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { CookieOptions, Request, Response } from "express";
 import _get from "../services/get.js";
 import _insert from "../services/insert.js";
 import _update from "../services/update.js";
@@ -122,6 +122,15 @@ export default async (req: Request, res: Response) => {
           ip: req.ip,
           referer: req.headers.referer,
           userAgent: req.headers["user-agent"],
+          cookies: {
+            data: req.cookies,
+            set: (name: string, value: string, options: CookieOptions) => {
+              res.cookie(name, value, options);
+            },
+            remove: (name: string, options?: CookieOptions) => {
+              res.clearCookie(name, options);
+            },
+          },
         },
         data,
       } as PayloadRequest<any>;

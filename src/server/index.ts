@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import Controller from "./controller/index.js";
 import { CreateServerProps, ServerInstance } from "../interfaces/server.js";
 import * as database from "./database/index.js";
@@ -31,6 +32,7 @@ export default async function Server(
 
   // parsing Middleware
   opposer.use(express.json()); // JSON forever active
+  opposer.use(cookieParser()); // cookies
   if (settings.urlencoded) {
     opposer.use(express.urlencoded({ extended: true }));
   }

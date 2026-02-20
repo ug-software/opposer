@@ -10,6 +10,8 @@ import {
   getIsPublicMetadata,
   getIsPublicMethodMetadata,
 } from "../../../server/decorators/index.js";
+import Session from "../schema/se.js";
+import { SignJwt } from "../../../interfaces/jwt.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
   const request = req.body as ControllerApiProps;
@@ -49,7 +51,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 
-  const authorization = req.headers.authorization;
+  const authorization = (req.headers.authorization ||
+    req.cookies.token_access) as string;
   if (!authorization) {
     return res
       .status(HttpStatus[403].code)
@@ -58,35 +61,108 @@ export default async (req: Request, res: Response, next: NextFunction) => {
       );
   }
 
-  const [_, token] = authorization.split(" ");
-  const decoded = await jwt.validate.access(token);
+  var token = authorization.replace("Bearer ", "");
+  var decoded = await jwt.validate.access(token);
 
   if (typeof decoded === "string" || !decoded) {
-    return res.status(HttpStatus[403].code).send(
-      Exception({
-        ...HttpStatus[403],
-        message: "[autorization] - Don't autorized, verify data and try again.",
-      })
+    const refresh = req.cookies.refresh_token as string | null;
+    if (!refresh) {
+      return res.status(HttpStatus[403].code).send(
+        Exception({
+          ...HttpStatus[403],
+          message:
+            "[autorization] - Don't autorized, verify data and try again.",
+        })
+      );
+    }
+
+    var sessionRepository = db.getRepository(Session);
+    var last = await sessionRepository.findOne({
+      where: { rt: refresh },
+    });
+
+    if (!last) {
+      return Exception({
+        ...HttpStatus[401],
+        message: "Don't find session.",
+      });
+    }
+
+    if (!last.ac) {
+      return Exception({
+        ...HttpStatus[401],
+        message: "Refresh expired.",
+      });
+    }
+
+    decoded = await jwt.validate.refresh(refresh);
+    if (!decoded || typeof decoded === "string") {
+      return Exception({
+        ...HttpStatus[401],
+        message: "Invalid token.",
+      });
+    }
+
+    //cancel last session and update in database;
+    sessionRepository.update(
+      { rt: last.rt },
+      {
+        ac: false,
+        lou: new Date(),
+      }
     );
+
+    var revalidate = await jwt.sign(decoded as SignJwt);
+
+    token = revalidate.token;
+    const current = new Date();
+
+    //seta os novos cookies
+    res.cookie("access_token", token, {
+      httpOnly: true,
+      expires: new Date(current.getTime() + 15 * 60 * 1000), // 15 mim
+    });
+
+    res.cookie("refresh_token", revalidate.refresh, {
+      httpOnly: true,
+      expires: new Date(current.getTime() + 10 * 60 * 60 * 1000), // 10 horas
+    });
+
+    await sessionRepository.save({
+      ac: true,
+      ag: last.ag,
+      ip: last.ip,
+      loi: new Date(),
+      rt: refresh,
+      usr: decoded.id,
+    });
   }
 
-  //manager permission
-  if (decoded.rl.some((x) => x.mt === "all" && x.sm === "all")) {
+  if (typeof decoded !== "string" && decoded !== undefined) {
+    //manager permission
+    if (decoded.rl.some((x) => x.mt === "all" && x.sm === "all")) {
+      return next();
+    }
+
+    //granular permission
+    if (
+      !decoded.rl.some((x) => x.mt === request.method && x.sm === request.model)
+    ) {
+      return res.status(HttpStatus[403].code).send(
+        Exception({
+          ...HttpStatus[403],
+          message:
+            "[autorization] - Don't autorized, verify our permissions and try again.",
+        })
+      );
+    }
+
     return next();
   }
 
-  //granular permission
-  if (
-    !decoded.rl.some((x) => x.mt === request.method && x.sm === request.model)
-  ) {
-    return res.status(HttpStatus[403].code).send(
-      Exception({
-        ...HttpStatus[403],
-        message:
-          "[autorization] - Don't autorized, verify our permissions and try again.",
-      })
+  return res
+    .status(HttpStatus[403].code)
+    .send(
+      Exception({ ...HttpStatus[403], message: "Unabled autorization key." })
     );
-  }
-
-  return next();
 };

@@ -1,4 +1,9 @@
-import { Method, Handler } from "../../decorators/index.js";
+import {
+  Method,
+  Handler,
+  IsPublic,
+  IsPublicMethod,
+} from "../../decorators/index.js";
 import {
   PayloadAuthChangePassword,
   PayloadAuthForgetPassword,
@@ -101,6 +106,17 @@ export default class Auth {
       usr: usr.id,
     });
 
+    const current = new Date();
+    payload.headers.cookies.set("access_token", token, {
+      httpOnly: true,
+      expires: new Date(current.getTime() + 15 * 60 * 1000), // 15 mim
+    });
+
+    payload.headers.cookies.set("refresh_token", refresh, {
+      httpOnly: true,
+      expires: new Date(current.getTime() + 10 * 60 * 60 * 1000), // 10 horas
+    });
+
     return Success({
       token,
       refresh,
@@ -168,6 +184,17 @@ export default class Auth {
       usr: usr.id,
     });
 
+    const current = new Date();
+    payload.headers.cookies.set("access_token", token, {
+      httpOnly: true,
+      expires: new Date(current.getTime() + 15 * 60 * 1000), // 15 mim
+    });
+
+    payload.headers.cookies.set("refresh_token", refresh, {
+      httpOnly: true,
+      expires: new Date(current.getTime() + 10 * 60 * 60 * 1000), // 10 horas
+    });
+
     return Success({
       token,
       refresh,
@@ -184,8 +211,10 @@ export default class Auth {
       });
     }
 
-    var sessionRepository = db.getRepository(Session);
+    payload.headers.cookies.remove("access_token");
+    payload.headers.cookies.remove("refresh_token");
 
+    var sessionRepository = db.getRepository(Session);
     await sessionRepository.update(
       { rt: payload.data },
       {
@@ -196,21 +225,16 @@ export default class Auth {
   }
 
   @Method()
-  async me(payload: PayloadRequest<string>) {
-    if (!payload.data) {
-      return Exception({
-        ...HttpStatus[400],
-        message: "Token is required.",
-      });
+  @IsPublicMethod()
+  async me(payload: PayloadRequest<any>) {
+    const token = payload.headers.cookies.data.access_token;
+    if (!token) {
+      return null;
     }
 
-    var usr = await jwt.validate.access(payload.data);
-
+    var usr = await jwt.validate.access(token);
     if (typeof usr === "string") {
-      return Exception({
-        ...HttpStatus[401],
-        message: "Invalid token.",
-      });
+      return null;
     }
 
     return Success(usr);
