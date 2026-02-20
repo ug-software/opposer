@@ -70,8 +70,8 @@ async function sign({ exp, ...payload }: SignJwt) {
   }
 
   const token = jwt.sign({ ...payload }, accessJwt, { expiresIn: "15m" });
-  const refresh = jwt.sign({ id: payload.id }, refreshJwt, {
-    expiresIn: "10d",
+  const refresh = jwt.sign({ ...payload }, refreshJwt, {
+    expiresIn: "15d",
   });
   return { token, refresh };
 }
