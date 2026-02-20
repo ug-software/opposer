@@ -51,8 +51,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 
-  const authorization = (req.headers.authorization ||
-    req.cookies.token_access) as string;
+  const authorization = req.headers.authorization || req.cookies.access_token;
   if (!authorization) {
     return res
       .status(HttpStatus[403].code)
