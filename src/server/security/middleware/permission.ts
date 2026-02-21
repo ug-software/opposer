@@ -86,25 +86,6 @@ export default async (req: Request, res: Response, next: NextFunction) => {
             );
         }
 
-        if (!last.ac) {
-            return res.status(HttpStatus[401].code).send(
-                Exception({
-                    ...HttpStatus[401],
-                    message: "Refresh expired.",
-                }),
-            );
-        }
-
-        decoded = await jwt.validate.refresh(refresh);
-        if (!decoded || typeof decoded === "string") {
-            return res.status(HttpStatus[401].code).send(
-                Exception({
-                    ...HttpStatus[401],
-                    message: "Invalid token.",
-                }),
-            );
-        }
-
         //cancel last session and update in database;
         sessionRepository.update(
             { rt: last.rt },
@@ -113,6 +94,16 @@ export default async (req: Request, res: Response, next: NextFunction) => {
                 lou: new Date(),
             },
         );
+
+        decoded = await jwt.validate.refresh(refresh);
+        if (!decoded || typeof decoded === "string") {
+            return res.status(HttpStatus[401].code).send(
+                Exception({
+                    ...HttpStatus[401],
+                    message: "Invalid refresh token.",
+                }),
+            );
+        }
 
         var revalidate = await jwt.sign(decoded as SignJwt);
 
@@ -164,12 +155,10 @@ export default async (req: Request, res: Response, next: NextFunction) => {
         return next();
     }
 
-    return res
-        .status(HttpStatus[403].code)
-        .send(
-            Exception({
-                ...HttpStatus[403],
-                message: "Unabled autorization key.",
-            }),
-        );
+    return res.status(HttpStatus[403].code).send(
+        Exception({
+            ...HttpStatus[403],
+            message: "Unabled autorization key.",
+        }),
+    );
 };
