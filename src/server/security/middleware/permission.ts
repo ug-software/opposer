@@ -118,7 +118,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
         res.cookie("refresh_token", revalidate.refresh, {
             httpOnly: true,
-            expires: new Date(current.getTime() + 10 * 60 * 60 * 1000), // 10 horas
+            expires: new Date(current.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 dias
         });
 
         await sessionRepository.save({
