@@ -206,7 +206,9 @@ export default class Auth {
 
     @Method()
     async logout(payload: PayloadRequest<string>) {
-        if (!payload.data) {
+        const token =
+            payload.data || payload.headers.cookies.data.refresh_token;
+        if (!token) {
             return Exception({
                 ...HttpStatus[400],
                 message: "Token is required for logout user.",
@@ -218,7 +220,7 @@ export default class Auth {
 
         var sessionRepository = db.getRepository(Session);
         await sessionRepository.update(
-            { rt: payload.data },
+            { rt: token },
             {
                 ac: false,
                 lou: new Date(),
