@@ -1,4 +1,3 @@
-import { BaseEntity, FindOptionsSelect } from "typeorm";
 import { ClassType } from "./system.js";
 export interface ControllerApiProps {
   handler?: string;

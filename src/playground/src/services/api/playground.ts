@@ -5,7 +5,7 @@ async function getAppMap(): Promise<{
   error?: string;
   data?: OpposerMap;
 }> {
-  return await fetch("/data/opposer-map.json", {
+  return await fetch("/opposer-map.json", {
     method: "GET",
   })
     .then(async (res) => ({ success: true, data: await res.json() }))
@@ -19,7 +19,7 @@ async function sendRequestOpposer(props: string): Promise<{
   data?: any;
 }> {
   try {
-    const res = await fetch("http://localhost:3838/opposer", {
+    const res = await fetch("/opposer", {
       method: "POST",
       body: props,
       headers: {

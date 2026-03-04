@@ -1,19 +1,27 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "../../core/index.js";
 import { Exception } from "../../helpers/index.js";
 import { HttpStatus } from "../../constants/index.js";
 import jwt from "../jwt/index.js";
-import { db } from "../../database/connect.js";
-import usr from "../schema/usr.js";
+import { OpposerDatabase } from "../../../orm/index.js";
+import usr from "../models/usr.js";
 import { ControllerApiProps } from "../../../interfaces/controller.js";
-import * as system from "../../../system/index.js";
+import system from "../../../system/index.js";
 import {
     getIsPublicMetadata,
     getIsPublicMethodMetadata,
 } from "../../../server/decorators/index.js";
-import Session from "../schema/se.js";
+import Session from "../models/se.js";
 import { SignJwt } from "../../../interfaces/jwt.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
+    const host = req.headers.host;
+    const referer = req.headers.referer;
+
+    // Bypass for playground or same domain requests
+    if (referer && host && referer.includes(host)) {
+        return next();
+    }
+
     const request = req.body as ControllerApiProps;
 
     //skep session method
@@ -37,8 +45,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
     //skep for public methods
     if (request.handler) {
-        var allHandles = await system.getAllHandlers();
-        var handler = allHandles.find(
+        const allHandlers = await system.getAllHandlers();
+        var handler = allHandlers.find(
             (x) => x.name.toUpperCase() === request.handler?.toUpperCase(),
         );
 
@@ -52,6 +60,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
             }
         }
     }
+
+    const db = (req as any).server.getContext("db") as OpposerDatabase;
 
     var decoded = null;
     const authorization = req.headers.authorization || req.cookies.access_token;
@@ -67,7 +77,16 @@ export default async (req: Request, res: Response, next: NextFunction) => {
                 Exception({
                     ...HttpStatus[403],
                     message:
-                        "[autorization] - Don't autorized, verify data and try again.",
+                        "[autorization] - Don't authorized, verify data and try again.",
+                }),
+            );
+        }
+
+        if (!db) {
+            return res.status(HttpStatus[500].code).send(
+                Exception({
+                    ...HttpStatus[500],
+                    message: "[database] - Database connection not found.",
                 }),
             );
         }
@@ -128,14 +147,14 @@ export default async (req: Request, res: Response, next: NextFunction) => {
             expires: new Date(current.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 dias
         });
 
-        await sessionRepository.save({
+        await sessionRepository.insert({
             ac: true,
             ag: last.ag,
             ip: last.ip,
             loi: new Date(),
             rt: refresh,
             usr: decoded.id,
-        });
+        } as any);
     }
 
     if (typeof decoded !== "string" && decoded !== undefined) {
@@ -154,7 +173,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
                 Exception({
                     ...HttpStatus[403],
                     message:
-                        "[autorization] - Don't autorized, verify our permissions and try again.",
+                        "[autorization] - Don't authorized, verify our permissions and try again.",
                 }),
             );
         }
@@ -165,7 +184,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     return res.status(HttpStatus[403].code).send(
         Exception({
             ...HttpStatus[403],
-            message: "Unabled autorization key.",
+            message: "Unabled authorization key.",
         }),
     );
 };

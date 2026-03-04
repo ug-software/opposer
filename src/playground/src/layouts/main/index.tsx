@@ -1,4 +1,4 @@
-import { Outlet, useParams, useLocation } from "react-router"
+import { Outlet, useLocation, useNavigate } from "react-router"
 import { useState } from "react";
 import { MainWrapperLayout, MainContainerLayout, MainNavLayout } from "./styles";
 import { Drawer } from "../../components";
@@ -8,23 +8,33 @@ import KeyboardDoubleArrowRightRoundedIcon from '@mui/icons-material/KeyboardDou
 import KeyboardDoubleArrowLeftRoundedIcon from '@mui/icons-material/KeyboardDoubleArrowLeftRounded';
 import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import BubbleChartRoundedIcon from '@mui/icons-material/BubbleChartRounded';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import { useAuth } from "../../context/auth";
 
 const MenuItems = [
     {
         label: "Handlers",
-        Icon: <BubbleChartRoundedIcon/>
+        Icon: <BubbleChartRoundedIcon/>,
+        path: "/"
     },
     {
         label: "Schemas",
-        Icon: <AutoStoriesRoundedIcon/>
+        Icon: <AutoStoriesRoundedIcon/>,
+        path: "/database-schema"
     }
 ]
 
 export default () => {
     const [open, setOpen] = useState<boolean>(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { logout } = useAuth();
 
     const handleChangeOpen = () => setOpen(state => !state)
+
+    const handleNavigate = (path: string) => {
+        navigate(path);
+    }
 
     return(
         <MainWrapperLayout>
@@ -33,7 +43,10 @@ export default () => {
                     <List>
                         {MenuItems.map((item, index) => (
                         <ListItem key={index} disablePadding>
-                            <ListItemButton selected={location.pathname.includes(item.label.toLowerCase())}>
+                            <ListItemButton 
+                                selected={location.pathname === item.path || (item.path === "/" && location.pathname === "")}
+                                onClick={() => handleNavigate(item.path)}
+                            >
                                 <ListItemIcon>
                                     {item.Icon}
                                 </ListItemIcon>
@@ -44,6 +57,14 @@ export default () => {
                     </List>
                     <Divider />
                     <List style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                        <ListItem disablePadding>
+                            <ListItemButton onClick={logout}>
+                                <ListItemIcon>
+                                    <LogoutRoundedIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Sair" />
+                            </ListItemButton>
+                        </ListItem>
                         <ListItem disablePadding>
                             <ListItemButton onClick={handleChangeOpen}>
                                 <ListItemIcon>

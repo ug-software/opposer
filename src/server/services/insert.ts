@@ -1,13 +1,14 @@
-import { TypeORMError } from "typeorm";
 import { HandleInsertProps } from "../../interfaces/controller.js";
-import { Exception, Success } from "..//helpers/index.js";
+import { Exception, Success } from "../helpers/index.js";
 import { HttpStatus } from "../constants/index.js";
-import * as system from "../../system/index.js";
-import { db } from "..//database/index.js";
+import system from "../../system/index.js";
+import opposerServer from "../core/index.js";
+import { OpposerDatabase } from "../../orm/index.js";
 
 export default async (props: HandleInsertProps) => {
   try {
-    var schema = (await system.getAllModels()).find(
+    const allModels = await system.getAllModels();
+    const schema = allModels.find(
       (x) => x.name === props.model
     );
 
@@ -19,15 +20,17 @@ export default async (props: HandleInsertProps) => {
       });
     }
 
+    const db = opposerServer.getContext<OpposerDatabase>("db");
+
     if (!db) {
       return Exception({
-        name: HttpStatus[400].name,
-        code: HttpStatus[400].code,
-        message: "Unable to connect for db.",
+        name: HttpStatus[500].name,
+        code: HttpStatus[500].code,
+        message: "Database not connected.",
       });
     }
 
-    var repository = db.getRepository(schema.entity);
+    const repository = db.getRepository(schema.entity);
 
     if (typeof props.data !== "object") {
       return Exception({
@@ -37,50 +40,43 @@ export default async (props: HandleInsertProps) => {
       });
     }
 
-    //valida se todas as propriedades que existem na data existem no repository
-    var repositoryColumns = [
-      ...repository.metadata.columns,
-      ...repository.metadata.relations,
-    ];
+    const repositoryFields = repository.Fields.map(f => f.name);
 
-    var thereIsPropertyOutsideTheRule = Object.keys(props.data).map((key) => {
-      if (
-        !repositoryColumns.find(
-          (x) => x.propertyName == key && x.propertyName !== "id"
-        )
-      ) {
-        return true;
-      }
-
-      return false;
-    });
-
-    if (thereIsPropertyOutsideTheRule.includes(true)) {
-      return Exception({
-        name: HttpStatus[400].name,
-        code: HttpStatus[400].code,
-        message:
-          "'Data' outside of expected range, check your data and try again.",
-      });
-    }
+    const checkDataProperties = (data: any) => {
+      return Object.keys(data).every(key => repositoryFields.includes(key) || key === 'id');
+    };
 
     if (Array.isArray(props.data)) {
-      var items = props.data.map((x) => repository.create(x));
-      await repository.insert(items);
+      for (const item of props.data) {
+        if (!checkDataProperties(item)) {
+          return Exception({
+            name: HttpStatus[400].name,
+            code: HttpStatus[400].code,
+            message: "Some data properties are outside the expected range.",
+          });
+        }
+      }
+      
+      const results = await Promise.all(props.data.map(item => repository.insert(item)));
+      return Success(results);
+    } else {
+      if (!checkDataProperties(props.data)) {
+        return Exception({
+          name: HttpStatus[400].name,
+          code: HttpStatus[400].code,
+          message: "'Data' outside of expected range.",
+        });
+      }
 
-      return Success(items);
+      const result = await repository.insert(props.data);
+      return Success(result);
     }
 
-    const item = repository.create(props.data);
-    await repository.insert(item);
-
-    return Success(item);
-  } catch (err) {
-    var error = err as TypeORMError;
+  } catch (err: any) {
     return Exception({
       name: HttpStatus[500].name,
       code: HttpStatus[500].code,
-      message: error.message,
+      message: err.message,
     });
   }
 };

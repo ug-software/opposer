@@ -1,5 +1,3 @@
-import { ObjectType } from "typeorm";
-
 export type ValidationFunction = (
   value: unknown,
   context: object
@@ -13,7 +11,7 @@ export interface SettingsField {
   min?: number;
   max?: number;
   relation?: {
-    target: () => ObjectType<unknown>;
+    target: () => any;
     type: "many-to-one" | "one-to-many" | "many-to-many" | "one-to-one" | null;
     inverseSide: string;
     joinColumn?: boolean;
