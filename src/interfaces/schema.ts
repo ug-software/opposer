@@ -1,4 +1,3 @@
-import { EntitySchema, ObjectType } from "typeorm";
 import { Field } from "./field.js";
 
 export interface SchemaDefinition {
@@ -7,6 +6,6 @@ export interface SchemaDefinition {
 
 export interface SchemaResult {
   validation: Record<string, any>;
-  entity: EntitySchema<any> & ClassDecorator;
+  entity: any;
   definition: SchemaDefinition;
 }

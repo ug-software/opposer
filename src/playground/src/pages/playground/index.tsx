@@ -94,6 +94,14 @@ export default () => {
       
       switch (isView) {
         case "models":
+          const modelData = opposerMap.models[selected] || { schema: {} };
+          const modelFields = modelData.schema;
+          const initialData = Object.keys(modelFields).reduce((acc: any, key) => {
+            acc[key] = modelFields[key] === "number" ? 0 : 
+                       modelFields[key] === "boolean" ? false : "";
+            return acc;
+          }, {});
+
           if(modelMethod === "get"){
             setPaneRequest(JSON.stringify({
               model: selected,
@@ -109,7 +117,7 @@ export default () => {
             setPaneRequest(JSON.stringify({
               model: selected,
               method: modelMethod,
-              data: {}
+              payload: initialData
             }, null, 2));
           }
 
@@ -118,7 +126,7 @@ export default () => {
               model: selected,
               method: modelMethod,
               filter: {},
-              data: {}
+              payload: initialData
             }, null, 2));
           }
 
@@ -133,16 +141,24 @@ export default () => {
           break;
       
         default:
+          const handlerMethods = opposerMap.handlers[handler] || {};
+          const methodPayload = (handlerMethods as any)[selected]?.payload || {};
+          const initialPayload = Object.keys(methodPayload).reduce((acc: any, key) => {
+            acc[key] = methodPayload[key] === "number" ? 0 : 
+                       methodPayload[key] === "boolean" ? false : "";
+            return acc;
+          }, {});
+
           setPaneRequest(JSON.stringify({
             handler,
             method: selected,
-            payload: {}
+            payload: initialPayload
           }, null, 2));
 
           break;
       }
       
-    }, [modelMethod, selected, isView]); 
+    }, [modelMethod, selected, isView, opposerMap]); 
 
     return(
         <WrapperHandlersAndMethods>

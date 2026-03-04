@@ -1,14 +1,15 @@
 import http from "http";
-import * as core from "express-serve-static-core";
 
 export interface CreateServerProps {
   cors?: {
-    origin: string;
+    origin: string | string[];
   };
+  modelsPath?: string;
+  handlersPath?: string;
 }
 
 export interface ServerInstance {
-  opposer: core.Express;
+  opposer: any;
   initialize: () => void;
 }
 

@@ -8,6 +8,7 @@ import {
 } from "react-router";
 import { theme } from "./theme/pallet";
 import { CssBaseline } from "@mui/material";
+import { AuthProvider } from "./context/auth";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -25,7 +26,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider theme={theme}>
           <CssBaseline/>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
         <ScrollRestoration />
         <Scripts />

@@ -1,4 +1,4 @@
-import { CookieOptions, Request, Response } from "express";
+import { Request, Response } from "../core/index.js";
 import _get from "../services/get.js";
 import _insert from "../services/insert.js";
 import _update from "../services/update.js";
@@ -12,19 +12,18 @@ import {
   HandleUpdateProps,
 } from "../../interfaces/controller.js";
 import { HttpStatus } from "../constants/index.js";
-import * as system from "../../system/index.js";
-import { Field } from "../database/field.js";
+import system from "../../system/index.js";
 import * as helper from "../handlers/index.js";
 import Auth from "../security/handler/auth.js";
 import { getPayloadMetadata } from "../decorators/payload.js";
 import { ClassType } from "../../interfaces/system.js";
-import { Exception } from "../helpers/index.js";
+import { Exception, validateData } from "../helpers/index.js";
 import { PayloadRequest } from "../../interfaces/handler.js";
+
 const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
   var props = req.body as ControllerApiProps;
-
   //handler method call
   if (props.handler) {
     var { method, payload, handler } = props;
@@ -37,7 +36,6 @@ export default async (req: Request, res: Response) => {
     }
 
     var handlers = await helper.loadHandlers();
-
     if (settings.auth) {
       var auth = {
         methods: [
@@ -91,7 +89,6 @@ export default async (req: Request, res: Response) => {
     }
 
     var allDto = getPayloadMetadata(__meta.handler);
-
     //realize validation dto
     if (Array.isArray(allDto) && allDto.length > 0) {
       var payloadMetadata = allDto.find(
@@ -99,7 +96,8 @@ export default async (req: Request, res: Response) => {
       );
 
       if (payloadMetadata) {
-        var erros = Field.validate(payloadMetadata.dto, payload);
+        var erros = validateData(payloadMetadata.dto, payload);
+
         if (Object.keys(erros).length > 0) {
           res.status(400).json({
             erros,
@@ -124,10 +122,10 @@ export default async (req: Request, res: Response) => {
           userAgent: req.headers["user-agent"],
           cookies: {
             data: req.cookies,
-            set: (name: string, value: string, options: CookieOptions) => {
+            set: (name: string, value: string, options: any) => {
               res.cookie(name, value, options);
             },
-            remove: (name: string, options?: CookieOptions) => {
+            remove: (name: string, options?: any) => {
               res.clearCookie(name, options);
             },
           },
@@ -150,7 +148,12 @@ export default async (req: Request, res: Response) => {
   }
 
   //database request...
-  var model = (await system.getAllModels()).find((x) => x.name === props.model);
+  var allModels = await system.getAllModels();
+
+  var model = allModels.find(
+    (x) => x.name.toLocaleLowerCase() === props.model.toLocaleLowerCase()
+  );
+
   if (!model) {
     res.status(400).json({
       name: HttpStatus[400].name,
@@ -169,12 +172,12 @@ export default async (req: Request, res: Response) => {
     },
   };
 
-  if (!["get", "insert", "update", "delete"].includes(req.body.method)) {
+  if (!["get", "insert", "update", "delete"].includes(props.method)) {
     result.error.message = "It was not possible to identify the method used.";
   }
 
   if (["insert", "update"].includes(props.method)) {
-    var erros = Field.validate(model, props);
+    var erros = validateData(model.entity, props.payload);
     if (Object.keys(erros).length > 0) {
       return res.status(400).json({
         erros,
@@ -187,25 +190,21 @@ export default async (req: Request, res: Response) => {
     case "get":
       var getBody = req.body as HandleGetProps;
       result = await _get(getBody);
-
       break;
 
     case "insert":
       var insertBody = req.body as HandleInsertProps;
       result = await _insert(insertBody);
-
       break;
 
     case "update":
       var updateBody = req.body as HandleUpdateProps;
       result = await _update(updateBody);
-
       break;
 
     case "delete":
       var deleteBody = req.body as HandleDeleteProps;
       result = await _delete(deleteBody);
-
       break;
   }
 
@@ -214,7 +213,6 @@ export default async (req: Request, res: Response) => {
     return;
   }
 
-  //@ts-ignore
-  res.status(result.error.code).json(result.error);
+  res.status(result.error!.code as number).json(result.error);
   return;
 };

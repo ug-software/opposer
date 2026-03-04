@@ -13,6 +13,10 @@
             "import": "./lib/esm/index.js",
             "require": "./lib/cjs/index.js"
         },
+        "./orm": {
+            "import": "./lib/esm/orm/index.js",
+            "require": "./lib/cjs/orm/index.js"
+        },
         "./persistent": {
             "import": "./lib/esm/persistent/index.js",
             "require": "./lib/cjs/persistent/index.js"
@@ -21,9 +25,13 @@
             "import": "./lib/esm/playground/index.js",
             "require": "./lib/cjs/playground/index.js"
         },
-        "./models": {
-            "import": "./lib/esm/server/security/index.js",
-            "require": "./lib/cjs/server/security/index.js"
+        "./server": {
+            "import": "./lib/esm/server/index.js",
+            "require": "./lib/cjs/server/index.js"
+        },
+        "./system": {
+            "import": "./lib/esm/system/index.js",
+            "require": "./lib/cjs/system/index.js"
         }
     },
     "scripts": {
@@ -41,6 +49,7 @@
         "jsonwebtoken": "^9.0.2",
         "merge-stream": "^2.0.0",
         "reflect-metadata": "^0.2.2",
+        "sqlite3": "^5.1.7",
         "typeorm": "^0.3.27"
     },
     "devDependencies": {

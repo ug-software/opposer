@@ -1,4 +1,4 @@
-import { DataSourceOptions } from "typeorm";
+import { ConnectionOptions } from "../orm/index.js";
 
 export interface OpposerSystemConfigOptions {
   models: string;
@@ -9,6 +9,9 @@ export interface OpposerSystemConfigOptions {
   urlencoded?: boolean;
   helmet?: boolean;
   logger?: boolean;
+  cors?: {
+    origin: string | string[];
+  };
   rateLimit?: {
     windowMs: number;
     max: number;
@@ -23,7 +26,7 @@ export interface OpposerSystemConfigOptions {
     refresh: string;
     recover: string;
   };
-  database: DataSourceOptions;
+  database: ConnectionOptions;
   manager: {
     firstName: string;
     lastName: string;

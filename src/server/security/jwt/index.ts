@@ -1,9 +1,9 @@
 //@ts-ignore
 import jwt from "jsonwebtoken";
-import { ErrorJwt, ForgetJwt, SignJwt } from "../../../interfaces/jwt";
-import * as System from "../../../system";
+import { ErrorJwt, ForgetJwt, SignJwt } from "../../../interfaces/jwt.js";
+import system from "../../../system/index.js";
 
-const settings = System.getSettingsFile();
+const settings = system.getSettingsFile();
 const accessJwt = process.env.ACCESS_JWT
   ? process.env.ACCESS_JWT
   : settings.jwt.access;
@@ -90,7 +90,7 @@ async function forget(payload: ForgetJwt) {
 async function recover(token: string) {
   if (!recoverJwt) {
     throw new Error(
-      "[jwt] - Don't finded token for recover password, generate running 'npx opposer jwt generate' or consulting documentation."
+      "[jwt] - Don't finded token secret for recover password, generate running 'npx opposer jwt generate' or consulting documentation."
     );
   }
 
@@ -115,7 +115,7 @@ async function verify(token: string) {
     const secret = process.env.ACCESS_JWT
       ? process.env.ACCESS_JWT
       : settings.jwt;
-    jwt.verify(token, secret);
+    jwt.verify(token, secret as any);
     return true;
   } catch (err) {
     var erro = err as ErrorJwt;
