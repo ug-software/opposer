@@ -6,6 +6,7 @@ export interface CreateServerProps {
   };
   modelsPath?: string;
   handlersPath?: string;
+  schedulesPath?: string;
 }
 
 export interface ServerInstance {

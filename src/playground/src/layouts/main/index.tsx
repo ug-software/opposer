@@ -8,6 +8,7 @@ import KeyboardDoubleArrowRightRoundedIcon from '@mui/icons-material/KeyboardDou
 import KeyboardDoubleArrowLeftRoundedIcon from '@mui/icons-material/KeyboardDoubleArrowLeftRounded';
 import AutoStoriesRoundedIcon from '@mui/icons-material/AutoStoriesRounded';
 import BubbleChartRoundedIcon from '@mui/icons-material/BubbleChartRounded';
+import ScheduleRoundedIcon from '@mui/icons-material/ScheduleRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { useAuth } from "../../context/auth";
 
@@ -21,6 +22,11 @@ const MenuItems = [
         label: "Schemas",
         Icon: <AutoStoriesRoundedIcon/>,
         path: "/database-schema"
+    },
+    {
+        label: "Scheduler",
+        Icon: <ScheduleRoundedIcon/>,
+        path: "/scheduler"
     }
 ]
 

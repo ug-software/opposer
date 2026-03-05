@@ -15,6 +15,7 @@ export interface ConnectionOptions {
   username?: string;
   password?: string;
   database: string;
+  logging?: boolean;
 }
 
 export class OpposerDatabase {

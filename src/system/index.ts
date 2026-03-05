@@ -7,8 +7,7 @@ import Key from "../server/security/models/ke.js";
 import Role from "../server/security/models/rl.js";
 import Session from "../server/security/models/se.js";
 import User from "../server/security/models/usr.js";
-import { OpposerDatabase } from "../orm/opposer.js";
-import Context from "../persistent/context/index.js";
+import ScheduleHistory from "../scheduler/models/history.js";
 import { MetadataStore } from "../orm/metadata.js";
 
 export class OpposerSystem {
@@ -43,16 +42,19 @@ export class OpposerSystem {
   private getAuthModels(
     settings: OpposerSystemConfigOptions
   ): { name: string; entity: any }[] {
+    const models = [];
     if (settings.auth) {
-      return [
+      models.push(
         { name: "crp", entity: ChangeRequestPassword },
         { name: "ke", entity: Key },
         { name: "rl", entity: Role },
         { name: "se", entity: Session },
-        { name: "usr", entity: User },
-      ];
+        { name: "usr", entity: User }
+      );
     }
-    return [];
+    // Always include ScheduleHistory as it's a core feature
+    models.push({ name: "sh", entity: ScheduleHistory });
+    return models;
   }
 
   async getAllHandlers(customHandlersPath?: string): Promise<ClassType<any>[]> {
@@ -65,12 +67,16 @@ export class OpposerSystem {
       handlersPath = path.resolve(root, settings.handlers, "handlers");
     }
 
+    // Dynamic import to avoid circular dependency
+    const SchedulerHandler = (await import("../scheduler/handlers/index.js")).default;
+    const internalHandlers: ClassType<any>[] = [SchedulerHandler];
+
     if (!fs.existsSync(handlersPath)) {
-      return [];
+      return internalHandlers;
     }
 
     const handlersFiles = this.getAllFiles(handlersPath);
-    return await Promise.all(
+    const userHandlers = await Promise.all(
       handlersFiles.map(async (filePath) => {
         const fileUrl = pathToFileURL(filePath).href;
 
@@ -78,6 +84,8 @@ export class OpposerSystem {
         return (await import(fileUrl)).default;
       })
     );
+
+    return [...internalHandlers, ...userHandlers.filter((h) => h)];
   }
 
   getSettingsFile(): OpposerSystemConfigOptions {
@@ -118,8 +126,9 @@ export class OpposerSystem {
           process.env.OPPOSER_DATABASE_PASSWORD ||
           (config.database as any)?.password,
         database:
-          process.env.OPPOSER_DATABASE_NAME ||
-          (config.database as any)?.database,
+          process.env.OPPOSER_DATABASE_NAME || (config.database as any)?.database,
+        logging:
+          process.env.OPPOSER_DATABASE_LOGGING === "true" || (config.database as any)?.logging,
       };
     }
 

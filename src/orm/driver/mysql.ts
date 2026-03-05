@@ -22,6 +22,9 @@ export class MySQLDriver implements DatabaseDriver {
   }
 
   async query<T = any>(sql: string, params?: any[]): Promise<T[]> {
+    if (this.options.logging) {
+      console.log(`[SQL] ${sql}${params && params.length ? ` -- params: ${JSON.stringify(params)}` : ""}`);
+    }
     const adjustedSql = sql.replace(/\$(\d+)/g, "?");
     const [rows] = await this.connection.execute(adjustedSql, params);
     return rows;

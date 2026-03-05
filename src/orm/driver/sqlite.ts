@@ -26,6 +26,9 @@ export class SQLiteDriver implements DatabaseDriver {
   }
 
   async query<T = any>(sql: string, params?: any[]): Promise<T[]> {
+    if (this.options.logging) {
+      console.log(`[SQL] ${sql}${params && params.length ? ` -- params: ${JSON.stringify(params)}` : ""}`);
+    }
     return new Promise((resolve, reject) => {
       const adjustedSql = sql.replace(/\$(\d+)/g, "?");
       this.db.all(adjustedSql, params, (err: any, rows: any) => {
