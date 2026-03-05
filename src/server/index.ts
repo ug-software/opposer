@@ -4,6 +4,7 @@ import system from "../system/index.js";
 import permission from "./security/middleware/permission.js";
 import autorization from "./security/middleware/autorization.js";
 import Auth from "./security/handler/auth.js";
+import scheduler from "../scheduler/index.js";
 import {
   OpposerDatabase,
   PostgresDriver,
@@ -124,6 +125,10 @@ export default async function Server(
   opposerServer.setContext("db", db);
   opposerServer.setContext("modelsPath", props.modelsPath);
   opposerServer.setContext("handlersPath", props.handlersPath);
+
+  console.log("-> Initializing scheduler.");
+  await scheduler.initialize(props.schedulesPath);
+  scheduler.start();
 
   console.log("-> Initializing core server.");
   let url = "/opposer";

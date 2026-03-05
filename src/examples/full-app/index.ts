@@ -20,10 +20,11 @@ async function runFullExample() {
 
   try {
     // 2. Start Opposer Server
-    // Passing the local models path so Playground and initialization can find our entities
+    // Passing the local models and schedules path so initialization can find our entities
     const { initialize } = await Server({
       cors: { origin: "*" },
-      modelsPath: path.resolve(__dirname, "models")
+      modelsPath: path.resolve(__dirname, "models"),
+      schedulesPath: path.resolve(__dirname, "schedules")
     });
 
     // 3. Populate Initial Data

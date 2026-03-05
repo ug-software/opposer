@@ -48,6 +48,7 @@
         "express": "^4.21.2",
         "jsonwebtoken": "^9.0.2",
         "merge-stream": "^2.0.0",
+        "node-cron": "^4.2.1",
         "reflect-metadata": "^0.2.2",
         "sqlite3": "^5.1.7",
         "typeorm": "^0.3.27"
@@ -59,6 +60,7 @@
         "@types/express": "^5.0.5",
         "@types/gulp": "^4.0.17",
         "@types/node": "^22.13.14",
+        "@types/node-cron": "^3.0.11",
         "del": "^8.0.1",
         "gulp": "^5.0.1",
         "gulp-typescript": "^6.0.0-alpha.1",

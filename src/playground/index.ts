@@ -30,11 +30,13 @@ async function generateMap(
     "se",
     "ke",
     "crp",
+    "sh",
     "User",
     "Role",
     "Session",
     "Key",
     "ChangeRequestPassword",
+    "ScheduleHistory",
   ];
 
   if (Array.isArray(allModels)) {
