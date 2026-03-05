@@ -7,6 +7,7 @@ import {
   PayloadSocialLogin,
 } from "../../../interfaces/security.js";
 import User from "../models/usr.js";
+import Role from "../models/rl.js";
 import { Exception, Success, validateData } from "../../helpers/index.js";
 import { HttpStatus } from "../../constants/index.js";
 import jwt from "../jwt/index.js";
@@ -83,9 +84,10 @@ export default class Auth {
       });
     }
 
-    // Fetch roles (assuming roles are loaded or we need another query since new ORM doesn't auto-load relations yet)
-    // For simplicity in this refactor, I'll assume usr has rl or roles are handled.
-    // In your original code it had relations: ["rl"].
+    var roleRepository = this.db.getRepository(Role);
+    var roles = await roleRepository.find({
+      where: { usr: usr.id },
+    });
 
     var { token, refresh } = await jwt.sign({
       fn: usr.fn,
@@ -93,7 +95,7 @@ export default class Auth {
       lg: usr.lg,
       ln: usr.ln,
       exp: 0,
-      rl: (usr as any).rl?.map(({ sm, mt }: any) => ({ sm, mt })) || [],
+      rl: roles.map(({ sm, mt }: any) => ({ sm, mt })),
     });
 
     // register new session init
@@ -131,6 +133,7 @@ export default class Auth {
         fn: usr.fn,
         ln: usr.ln,
         lg: usr.lg,
+        rl: roles.map(({ sm, mt }: any) => ({ sm, mt })),
       },
     });
   }

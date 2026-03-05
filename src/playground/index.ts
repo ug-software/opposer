@@ -13,18 +13,33 @@ import { MetadataStore } from "../orm/index.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function generateMap(server?: any, modelsPath?: string, handlersPath?: string) {
+async function generateMap(
+  server?: any,
+  modelsPath?: string,
+  handlersPath?: string
+) {
   var map = {
     models: {},
     handlers: {},
   };
 
   var allModels = await system.getAllModels();
-  const internalModels = ["usr", "rl", "se", "ke", "crp", "User", "Role", "Session", "Key", "ChangeRequestPassword"];
+  const internalModels = [
+    "usr",
+    "rl",
+    "se",
+    "ke",
+    "crp",
+    "User",
+    "Role",
+    "Session",
+    "Key",
+    "ChangeRequestPassword",
+  ];
 
   if (Array.isArray(allModels)) {
     var models = allModels
-      .filter(m => !internalModels.includes(m.name))
+      .filter((m) => !internalModels.includes(m.name))
       .reduce((__models: any, model) => {
         var fields = getFieldsMetadata(model.entity);
         const meta = MetadataStore.getEntity(model.entity);
@@ -37,7 +52,7 @@ async function generateMap(server?: any, modelsPath?: string, handlersPath?: str
 
           __models[model.name] = {
             description: meta?.description || "Database Entity Definition",
-            schema: schema
+            schema: schema,
           };
         }
 
@@ -150,6 +165,7 @@ export default async function Playground(req: any, res: any, next: () => void) {
       res.setHeader("Content-Type", contentType);
       res.status(200).end(content);
     } catch (error) {
+      console.log("error", error);
       res.status(500).json({ message: "Error serving playground file." });
     }
     return;
