@@ -48,7 +48,7 @@ export class SQLiteDriver implements DatabaseDriver {
         let constraints = "";
         if (field.primary) constraints += " PRIMARY KEY";
         if (field.generated && field.type === "number") constraints += " AUTOINCREMENT";
-        if (!field.nullable && !field.primary) constraints += " NOT NULL";
+        if (field.nullable === false && !field.primary) constraints += " NOT NULL";
         if (field.default !== undefined) constraints += ` DEFAULT ${this.formatDefault(field.default)}`;
 
         return `"${field.name}" ${sqlType}${constraints}`;

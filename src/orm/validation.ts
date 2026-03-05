@@ -29,7 +29,7 @@ class NumberValidator extends FieldValidator {
   constructor(message: string) {
     super();
     this._type = "number";
-    this._cases.push((value) => typeof value !== "number" ? message : null);
+    this._cases.push((value) => (value === null || value === undefined) ? null : (typeof value !== "number" ? message : null));
   }
 
   required(message: string) {
@@ -52,7 +52,7 @@ class StringValidator extends FieldValidator {
   constructor(message: string) {
     super();
     this._type = "string";
-    this._cases.push((value) => typeof value !== "string" ? message : null);
+    this._cases.push((value) => (value === null || value === undefined) ? null : (typeof value !== "string" ? message : null));
   }
 
   required(message: string) {
@@ -61,7 +61,7 @@ class StringValidator extends FieldValidator {
   }
 
   match(regex: RegExp, message: string) {
-    this._cases.push((value) => !regex.test(String(value)) ? message : null);
+    this._cases.push((value) => (value === null || value === undefined) ? null : (!regex.test(String(value)) ? message : null));
     return this;
   }
 }
@@ -70,7 +70,7 @@ class BooleanValidator extends FieldValidator {
   constructor(message: string) {
     super();
     this._type = "boolean";
-    this._cases.push((value) => typeof value !== "boolean" ? message : null);
+    this._cases.push((value) => (value === null || value === undefined) ? null : (typeof value !== "boolean" ? message : null));
   }
 
   required(message: string) {
@@ -84,7 +84,7 @@ class DateValidator extends FieldValidator {
     super();
     this._type = "date";
     this._cases.push((value) => {
-      if (!value) return message;
+      if (value === null || value === undefined) return null;
       const d = new Date(value as any);
       return isNaN(d.getTime()) ? message : null;
     });

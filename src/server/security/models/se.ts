@@ -29,7 +29,7 @@ export default class Session {
   @Field(() => f().date("loi is date.").required("loi is required."))
   loi!: Date;
 
-  @Field(() => f().date("lou is date."))
+  @Field({ nullable: true, validation: () => f().date("lou is date.") })
   lou?: Date;
 
   @CreateDateColumn()

@@ -59,9 +59,13 @@ async function ensureManager(db: OpposerDatabase, settings: any, modelsPath?: st
     const userEntity = allModels.find(
       (x) => x.name === "User" || x.name === "usr"
     );
+    const roleEntity = allModels.find(
+      (x) => x.name === "Role" || x.name === "rl"
+    );
 
-    if (userEntity) {
+    if (userEntity && roleEntity) {
       const userRepository = db.getRepository(userEntity.entity);
+      const roleRepository = db.getRepository(roleEntity.entity);
 
       let login = process.env.MANAGER_LOGIN || settings.manager?.login;
       let firstName =
@@ -70,18 +74,31 @@ async function ensureManager(db: OpposerDatabase, settings: any, modelsPath?: st
         process.env.MANAGER_LAST_NAME || settings.manager?.lastName;
       let password = process.env.MANAGER_PASSWORD || settings.manager?.password;
 
-      const existingManager = await userRepository.findOne({
+      let manager = await userRepository.findOne({
         where: { lg: login },
       });
 
-      if (!existingManager) {
+      if (!manager) {
         console.log("-> Creating manager account.");
-        await userRepository.insert({
+        manager = await userRepository.insert({
           fn: firstName,
           ln: lastName,
           lg: login,
           ps: password,
           ac: true,
+        } as any);
+      }
+
+      const hasAllRole = await roleRepository.findOne({
+        where: { usr: (manager as any).id, sm: "all", mt: "all" },
+      });
+
+      if (!hasAllRole) {
+        console.log("-> Creating all-access role for manager.");
+        await roleRepository.insert({
+          usr: (manager as any).id,
+          sm: "all",
+          mt: "all",
         } as any);
       }
     }
