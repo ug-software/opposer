@@ -9,6 +9,8 @@ import {
 import { theme } from "./theme/pallet";
 import { CssBaseline } from "@mui/material";
 import { AuthProvider } from "./context/auth";
+import { ToastProvider } from "./context/toast";
+import { ConfirmProvider } from "./context/confirm";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -26,9 +28,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider theme={theme}>
           <CssBaseline/>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          <ToastProvider>
+            <ConfirmProvider>
+              <AuthProvider>
+                {children}
+              </AuthProvider>
+            </ConfirmProvider>
+          </ToastProvider>
         </ThemeProvider>
         <ScrollRestoration />
         <Scripts />

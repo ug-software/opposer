@@ -26,6 +26,7 @@ import {
 import { playgroundApi } from "../../services";
 import type { OpposerMap } from "../../interfaces";
 import useRequest from "../../hooks/use-request";
+import { useToast } from "../../context/toast";
 
 export function meta() {
   return [{ title: "Opposer - Database Schemas" }];
@@ -37,6 +38,7 @@ export default function DatabaseSchema() {
     models: {},
   });
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const { showToast } = useToast();
 
   const [loadingGetOpposerMap, getOpposerMap] = useRequest(async () => {
     const result = await playgroundApi.getAppMap();
@@ -46,6 +48,8 @@ export default function DatabaseSchema() {
       if (firstModel) {
         setSelectedModel(firstModel);
       }
+    } else {
+      showToast(result.error || "Erro ao carregar mapa da aplicação", "error");
     }
     return null;
   });
@@ -61,31 +65,37 @@ export default function DatabaseSchema() {
   return (
     <WrapperSchema>
       <Backdrop
-        sx={(theme) => ({ zIndex: theme.zIndex.drawer + 1 })}
+        sx={(theme) => {
+          return { zIndex: theme.zIndex.drawer + 1 };
+        }}
         open={loadingGetOpposerMap}
       >
         <CircularProgress size={50} />
       </Backdrop>
 
       <Navigation>
-        <Typography variant="h6" sx={{ px: 2, mb: 2, fontWeight: 'bold' }}>
+        <Typography variant="h6" sx={{ px: 2, mb: 2, fontWeight: "bold" }}>
           Entities
         </Typography>
         <List>
-          {Object.keys(opposerMap.models).map((model, index) => (
-            <ListItem key={index} disablePadding disableGutters>
-              <ListItemButton
-                selected={selectedModel === model}
-                onClick={() => setSelectedModel(model)}
-              >
-                <ListItemText
-                  slotProps={{ primary: { noWrap: true } }}
-                  inset
-                  primary={model}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
+          {Object.keys(opposerMap.models).map((model, index) => {
+            return (
+              <ListItem key={index} disablePadding disableGutters>
+                <ListItemButton
+                  selected={selectedModel === model}
+                  onClick={() => {
+                    return setSelectedModel(model);
+                  }}
+                >
+                  <ListItemText
+                    slotProps={{ primary: { noWrap: true } }}
+                    inset
+                    primary={model}
+                  />
+                </ListItemButton>
+              </ListItem>
+            );
+          })}
         </List>
       </Navigation>
 
@@ -100,46 +110,69 @@ export default function DatabaseSchema() {
                 {description}
               </Typography>
             </Box>
-            
+
             <Divider />
 
             <StyledTableContainer component={Paper} elevation={0}>
-              <Table>
+              <Table stickyHeader>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Field Name</TableCell>
-                    <TableCell align="right">Data Type</TableCell>
+                    <TableCell sx={{ backgroundColor: "background.paper" }}>
+                      Field Name
+                    </TableCell>
+                    <TableCell
+                      align="right"
+                      sx={{ backgroundColor: "background.paper" }}
+                    >
+                      Data Type
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Object.entries(fields).map(([fieldName, type]) => (
-                    <TableRow key={fieldName} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                      <TableCell component="th" scope="row" sx={{ fontWeight: 500 }}>
-                        {fieldName}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box
-                          component="span"
-                          sx={{
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: '4px',
-                            backgroundColor: 'action.hover',
-                            fontFamily: 'monospace',
-                            fontSize: '0.85rem'
-                          }}
+                  {Object.entries(fields).map(([fieldName, type]) => {
+                    return (
+                      <TableRow
+                        key={fieldName}
+                        sx={{
+                          "&:last-child td, &:last-child th": { border: 0 },
+                        }}
+                      >
+                        <TableCell
+                          component="th"
+                          scope="row"
+                          sx={{ fontWeight: 500 }}
                         >
-                          {type as string}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          {fieldName}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Box
+                            component="span"
+                            sx={{
+                              px: 1,
+                              py: 0.5,
+                              borderRadius: "4px",
+                              backgroundColor: "action.hover",
+                              fontFormat: "monospace",
+                              fontSize: "0.85rem",
+                            }}
+                          >
+                            {type as string}
+                          </Box>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </StyledTableContainer>
           </SchemaCard>
         ) : (
-          <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100%"
+          >
             <Typography variant="h6" color="textSecondary">
               Select an entity to view its schema
             </Typography>

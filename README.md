@@ -66,6 +66,8 @@ O Opposer inclui nativamente um **Playground**, uma interface web completa para 
 - **Explorar Schemas:** Ver a definição de todas as tabelas e tipos de campos.
 - **Testar Handlers:** Executar métodos de API diretamente pelo navegador com suporte a JSON.
 - **Monitorar Schedulers:** Acompanhar o status das tarefas agendadas em tempo real.
+- **Gestão de Usuários:** Criar, editar e excluir usuários do sistema com validações integradas.
+- **Gestão de API Keys:** Gerar chaves de acesso (`opposer-key`) para integrações externas.
 
 **Acesso:** `http://localhost:3838/playground`
 
@@ -112,19 +114,100 @@ export default class Product {
     @Field({ type: "number", default: 0 })
     stock!: number;
 
+    @Field({ type: "number", default: 0 })
+    price!: number;
+
     @CreateDateColumn()
     createdAt!: Date;
 }
 ```
 
-O Opposer também oferece um **Query Builder** JSON para buscas flexíveis:
+### 🔍 Query Builder JSON
+O Opposer oferece um motor de busca flexível via JSON. Você não precisa informar o `type` se usar as chaves específicas:
+
+#### Filtrar Múltiplos (`filter`)
 ```json
 {
     "method": "get",
     "model": "products",
     "query": {
-        "type": "filter",
-        "filter": { "stock": { "$lt": 10 } } // Filtra produtos com estoque baixo
+        "filter": { "stock": { "$lt": 10 } },
+        "select": ["id", "name"]
+    }
+}
+```
+
+#### Buscar Um (`find`)
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "find": { "id": "uuid-aqui" }
+    }
+}
+```
+
+#### Contar Registros (`count`)
+Retorna a quantidade total de itens que batem com o filtro.
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "count": { "stock": { "$gt": 0 } }
+    }
+}
+```
+
+#### Verificar Existência (`exists`)
+Retorna um booleano simples.
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "exists": { "name": "Celular" }
+    }
+}
+```
+
+#### Agregações (`aggregate`)
+Suporta `sum`, `avg`, `min`, `max` e `count`.
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "aggregate": {
+            "where": { "stock": { "$gt": 0 } },
+            "aggregate": { "price": "avg", "stock": "sum" }
+        }
+    }
+}
+```
+
+#### Valores Únicos (`distinct`)
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "distinct": { "field": "category" }
+    }
+}
+```
+
+#### Agrupamento (`group`)
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "group": {
+            "by": ["category"],
+            "aggregate": { "id": "count", "price": "avg" }
+        }
     }
 }
 ```

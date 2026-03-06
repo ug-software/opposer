@@ -24,6 +24,7 @@ import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 
 import { playgroundApi } from "../../services";
 import useRequest from "../../hooks/use-request";
+import { useToast } from "../../context/toast";
 import {
   SchedulerWrapper,
   PageHeader,
@@ -58,53 +59,69 @@ export default () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const { showToast } = useToast();
 
-  const [loadingTasks, fetchTasks] = useRequest(() =>
-    playgroundApi.sendRequestOpposer(
+  const [loadingTasks, fetchTasks] = useRequest(() => {
+    return playgroundApi.sendRequestOpposer(
       JSON.stringify({
         handler: "scheduler",
         method: "listTasks",
         payload: {},
       })
-    )
-  );
+    );
+  });
 
-  const [loadingHistory, fetchHistory] = useRequest(() =>
-    playgroundApi.sendRequestOpposer(
+  const [loadingHistory, fetchHistory] = useRequest(() => {
+    return playgroundApi.sendRequestOpposer(
       JSON.stringify({
         handler: "scheduler",
         method: "getHistory",
         payload: {},
       })
-    )
-  );
+    );
+  });
 
-  const [runningTask, executeTask] = useRequest((name: string) =>
-    playgroundApi.sendRequestOpposer(
+  const [runningTask, executeTask] = useRequest((name: string) => {
+    return playgroundApi.sendRequestOpposer(
       JSON.stringify({
         handler: "scheduler",
         method: "runTask",
         payload: { name },
       })
-    )
-  );
+    );
+  });
 
   const loadData = async () => {
     const tasksRes = await fetchTasks();
-    if (tasksRes.success) setTasks(tasksRes.data.data);
+    if (tasksRes.success) {
+      setTasks(tasksRes.data.data);
+    } else {
+      showToast(tasksRes.error || "Erro ao carregar tarefas", "error");
+    }
 
     const historyRes = await fetchHistory();
-    if (historyRes.success) setHistory(historyRes.data.data);
+    if (historyRes.success) {
+      setHistory(historyRes.data.data);
+    } else {
+      showToast(historyRes.error || "Erro ao carregar histórico", "error");
+    }
   };
 
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 30000); // Refresh every 30s
-    return () => clearInterval(interval);
+    return () => {
+      return clearInterval(interval);
+    };
   }, []);
 
   const handleRunTask = async (name: string) => {
-    await executeTask(name);
+    const res = await executeTask(name);
+    if (res.success) {
+      showToast(`Tarefa '${name}' iniciada com sucesso!`, "success");
+    } else {
+      showToast(res.error || `Erro ao executar tarefa '${name}'`, "error");
+    }
     loadData();
   };
 
@@ -128,14 +145,20 @@ export default () => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
   const getStatus = (item: ExecutionHistory) => {
-    if (!item.ft) return <StatusChip label="EXECUTANDO" status="running" size="small" />;
-    if (item.sc) return <StatusChip label="SUCESSO" status="success" size="small" />;
+    if (!item.ft) {
+      return <StatusChip label="EXECUTANDO" status="running" size="small" />;
+    }
+    if (item.sc) {
+      return <StatusChip label="SUCESSO" status="success" size="small" />;
+    }
     return <StatusChip label="ERRO" status="error" size="small" />;
   };
 
@@ -145,7 +168,10 @@ export default () => {
         <Typography variant="h4" fontWeight="bold">
           Scheduler
         </Typography>
-        <IconButton onClick={loadData} disabled={loadingTasks || loadingHistory}>
+        <IconButton
+          onClick={loadData}
+          disabled={loadingTasks || loadingHistory}
+        >
           <RefreshRoundedIcon />
         </IconButton>
       </PageHeader>
@@ -165,34 +191,38 @@ export default () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tasks.map((task) => (
-                <TableRow key={task.name}>
-                  <TableCell>
-                    <TaskName>{task.name}</TaskName>
-                  </TableCell>
-                  <TableCell>{task.interval}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={task.enabled ? "ATIVO" : "INATIVO"}
-                      color={task.enabled ? "success" : "default"}
-                      size="small"
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell align="right">
-                    <Tooltip title="Executar Agora">
-                      <IconButton
+              {tasks.map((task) => {
+                return (
+                  <TableRow key={task.name}>
+                    <TableCell>
+                      <TaskName>{task.name}</TaskName>
+                    </TableCell>
+                    <TableCell>{task.interval}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={task.enabled ? "ATIVO" : "INATIVO"}
+                        color={task.enabled ? "success" : "default"}
                         size="small"
-                        color="primary"
-                        onClick={() => handleRunTask(task.name)}
-                        disabled={runningTask}
-                      >
-                        <PlayArrowRoundedIcon />
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Tooltip title="Executar Agora">
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => {
+                            return handleRunTask(task.name);
+                          }}
+                          disabled={runningTask}
+                        >
+                          <PlayArrowRoundedIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {tasks.length === 0 && !loadingTasks && (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
@@ -216,7 +246,9 @@ export default () => {
             variant="outlined"
             size="small"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              return setSearch(e.target.value);
+            }}
             sx={{ flex: 1, minWidth: "250px" }}
           />
           <FormControl size="small" sx={{ minWidth: "150px" }}>
@@ -224,7 +256,9 @@ export default () => {
             <Select
               value={statusFilter}
               label="Status"
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => {
+                return setStatusFilter(e.target.value);
+              }}
             >
               <MenuItem value="all">Todos</MenuItem>
               <MenuItem value="success">Sucesso</MenuItem>
@@ -254,31 +288,38 @@ export default () => {
               <TableBody>
                 {filteredHistory
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                  .map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>
-                        <Typography fontWeight="medium">{item.nm}</Typography>
-                      </TableCell>
-                      <TableCell>{new Date(item.st).toLocaleString()}</TableCell>
-                      <TableCell>
-                        {item.ft ? new Date(item.ft).toLocaleString() : "-"}
-                      </TableCell>
-                      <TableCell>{item.du ? `${item.du}ms` : "-"}</TableCell>
-                      <TableCell>{getStatus(item)}</TableCell>
-                      <TableCell>
-                        {item.er ? (
-                          <Tooltip title={item.er}>
-                            <Box display="flex" alignItems="center" gap={0.5}>
-                              <ErrorOutlineRoundedIcon color="error" fontSize="small" />
-                              <ErrorText>{item.er}</ErrorText>
-                            </Box>
-                          </Tooltip>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  .map((item) => {
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <Typography fontWeight="medium">{item.nm}</Typography>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(item.st).toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          {item.ft ? new Date(item.ft).toLocaleString() : "-"}
+                        </TableCell>
+                        <TableCell>{item.du ? `${item.du}ms` : "-"}</TableCell>
+                        <TableCell>{getStatus(item)}</TableCell>
+                        <TableCell>
+                          {item.er ? (
+                            <Tooltip title={item.er}>
+                              <Box display="flex" alignItems="center" gap={0.5}>
+                                <ErrorOutlineRoundedIcon
+                                  color="error"
+                                  fontSize="small"
+                                />
+                                <ErrorText>{item.er}</ErrorText>
+                              </Box>
+                            </Tooltip>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 {filteredHistory.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} align="center">

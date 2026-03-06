@@ -1,9 +1,10 @@
-import { ClassType } from "./system.js";
+import { ClassType } from './system.js';
 export interface ControllerApiProps {
   handler?: string;
-  method: "get" | "insert" | "update" | "delete" | string;
+  method: 'get' | 'insert' | 'update' | 'delete' | string;
   model: string;
   payload?: any;
+  data?: any;
 }
 
 export interface QueryBuilder {
@@ -32,20 +33,35 @@ export interface RelationBuilder {
   select: (string | RelationBuilder)[];
 }
 
+export type AggregateOperator = 'sum' | 'avg' | 'min' | 'max' | 'count';
+
 export interface HandleGetProps {
   model: string;
-  pagination:
-    | {
-        page: number;
-        take: number;
-      }
-    | undefined;
+  pagination?: {
+    page: number;
+    take: number;
+  };
   query: {
-    type: "find" | "filter";
-    select: string[];
-    find: QueryBuilder;
-    filter: QueryBuilder;
-    relation: (string | RelationBuilder)[];
+    select?: string[];
+    find?: QueryBuilder;
+    filter?: QueryBuilder;
+    count?: QueryBuilder;
+    exists?: QueryBuilder;
+    aggregate?: {
+      where?: QueryBuilder;
+      aggregate: { [key: string]: AggregateOperator };
+    };
+    distinct?: {
+      where?: QueryBuilder;
+      field: string;
+    };
+    group?: {
+      where?: QueryBuilder;
+      by: string[];
+      aggregate?: { [key: string]: AggregateOperator };
+      select?: string[];
+    };
+    relation?: (string | RelationBuilder)[];
   };
 }
 

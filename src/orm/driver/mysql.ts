@@ -30,6 +30,10 @@ export class MySQLDriver implements DatabaseDriver {
     return rows;
   }
 
+  quoteIdentifier(identifier: string): string {
+    return `\`${identifier.replace(/`/g, "``")}\``;
+  }
+
   async createTable(entity: EntityMetadata, fields: FieldMetadata[]): Promise<void> {
     const columnsSql = fields
       .map((field) => {
@@ -40,11 +44,11 @@ export class MySQLDriver implements DatabaseDriver {
         if (!field.nullable && !field.primary) constraints += " NOT NULL";
         if (field.default !== undefined) constraints += ` DEFAULT ${this.formatDefault(field.default)}`;
 
-        return `\`${field.name}\` ${sqlType}${constraints}`;
+        return `${this.quoteIdentifier(field.name)} ${sqlType}${constraints}`;
       })
       .join(", ");
 
-    const sql = `CREATE TABLE IF NOT EXISTS \`${entity.tableName}\` (${columnsSql});`;
+    const sql = `CREATE TABLE IF NOT EXISTS ${this.quoteIdentifier(entity.tableName)} (${columnsSql});`;
     await this.query(sql);
   }
 
@@ -61,7 +65,7 @@ export class MySQLDriver implements DatabaseDriver {
   }
 
   private formatDefault(value: any): string {
-    if (typeof value === "string") return `'${value}'`;
+    if (typeof value === "string") return `'${value.replace(/'/g, "''")}'`;
     if (value instanceof Date) return `'${value.toISOString()}'`;
     return String(value);
   }
