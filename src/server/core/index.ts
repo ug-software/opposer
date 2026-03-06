@@ -3,10 +3,14 @@ import { OpposerSystemConfigOptions } from "../../interfaces/system.js";
 import system from "../../system/index.js";
 import Context from "../../persistent/context/index.js";
 
+export type Request = any;
+export type Response = any;
+export type NextFunction = () => void | Promise<void>;
+
 export type Middleware = (
-  req: any,
-  res: any,
-  next: () => void
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => Promise<void> | void;
 
 export class OpposerServer {

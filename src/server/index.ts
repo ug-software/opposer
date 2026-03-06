@@ -197,5 +197,6 @@ export {
   Payload,
   IsPublic,
   IsPublicMethod,
+  f,
 } from "./decorators/index.js";
 export type { PayloadRequest } from "../interfaces/handler.js";

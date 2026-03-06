@@ -31,7 +31,7 @@ async function runSQLiteExample() {
     };
     
     console.log("Validating user data with nested profile structure.");
-    const errors = userRepository.validate(userData);
+    const errors = userRepository.validate(userData as any);
     if (Object.keys(errors).length === 0) {
       console.log("✅ Data is valid for insertion.");
     }

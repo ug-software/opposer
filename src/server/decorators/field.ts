@@ -11,7 +11,7 @@ export default function Field(schema: any) {
 
     // 2. ORM metadata (calling the ORM decorator logic)
     const ormDecorator = OrmField(typeof schema === 'function' ? { validation: schema } : schema);
-    return ormDecorator(target, name, context);
+    return ormDecorator(target, name);
   };
 }
 

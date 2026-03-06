@@ -10,8 +10,11 @@ import {
 } from "../server/decorators/index.js";
 import { MetadataStore } from "../orm/index.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// @ts-ignore
+const _dirname = typeof __dirname !== 'undefined' 
+  ? __dirname 
+  // @ts-ignore
+  : path.dirname(fileURLToPath(import.meta.url));
 
 async function generateMap(
   server?: any,
@@ -136,14 +139,14 @@ export default async function Playground(req: any, res: any, next: () => void) {
   if (req.url.startsWith("/playground")) {
     await generateMap(server, modelsPath, handlersPath);
 
-    const buildPath = path.resolve(__dirname, "build", "client");
+    const _buildPath = path.resolve(_dirname, "build", "client");
     let relativePath = req.url.replace("/playground", "");
 
     if (relativePath === "" || relativePath === "/") {
       relativePath = "/index.html";
     }
 
-    let filePath = path.join(buildPath, relativePath);
+    let filePath = path.join(_buildPath, relativePath);
 
     // If file doesn't exist, fallback to index.html only if it's a likely page request
     if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
@@ -151,7 +154,7 @@ export default async function Playground(req: any, res: any, next: () => void) {
         relativePath
       );
       if (!isAsset) {
-        filePath = path.join(buildPath, "index.html");
+        filePath = path.join(_buildPath, "index.html");
       } else {
         res.status(404).json({ message: `Asset ${relativePath} not found.` });
         return;

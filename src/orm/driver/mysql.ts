@@ -7,7 +7,7 @@ export class MySQLDriver implements DatabaseDriver {
   constructor(private options: ConnectionOptions) {}
 
   async connect() {
-    const mysql = (await import("mysql2/promise")).default;
+    const mysql = (await import("mysql2/promise" as any)).default;
     this.connection = await mysql.createConnection({
       host: this.options.host,
       port: this.options.port,
