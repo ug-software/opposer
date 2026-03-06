@@ -1,0 +1,250 @@
+import { OpposerDatabase } from './opposer.js';
+import { MetadataStore, EntityMetadata, FieldMetadata } from './metadata.js';
+import { QueryTranslator } from './query-builder.js';
+import { QueryBuilder as OpposerQueryBuilder } from '../interfaces/controller.js';
+import crypto from 'crypto';
+
+export class Repository<T> {
+  private metadata: EntityMetadata;
+  private fields: FieldMetadata[];
+  private translator: QueryTranslator;
+
+  constructor(private connection: OpposerDatabase, private target: Function) {
+    const metadata = MetadataStore.getEntity(target);
+    const fields = MetadataStore.getFields(target);
+    if (!metadata) {
+      throw new Error(`Entity metadata not found for ${target.name}`);
+    }
+    this.metadata = metadata;
+    this.fields = fields;
+    this.translator = new QueryTranslator(this.metadata, this.fields, this.connection.getDriver());
+  }
+
+  get Metadata() {
+    return this.metadata;
+  }
+
+  get Fields() {
+    return this.fields;
+  }
+
+  async find(options: { where?: OpposerQueryBuilder; select?: string[]; pagination?: { page: number; take: number } }): Promise<T[]> {
+    const driver = this.connection.getDriver();
+    const select = this.translator.translateSelect(options.select || []);
+    const { sql: where, params } = this.translator.translateFilter(options.where || {});
+    const pagination = this.translator.translatePagination(options.pagination);
+
+    const sql = `SELECT ${select} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${where} ${pagination};`;
+    const results = await driver.query<T>(sql, params);
+
+    return results.map((row) => {
+      return Object.assign(new (this.target as any)(), row);
+    });
+  }
+
+  async findOne(options: { where?: OpposerQueryBuilder; select?: string[] }): Promise<T | null> {
+    const results = await this.find({
+      ...options,
+      pagination: { page: 0, take: 1 },
+    });
+    return results.length > 0 ? results[0] : null;
+  }
+
+  private async executeHooks(type: 'before-insert' | 'before-update', entity: T) {
+    const hooks = MetadataStore.getHooks(this.target).filter((h) => {
+      return h.type === type;
+    });
+    for (const hook of hooks) {
+      const method = (entity as any)[hook.propertyKey];
+      if (typeof method === 'function') {
+        await method.apply(entity);
+      }
+    }
+  }
+
+  async insert(data: Partial<T>): Promise<T> {
+    const entity = Object.assign(new (this.target as any)(), data);
+
+    // Execute hooks
+    await this.executeHooks('before-insert', entity);
+
+    const persistableFields = MetadataStore.getPersistableFields(this.target);
+    const now = new Date();
+
+    for (const field of persistableFields) {
+      if (field.createDate || field.updateDate) {
+        if ((entity as any)[field.name] === undefined) {
+          (entity as any)[field.name] = now;
+        }
+      }
+      if (field.generated && field.type === 'uuid' && (entity as any)[field.name] === undefined) {
+        (entity as any)[field.name] = crypto.randomUUID();
+      }
+    }
+
+    const persistableKeys = persistableFields.map((f) => {
+      return f.name;
+    });
+    const keys = Object.keys(entity).filter((k) => {
+      return persistableKeys.includes(k) || k === 'id';
+    });
+    const values = keys.map((k) => {
+      return (entity as any)[k];
+    });
+    const driver = this.connection.getDriver();
+    const placeholders = keys
+      .map((_, i) => {
+        return `$${i + 1}`;
+      })
+      .join(', ');
+    const columns = keys
+      .map((k) => {
+        return driver.quoteIdentifier(k);
+      })
+      .join(', ');
+
+    const isSqlite = driver.constructor.name === 'SQLiteDriver';
+
+    if (isSqlite) {
+      const sql = `INSERT INTO ${driver.quoteIdentifier(this.metadata.tableName)} (${columns}) VALUES (${placeholders});`;
+      await driver.query(sql, values);
+
+      // Fetch the inserted record using primary key(s)
+      const primaryFields = this.fields.filter((f) => {
+        return f.primary;
+      });
+      const where: any = {};
+      primaryFields.forEach((f) => {
+        where[f.name] = (entity as any)[f.name];
+      });
+
+      return (await this.findOne({ where })) as T;
+    } else {
+      const sql = `INSERT INTO ${driver.quoteIdentifier(this.metadata.tableName)} (${columns}) VALUES (${placeholders}) RETURNING *;`;
+      const result = await driver.query<T>(sql, values);
+      return result[0];
+    }
+  }
+
+  async update(where: OpposerQueryBuilder, data: Partial<T>): Promise<void> {
+    const entity = Object.assign(new (this.target as any)(), data);
+    await this.executeHooks('before-update', entity);
+
+    const persistableFields = MetadataStore.getPersistableFields(this.target);
+    const now = new Date();
+
+    for (const field of persistableFields) {
+      if (field.updateDate) {
+        (entity as any)[field.name] = now;
+      }
+    }
+
+    const driver = this.connection.getDriver();
+    const persistableKeys = persistableFields.map((f) => {
+      return f.name;
+    });
+    const setKeys = Object.keys(entity).filter((k) => {
+      return persistableKeys.includes(k);
+    });
+    const setValues = setKeys.map((k) => {
+      return (entity as any)[k];
+    });
+    const setSql = setKeys
+      .map((k, i) => {
+        return `${driver.quoteIdentifier(k)} = $${i + 1}`;
+      })
+      .join(', ');
+
+    const { sql: whereSql, params: whereParams } = this.translator.translateFilter(where);
+
+    // Adjust whereParams placeholders
+    const adjustedWhereSql = whereSql.replace(/\$(\d+)/g, (_, n) => {
+      return `$${parseInt(n) + setValues.length}`;
+    });
+    const sql = `UPDATE ${driver.quoteIdentifier(this.metadata.tableName)} SET ${setSql} ${adjustedWhereSql};`;
+
+    await driver.query(sql, [...setValues, ...whereParams]);
+  }
+
+  async delete(where: OpposerQueryBuilder): Promise<void> {
+    const driver = this.connection.getDriver();
+    const { sql: whereSql, params } = this.translator.translateFilter(where);
+    const sql = `DELETE FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${whereSql};`;
+    await driver.query(sql, params);
+  }
+
+  async count(where: OpposerQueryBuilder): Promise<number> {
+    const driver = this.connection.getDriver();
+    const { sql: whereSql, params } = this.translator.translateFilter(where);
+    const sql = `SELECT COUNT(*) as count FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${whereSql};`;
+    const result = await driver.query(sql, params);
+    return parseInt((result[0] as any).count);
+  }
+
+  async exists(where: OpposerQueryBuilder): Promise<boolean> {
+    const driver = this.connection.getDriver();
+    const { sql: whereSql, params } = this.translator.translateFilter(where);
+    const sql = `SELECT 1 FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${whereSql} LIMIT 1;`;
+    const result = await driver.query(sql, params);
+    return result.length > 0;
+  }
+
+  async aggregate(options: { where?: OpposerQueryBuilder; aggregate: { [key: string]: 'sum' | 'avg' | 'min' | 'max' | 'count' } }): Promise<any> {
+    const driver = this.connection.getDriver();
+    const { sql: whereSql, params } = this.translator.translateFilter(options.where || {});
+    const aggregateSql = this.translator.translateAggregate(options.aggregate);
+    const sql = `SELECT ${aggregateSql} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${whereSql};`;
+    const result = await driver.query(sql, params);
+    return result[0];
+  }
+
+  async distinct(options: { where?: OpposerQueryBuilder; field: string }): Promise<any[]> {
+    const driver = this.connection.getDriver();
+    const { sql: whereSql, params } = this.translator.translateFilter(options.where || {});
+    const sql = `SELECT DISTINCT ${driver.quoteIdentifier(options.field)} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${whereSql};`;
+    const result = await driver.query(sql, params);
+    return result.map((r) => {
+      return r[options.field];
+    });
+  }
+
+  async group(options: { where?: OpposerQueryBuilder; by: string[]; aggregate?: { [key: string]: 'sum' | 'avg' | 'min' | 'max' | 'count' }; select?: string[] }): Promise<any[]> {
+    const driver = this.connection.getDriver();
+    const { sql: whereSql, params } = this.translator.translateFilter(options.where || {});
+    const groupSql = this.translator.translateGroup(options.by);
+
+    let selectParts: string[] = [];
+    if (options.select) {
+      selectParts.push(this.translator.translateSelect(options.select));
+    } else {
+      selectParts.push(
+        options.by
+          .map((f) => {
+            return driver.quoteIdentifier(f);
+          })
+          .join(', '),
+      );
+    }
+
+    if (options.aggregate) {
+      selectParts.push(this.translator.translateAggregate(options.aggregate));
+    }
+
+    const sql = `SELECT ${selectParts.join(', ')} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${whereSql} ${groupSql};`;
+    return await driver.query(sql, params);
+  }
+
+  validate(data: Partial<T>): Record<string, string[]> {
+    const errors: Record<string, string[]> = {};
+    for (const field of this.fields) {
+      if (field.validation) {
+        const val = field.validation();
+        const fieldErrors = val.validate((data as any)[field.name], data);
+        if (fieldErrors && fieldErrors.length > 0) {
+          errors[field.name] = fieldErrors;
+        }
+      }
+    }
+    return errors;
+  }
+}

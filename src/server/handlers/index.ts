@@ -1,5 +1,5 @@
 import { ResultGetAllHandlers } from "../../interfaces/controller.js";
-import * as system from "../../system/index.js";
+import system from "../../system/index.js";
 import * as decorator from "../decorators/index.js";
 
 const handlers: ResultGetAllHandlers = {};

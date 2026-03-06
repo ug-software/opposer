@@ -1,2 +1,2 @@
-export { default as User } from "./schema/usr";
-export { default as Role } from "./schema/rl";
+export { default as User } from "./models/usr.js";
+export { default as Role } from "./models/rl.js";

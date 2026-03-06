@@ -2,7 +2,7 @@
     "name": "opposer",
     "version": "1.0.0",
     "type": "module",
-    "main": "./lib/cjs/index.cjs",
+    "main": "./lib/cjs/index.js",
     "module": "./lib/esm/index.js",
     "types": "./lib/esm/index.d.ts",
     "bin": {
@@ -13,6 +13,10 @@
             "import": "./lib/esm/index.js",
             "require": "./lib/cjs/index.js"
         },
+        "./orm": {
+            "import": "./lib/esm/orm/index.js",
+            "require": "./lib/cjs/orm/index.js"
+        },
         "./persistent": {
             "import": "./lib/esm/persistent/index.js",
             "require": "./lib/cjs/persistent/index.js"
@@ -21,9 +25,13 @@
             "import": "./lib/esm/playground/index.js",
             "require": "./lib/cjs/playground/index.js"
         },
-        "./models": {
-            "import": "./lib/esm/server/security/index.js",
-            "require": "./lib/cjs/server/security/index.js"
+        "./server": {
+            "import": "./lib/esm/server/index.js",
+            "require": "./lib/cjs/server/index.js"
+        },
+        "./system": {
+            "import": "./lib/esm/system/index.js",
+            "require": "./lib/cjs/system/index.js"
         }
     },
     "scripts": {
@@ -35,13 +43,26 @@
     ],
     "dependencies": {
         "bcrypt": "^6.0.0",
-        "cookie-parser": "^1.4.7",
-        "cors": "^2.8.5",
-        "express": "^4.21.2",
         "jsonwebtoken": "^9.0.2",
-        "merge-stream": "^2.0.0",
+        "node-cron": "^4.2.1",
         "reflect-metadata": "^0.2.2",
-        "typeorm": "^0.3.27"
+        "yargs": "^17.7.2"
+    },
+    "peerDependencies": {
+        "mysql2": "^3.12.0",
+        "pg": "^8.13.3",
+        "sqlite3": "^5.1.7"
+    },
+    "peerDependenciesMeta": {
+        "mysql2": {
+            "optional": true
+        },
+        "pg": {
+            "optional": true
+        },
+        "sqlite3": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@types/bcrypt": "^6.0.0",
@@ -50,10 +71,16 @@
         "@types/express": "^5.0.5",
         "@types/gulp": "^4.0.17",
         "@types/node": "^22.13.14",
+        "@types/node-cron": "^3.0.11",
+        "@types/pg": "^8.18.0",
+        "@types/yargs": "^17.0.33",
         "del": "^8.0.1",
         "gulp": "^5.0.1",
         "gulp-typescript": "^6.0.0-alpha.1",
+        "merge-stream": "^2.0.0",
+        "mysql2": "^3.12.0",
         "pg": "^8.14.1",
+        "sqlite3": "^5.1.7",
         "ts-node": "^10.9.2",
         "tsx": "^4.20.6",
         "typescript": "^5.9.3"
