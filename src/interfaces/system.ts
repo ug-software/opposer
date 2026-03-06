@@ -39,3 +39,8 @@ export interface OpposerSystemConfigOptions {
 export interface ClassType<T> {
   new (...args: any[]): T;
 }
+
+export interface ModelDefinition {
+  name: string;
+  entity: ClassType<unknown>;
+}
