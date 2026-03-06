@@ -35,7 +35,7 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    const customHandlers = req.server.getContext("handlers");
+    const customHandlers = req.server.getContext<string | ClassType<unknown>[]>("handlers");
     var handlers = await helper.loadHandlers(customHandlers);
     if (settings.auth) {
       var auth = {
@@ -149,7 +149,7 @@ export default async (req: Request, res: Response) => {
   }
 
   //database request...
-  const customModels = req.server.getContext("models");
+  const customModels = req.server.getContext<string | ClassType<unknown>[]>("models");
   var allModels = await system.getAllModels(customModels);
 
   var model = allModels.find(

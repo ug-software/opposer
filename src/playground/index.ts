@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url';
 import system from '../system/index.js';
 import { getMethodMetadata, getPayloadMetadata, getFieldsMetadata, getHandlerMetadata } from '../server/decorators/index.js';
 import { MetadataStore } from '../orm/index.js';
+import type { ClassType } from '../interfaces/system.js';
+import type { Request, Response } from '../interfaces/server.js';
 
 // @ts-ignore
 const _dirname =
@@ -48,7 +50,7 @@ async function generateMap(server?: any, models?: string | ClassType<unknown>[],
 
   var allHandlers = await system.getAllHandlers(handlers);
   if (Array.isArray(allHandlers)) {
-    var handlers = allHandlers.reduce((__handlers: any, handler) => {
+    var handlersMap = allHandlers.reduce((__handlers: any, handler) => {
       var handleMetadata = getHandlerMetadata(handler);
       var allMethods = getMethodMetadata(handler);
       var allPayloads = getPayloadMetadata(handler);
@@ -79,7 +81,7 @@ async function generateMap(server?: any, models?: string | ClassType<unknown>[],
       return __handlers;
     }, {});
 
-    map.handlers = handlers;
+    map.handlers = handlersMap;
 
     const mapPath = path.resolve(process.cwd(), 'opposer-map.json');
     fs.writeFileSync(mapPath, JSON.stringify(map, null, 2));
@@ -100,10 +102,10 @@ const MIME_TYPES: Record<string, string> = {
   '.ico': 'image/x-icon',
 };
 
-export default async function Playground(req: any, res: any, next: () => void) {
+export default async function Playground(req: Request, res: Response, next: () => void) {
   const server = req.server;
-  const models = server.getContext('models');
-  const handlers = server.getContext('handlers');
+  const models = server.getContext<string | ClassType<unknown>[] | undefined>('models');
+  const handlers = server.getContext<string | ClassType<unknown>[] | undefined>('handlers');
 
   // Public map endpoint for the Swagger UI
   if (req.url === '/opposer-map.json') {

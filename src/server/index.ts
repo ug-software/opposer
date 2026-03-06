@@ -1,6 +1,7 @@
 import Controller from "./controller/index.js";
 import { CreateServerProps, ServerInstance } from "../interfaces/server.js";
 import system from "../system/index.js";
+import { ClassType } from "../interfaces/system.js";
 import permission from "./security/middleware/permission.js";
 import autorization from "./security/middleware/autorization.js";
 import Auth from "./security/handler/auth.js";
