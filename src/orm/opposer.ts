@@ -6,6 +6,7 @@ export interface DatabaseDriver {
   disconnect(): Promise<void>;
   query<T = any>(sql: string, params?: any[]): Promise<T[]>;
   createTable(entity: EntityMetadata, fields: FieldMetadata[]): Promise<void>;
+  quoteIdentifier(identifier: string): string;
 }
 
 export interface ConnectionOptions {

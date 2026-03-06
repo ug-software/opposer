@@ -177,7 +177,7 @@ export default async (req: Request, res: Response) => {
   }
 
   if (["insert", "update"].includes(props.method)) {
-    var erros = validateData(model.entity, props.payload);
+    var erros = validateData(model.entity, props.data);
     if (Object.keys(erros).length > 0) {
       return res.status(400).json({
         erros,

@@ -1,89 +1,167 @@
-import { QueryBuilder as OpposerQueryBuilder } from "../interfaces/controller.js";
-import { EntityMetadata, FieldMetadata } from "./metadata.js";
+import { QueryBuilder as OpposerQueryBuilder } from '../interfaces/controller.js';
+import { EntityMetadata, FieldMetadata } from './metadata.js';
+import { DatabaseDriver } from './opposer.js';
 
 export class QueryTranslator {
-  constructor(private entity: EntityMetadata, private fields: FieldMetadata[]) {}
+  constructor(private entity: EntityMetadata, private fields: FieldMetadata[], private driver: DatabaseDriver) {}
+
+  private validateField(field: string): boolean {
+    return (
+      this.fields.some((f) => {
+        return f.name === field;
+      }) ||
+      field === 'id' ||
+      field === '*'
+    );
+  }
 
   translateFilter(query: OpposerQueryBuilder): { sql: string; params: any[] } {
     const params: any[] = [];
     const sql = this.renderFilter(query, params);
-    return { sql: sql ? `WHERE ${sql}` : "", params };
+    return { sql: sql ? `WHERE ${sql}` : '', params };
   }
 
   private renderFilter(query: OpposerQueryBuilder, params: any[]): string {
-    if (!query || typeof query !== "object") return "";
+    if (!query || typeof query !== 'object') {
+      return '';
+    }
 
     const parts: string[] = [];
 
     for (const [key, value] of Object.entries(query)) {
-      if (key === "$or" && Array.isArray(value)) {
-        const orParts = value.map((v) => `(${this.renderFilter(v, params)})`);
-        parts.push(`(${orParts.join(" OR ")})`);
+      if (key === '$or' && Array.isArray(value)) {
+        const orParts = value
+          .map((v) => {
+            return this.renderFilter(v, params);
+          })
+          .filter((v) => {
+            return v !== '';
+          })
+          .map((v) => {
+            return `(${v})`;
+          });
+        if (orParts.length > 0) {
+          parts.push(`(${orParts.join(' OR ')})`);
+        }
         continue;
       }
 
-      if (typeof value === "object" && value !== null && !(value instanceof Date)) {
-        // Special operator
+      if (!this.validateField(key)) {
+        continue;
+      }
+
+      if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
         for (const [op, val] of Object.entries(value)) {
-          parts.push(this.renderOperator(key, op, val, params));
+          const operatorSql = this.renderOperator(key, op, val, params);
+          if (operatorSql) {
+            parts.push(operatorSql);
+          }
         }
       } else {
-        // Equality
         params.push(value);
-        parts.push(`"${key}" = $${params.length}`);
+        parts.push(`${this.driver.quoteIdentifier(key)} = $${params.length}`);
       }
     }
 
-    return parts.join(" AND ");
+    return parts.join(' AND ');
   }
 
   private renderOperator(column: string, op: string, val: any, params: any[]): string {
+    const quotedColumn = this.driver.quoteIdentifier(column);
+
     switch (op) {
-      case "$l":
+      case '$l':
         params.push(val);
-        return `"${column}" LIKE $${params.length}`;
-      case "$il":
+        return `${quotedColumn} LIKE $${params.length}`;
+      case '$il':
         params.push(val);
-        return `"${column}" ILIKE $${params.length}`;
-      case "$in":
-        params.push(val);
-        return `"${column}" = ANY($${params.length})`;
-      case "$nin":
-        params.push(val);
-        return `NOT ("${column}" = ANY($${params.length}))`;
-      case "$btw":
+        return `${quotedColumn} ILIKE $${params.length}`;
+      case '$in':
+      case '$nin': {
+        if (!Array.isArray(val) || val.length === 0) {
+          return '';
+        }
+        const placeholders = val
+          .map((v) => {
+            params.push(v);
+            return `$${params.length}`;
+          })
+          .join(', ');
+        const operator = op === '$in' ? 'IN' : 'NOT IN';
+        return `${quotedColumn} ${operator} (${placeholders})`;
+      }
+      case '$btw':
+        if (!Array.isArray(val) || val.length < 2) {
+          return '';
+        }
         params.push(val[0]);
         params.push(val[1]);
-        return `"${column}" BETWEEN $${params.length - 1} AND $${params.length}`;
-      case "$mt":
+        return `${quotedColumn} BETWEEN $${params.length - 1} AND $${params.length}`;
+      case '$mt':
         params.push(val);
-        return `"${column}" > $${params.length}`;
-      case "$mte":
+        return `${quotedColumn} > $${params.length}`;
+      case '$mte':
         params.push(val);
-        return `"${column}" >= $${params.length}`;
-      case "$lt":
+        return `${quotedColumn} >= $${params.length}`;
+      case '$lt':
         params.push(val);
-        return `"${column}" < $${params.length}`;
-      case "$lte":
+        return `${quotedColumn} < $${params.length}`;
+      case '$lte':
         params.push(val);
-        return `"${column}" <= $${params.length}`;
-      case "$eq":
+        return `${quotedColumn} <= $${params.length}`;
+      case '$eq':
         params.push(val);
-        return `"${column}" = $${params.length}`;
+        return `${quotedColumn} = $${params.length}`;
       default:
-        return "";
+        return '';
     }
   }
 
   translateSelect(select: string[]): string {
-    if (!select || select.length === 0) return "*";
-    return select.map((s) => `"${s}"`).join(", ");
+    if (!select || select.length === 0) {
+      return '*';
+    }
+    return select
+      .filter((s) => {
+        return this.validateField(s);
+      })
+      .map((s) => {
+        return this.driver.quoteIdentifier(s);
+      })
+      .join(', ');
+  }
+
+  translateAggregate(aggregates: { [key: string]: 'sum' | 'avg' | 'min' | 'max' | 'count' }): string {
+    return Object.entries(aggregates)
+      .map(([field, op]) => {
+        const quotedField = field === '*' ? '*' : this.driver.quoteIdentifier(field);
+        const alias = this.driver.quoteIdentifier(`${op}_${field.replace('*', 'all')}`);
+        return `${op.toUpperCase()}(${quotedField}) as ${alias}`;
+      })
+      .join(', ');
+  }
+
+  translateGroup(fields: string[]): string {
+    if (!fields || fields.length === 0) {
+      return '';
+    }
+    const quotedFields = fields
+      .filter((f) => {
+        return this.validateField(f);
+      })
+      .map((f) => {
+        return this.driver.quoteIdentifier(f);
+      })
+      .join(', ');
+    return quotedFields ? `GROUP BY ${quotedFields}` : '';
   }
 
   translatePagination(pagination: { page: number; take: number } | undefined): string {
-    if (!pagination) return "";
-    const limit = pagination.take || 10;
-    const offset = (pagination.page || 0) * limit;
+    if (!pagination) {
+      return '';
+    }
+    const limit = Math.max(0, pagination.take || 10);
+    const offset = Math.max(0, pagination.page || 0) * limit;
     return `LIMIT ${limit} OFFSET ${offset}`;
   }
 }
