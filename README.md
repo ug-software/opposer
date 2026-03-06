@@ -253,10 +253,44 @@ Para começar, inicialize o servidor no seu `index.ts`:
 import { Server } from "opposer";
 
 const instance = await Server({
-    modelsPath: "./src/schemas",
-    handlersPath: "./src/handlers",
-    schedulesPath: "./src/schedules"
+    models: "./src/schemas",
+    handlers: "./src/handlers",
+    schedules: "./src/schedules"
 });
 
 instance.initialize();
 ```
+
+---
+
+## ⚙️ Configurações e Variáveis de Ambiente
+
+O Opposer pode ser configurado através do arquivo `opposer-settings.json` na raiz do projeto ou via variáveis de ambiente. As variáveis de ambiente têm precedência sobre o arquivo JSON.
+
+### Tabela de Referência
+
+| Propriedade JSON | Variável de Ambiente | Descrição | Padrão |
+| :--- | :--- | :--- | :--- |
+| `port` | `OPPOSER_PORT` | Porta onde o servidor HTTP irá rodar. | `3000` |
+| `url` | `OPPOSER_URL` | Endpoint base da API (POST). | `/opposer` |
+| `logger` | - | Habilita o middleware de logs de requisição. | `false` |
+| `auth` | - | Habilita o sistema de autenticação e permissões. | `false` |
+| **Database** | | | |
+| `database.type` | `OPPOSER_DATABASE_TYPE` | Tipo do banco (`postgres`, `mysql`, `sqlite`). | - |
+| `database.host` | `OPPOSER_DATABASE_HOST` | Host do banco de dados. | - |
+| `database.port` | `OPPOSER_DATABASE_PORT` | Porta do banco de dados. | - |
+| `database.username` | `OPPOSER_DATABASE_USER` | Usuário do banco de dados. | - |
+| `database.password` | `OPPOSER_DATABASE_PASSWORD` | Senha do banco de dados. | - |
+| `database.database` | `OPPOSER_DATABASE_NAME` | Nome do banco ou caminho (se sqlite). | - |
+| `database.logging` | `OPPOSER_DATABASE_LOGGING`| Habilita logs de queries SQL (`true`/`false`). | `false` |
+| **JWT** | | | |
+| `jwt.access` | `OPPOSER_JWT_ACCESS` | Secret para o token de acesso (Access Token). | - |
+| `jwt.refresh` | `OPPOSER_JWT_REFRESH` | Secret para o token de atualização (Refresh Token). | - |
+| `jwt.recover` | `OPPOSER_JWT_RECOVER` | Secret para o token de recuperação de senha. | - |
+| **Manager (Admin)**| | | |
+| `manager.login` | `OPPOSER_MANAGER_LOGIN` | Login da conta administradora inicial. | - |
+| `manager.password`| `OPPOSER_MANAGER_PASSWORD`| Senha da conta administradora inicial. | - |
+| `manager.firstName`| `OPPOSER_MANAGER_FIRST_NAME`| Nome do administrador. | - |
+| `manager.lastName` | `OPPOSER_MANAGER_LAST_NAME` | Sobrenome do administrador. | - |
+
+> **Nota:** Se o sistema de `auth` estiver ativo e a conta do `manager` não existir no banco de dados, o Opposer irá criá-la automaticamente durante a inicialização usando as configurações acima.

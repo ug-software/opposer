@@ -1,12 +1,13 @@
 import http from "http";
+import { ClassType } from "./system.js";
 
 export interface CreateServerProps {
   cors?: {
     origin: string | string[];
   };
-  modelsPath?: string;
-  handlersPath?: string;
-  schedulesPath?: string;
+  models?: string | ClassType<unknown>[];
+  handlers?: string | ClassType<unknown>[];
+  schedules?: string | ClassType<unknown>[];
 }
 
 export interface Request extends http.IncomingMessage {

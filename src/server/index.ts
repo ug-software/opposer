@@ -23,10 +23,10 @@ import Playground from "../playground/index.js";
 
 async function initializeDatabase(
   props: any,
-  modelsPath?: string
+  models?: string | ClassType<unknown>[]
 ): Promise<OpposerDatabase> {
   const settings = system.getSettingsFile();
-  const allModels = await system.getAllModels();
+  const allModels = await system.getAllModels(models);
   const entities = allModels.map((x) => x.entity);
   
   let driver;
@@ -52,11 +52,11 @@ async function initializeDatabase(
   return db;
 }
 
-async function ensureManager(db: OpposerDatabase, settings: any, modelsPath?: string) {
+async function ensureManager(db: OpposerDatabase, settings: any, models?: string | ClassType<unknown>[]) {
   if (!settings.auth) return;
 
   try {
-    const allModels = await system.getAllModels();
+    const allModels = await system.getAllModels(models);
     const userEntity = allModels.find(
       (x) => x.name === "User" || x.name === "usr"
     );
@@ -118,16 +118,16 @@ export default async function Server(
     throw new Error("-> It is necessary to inform database properties.");
   }
 
-  const db = await initializeDatabase(settings.database, props.modelsPath);
-  await ensureManager(db, settings, props.modelsPath);
+  const db = await initializeDatabase(settings.database, props.models);
+  await ensureManager(db, settings, props.models);
 
   // Store database in server context
   opposerServer.setContext("db", db);
-  opposerServer.setContext("modelsPath", props.modelsPath);
-  opposerServer.setContext("handlersPath", props.handlersPath);
+  opposerServer.setContext("models", props.models);
+  opposerServer.setContext("handlers", props.handlers);
 
   console.log("-> Initializing scheduler.");
-  await scheduler.initialize(props.schedulesPath);
+  await scheduler.initialize(props.schedules);
   scheduler.start();
 
   console.log("-> Initializing core server.");

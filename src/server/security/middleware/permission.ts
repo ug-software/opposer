@@ -13,6 +13,8 @@ import {
 import Session from "../models/se.js";
 import { SignJwt } from "../../../interfaces/jwt.js";
 
+import { ClassType } from "../../../interfaces/system.js";
+
 export default async (req: Request, res: Response, next: NextFunction) => {
     const host = req.headers.host;
     const referer = req.headers.referer;
@@ -31,7 +33,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
     //skep for public models
     if (request.model) {
-        var allModels = await system.getAllModels();
+        const customModels = req.server.getContext<string | ClassType<unknown>[]>("models");
+        var allModels = await system.getAllModels(customModels);
         var model = allModels.find((x) => x.name === request.model);
 
         if (model) {
@@ -45,7 +48,8 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
     //skep for public methods
     if (request.handler) {
-        const allHandlers = await system.getAllHandlers();
+        const customHandlers = req.server.getContext<string | ClassType<unknown>[]>("handlers");
+        const allHandlers = await system.getAllHandlers(customHandlers);
         var handler = allHandlers.find(
             (x) => x.name.toUpperCase() === request.handler?.toUpperCase(),
         );

@@ -19,9 +19,28 @@ export class OpposerSystem {
     }
   }
 
-  async getAllModels(): Promise<ModelDefinition[]> {
-    const allEntities = MetadataStore.getAllEntities();
+  async getAllModels(customModels?: string | ClassType<unknown>[]): Promise<ModelDefinition[]> {
     const settings = this.getSettingsFile();
+    const root = process.cwd();
+
+    if (typeof customModels === "string") {
+      const modelsPath = path.resolve(root, customModels);
+      if (fs.existsSync(modelsPath)) {
+        const modelsFiles = this.getAllFiles(modelsPath);
+        await Promise.all(
+          modelsFiles.map(async (filePath) => {
+            const fileUrl = pathToFileURL(filePath).href;
+            return await import(fileUrl);
+          })
+        );
+      }
+    } else if (Array.isArray(customModels)) {
+      // If models are passed as an array, they are already imported/defined.
+      // We don't need to do anything here as they should have registered themselves
+      // via decorators if they are in the array.
+    }
+
+    const allEntities = MetadataStore.getAllEntities();
     const authModels = this.getAuthModels(settings);
 
     const models: ModelDefinition[] = allEntities.map((meta) => ({
@@ -57,19 +76,24 @@ export class OpposerSystem {
     return models;
   }
 
-  async getAllHandlers(customHandlersPath?: string): Promise<ClassType<unknown>[]> {
+  async getAllHandlers(customHandlers?: string | ClassType<unknown>[]): Promise<ClassType<unknown>[]> {
     const settings = this.getSettingsFile();
     const root = process.cwd();
-    let handlersPath =
-      customHandlersPath || path.resolve(root, "src", "handlers");
-
-    if (!customHandlersPath && settings.handlers) {
-      handlersPath = path.resolve(root, settings.handlers, "handlers");
-    }
-
+    
     // Dynamic import to avoid circular dependency
     const SchedulerHandler = (await import("../scheduler/handlers/index.js")).default;
     const internalHandlers: ClassType<unknown>[] = [SchedulerHandler as unknown as ClassType<unknown>];
+
+    if (Array.isArray(customHandlers)) {
+      return [...internalHandlers, ...customHandlers];
+    }
+
+    let handlersPath =
+      (customHandlers as string) || path.resolve(root, "src", "handlers");
+
+    if (!customHandlers && settings.handlers) {
+      handlersPath = path.resolve(root, settings.handlers, "handlers");
+    }
 
     if (!fs.existsSync(handlersPath)) {
       return internalHandlers;
@@ -86,6 +110,38 @@ export class OpposerSystem {
     );
 
     return [...internalHandlers, ...userHandlers.filter((h) => h)];
+  }
+
+  async getAllSchedules(customSchedules?: string | ClassType<unknown>[]): Promise<ClassType<unknown>[]> {
+    const settings = this.getSettingsFile();
+    const root = process.cwd();
+
+    if (Array.isArray(customSchedules)) {
+      return customSchedules;
+    }
+
+    let schedulesPath =
+      (customSchedules as string) || path.resolve(root, "src", "schedules");
+
+    if (!customSchedules && settings.schedules) {
+      schedulesPath = path.resolve(root, settings.schedules, "schedules");
+    }
+
+    if (!fs.existsSync(schedulesPath)) {
+      return [];
+    }
+
+    const schedulesFiles = this.getAllFiles(schedulesPath);
+    const userSchedules = await Promise.all(
+      schedulesFiles.map(async (filePath) => {
+        const fileUrl = pathToFileURL(filePath).href;
+
+        //@ts-ignore
+        return (await import(fileUrl)).default;
+      })
+    );
+
+    return userSchedules.filter((s) => s);
   }
 
   getSettingsFile(): OpposerSystemConfigOptions {

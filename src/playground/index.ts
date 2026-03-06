@@ -12,17 +12,17 @@ const _dirname =
     : // @ts-ignore
       path.dirname(fileURLToPath(import.meta.url));
 
-async function generateMap(server?: any, modelsPath?: string, handlersPath?: string) {
+async function generateMap(server?: any, models?: string | ClassType<unknown>[], handlers?: string | ClassType<unknown>[]) {
   var map = {
     models: {},
     handlers: {},
   };
 
-  var allModels = await system.getAllModels();
+  var allModels = await system.getAllModels(models);
   const internalModels = ['usr', 'rl', 'se', 'ke', 'crp', 'sh', 'User', 'Role', 'Session', 'Key', 'ChangeRequestPassword', 'ScheduleHistory'];
 
   if (Array.isArray(allModels)) {
-    var models = allModels
+    var modelsMap = allModels
       .filter((m) => !internalModels.includes(m.name))
       .reduce((__models: any, model) => {
         var fields = getFieldsMetadata(model.entity);
@@ -43,10 +43,10 @@ async function generateMap(server?: any, modelsPath?: string, handlersPath?: str
         return __models;
       }, {});
 
-    map.models = models;
+    map.models = modelsMap;
   }
 
-  var allHandlers = await system.getAllHandlers(handlersPath);
+  var allHandlers = await system.getAllHandlers(handlers);
   if (Array.isArray(allHandlers)) {
     var handlers = allHandlers.reduce((__handlers: any, handler) => {
       var handleMetadata = getHandlerMetadata(handler);
@@ -102,19 +102,19 @@ const MIME_TYPES: Record<string, string> = {
 
 export default async function Playground(req: any, res: any, next: () => void) {
   const server = req.server;
-  const modelsPath = server.getContext('modelsPath');
-  const handlersPath = server.getContext('handlersPath');
+  const models = server.getContext('models');
+  const handlers = server.getContext('handlers');
 
   // Public map endpoint for the Swagger UI
   if (req.url === '/opposer-map.json') {
-    const map = await generateMap(server, modelsPath, handlersPath);
+    const map = await generateMap(server, models, handlers);
     res.status(200).json(map);
     return;
   }
 
   // Base playground route - Serve static files from build/client
   if (req.url.startsWith('/playground')) {
-    await generateMap(server, modelsPath, handlersPath);
+    await generateMap(server, models, handlers);
 
     const _buildPath = path.resolve(_dirname, 'build', 'client');
     let relativePath = req.url.replace('/playground', '');

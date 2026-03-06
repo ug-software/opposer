@@ -35,7 +35,8 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    var handlers = await helper.loadHandlers();
+    const customHandlers = req.server.getContext("handlers");
+    var handlers = await helper.loadHandlers(customHandlers);
     if (settings.auth) {
       var auth = {
         methods: [
@@ -148,7 +149,8 @@ export default async (req: Request, res: Response) => {
   }
 
   //database request...
-  var allModels = await system.getAllModels();
+  const customModels = req.server.getContext("models");
+  var allModels = await system.getAllModels(customModels);
 
   var model = allModels.find(
     (x) => x.name.toLocaleLowerCase() === props.model.toLocaleLowerCase()

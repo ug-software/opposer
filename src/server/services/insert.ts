@@ -4,10 +4,12 @@ import { HttpStatus } from "../constants/index.js";
 import system from "../../system/index.js";
 import opposerServer from "../core/index.js";
 import { OpposerDatabase } from "../../orm/index.js";
+import { ClassType } from "../../interfaces/system.js";
 
 export default async (props: HandleInsertProps) => {
   try {
-    const allModels = await system.getAllModels();
+    const customModels = opposerServer.getContext<string | ClassType<unknown>[]>("models");
+    const allModels = await system.getAllModels(customModels);
     const schema = allModels.find(
       (x) => x.name === props.model
     );

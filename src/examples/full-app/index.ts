@@ -27,8 +27,8 @@ async function runFullExample() {
     // Passing the local models and schedules path so initialization can find our entities
     const { initialize } = await Server({
       cors: { origin: '*' },
-      modelsPath: path.resolve(_dirname, 'models'),
-      schedulesPath: path.resolve(_dirname, 'schedules'),
+      models: path.resolve(_dirname, 'models'),
+      schedules: path.resolve(_dirname, 'schedules'),
     });
 
     // 3. Populate Initial Data

@@ -5,11 +5,13 @@ import system from "../../system/index.js";
 import { HandleRequestResult } from "../../interfaces/request.js";
 import opposerServer from "../core/index.js";
 import { OpposerDatabase } from "../../orm/index.js";
+import { ClassType } from "../../interfaces/system.js";
 
 export default async (
   props: HandleGetProps
 ): Promise<HandleRequestResult<unknown>> => {
-  const allModels = await system.getAllModels();
+  const customModels = opposerServer.getContext<string | ClassType<unknown>[]>("models");
+  const allModels = await system.getAllModels(customModels);
   const schema = allModels.find((x) => {
     return x.name.toLowerCase() === props.model.toLowerCase();
   });
