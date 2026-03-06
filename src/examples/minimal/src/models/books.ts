@@ -1,12 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { f, Field } from "../../../../server/index.js";
+import { Entity, PrimaryColumn, Field, f } from "../../../../orm/index.js";
 
 @Entity("book")
 export default class Books {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn({ generated: true })
   id!: string;
 
-  @Column({ type: "varchar" })
   @Field(() => f().string("type of string").required("field is required"))
   name!: string;
 }

@@ -1,19 +1,19 @@
-import { QueryBuilder } from "typeorm";
 import { HandleGetProps } from "../../interfaces/controller.js";
 import { Exception, Success } from "../helpers/index.js";
 import { HttpStatus } from "../constants/index.js";
-import * as system from "../../system/index.js";
+import system from "../../system/index.js";
 import { HandleRequestResult } from "../../interfaces/request.js";
-import { db } from "../database/index.js";
-import QueryTool from "../tools/query.js";
+import opposerServer from "../core/index.js";
+import { OpposerDatabase } from "../../orm/index.js";
 
 export default async (
   props: HandleGetProps
 ): Promise<HandleRequestResult<unknown>> => {
-  var queryTool = new QueryTool();
-  var schema = (await system.getAllModels()).find(
-    (x) => x.name === props.model
-  );
+  const allModels = await system.getAllModels();
+  const schema = allModels.find((x) => {
+    return x.name.toLowerCase() === props.model.toLowerCase();
+  });
+
   if (!schema) {
     return Exception({
       name: HttpStatus[400].name,
@@ -22,11 +22,13 @@ export default async (
     });
   }
 
+  const db = opposerServer.getContext<OpposerDatabase>("db");
+
   if (!db) {
     return Exception({
-      name: HttpStatus[400].name,
-      code: HttpStatus[400].code,
-      message: "Unable to connect for db.",
+      name: HttpStatus[500].name,
+      code: HttpStatus[500].code,
+      message: "Database not connected.",
     });
   }
 
@@ -34,101 +36,142 @@ export default async (
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: "Search not understood.",
+      message: "Search parameters missing.",
     });
   }
 
-  var repository = db.getRepository(schema.entity);
+  const repository = db.getRepository(schema.entity);
 
-  if (props.query.type === "filter") {
-    //@ts-ignore
-    var queryBuilder = {} as QueryBuilder;
-
-    if (props.query.relation) {
-      queryBuilder.relations = queryTool.renderRelations(props.query.relation);
-    }
-
-    if (props.pagination) {
-      var skip = 0;
-      if (!props.pagination.take || props.pagination.take === 0) {
-        props.pagination.take = 10;
-      }
-
-      if (props.pagination.page) {
-        skip = props.pagination.page * props.pagination.take;
-      }
-
-      queryBuilder = {
-        take: props.pagination.take,
-        skip,
-      };
-    }
-
-    if (!props.query.filter) {
-      return Exception({
-        name: HttpStatus[400].name,
-        code: HttpStatus[400].code,
-        message: "Search not understood, missing 'filter' parameter",
-      });
-    }
-
-    if (props.query.select) {
-      queryBuilder.select = queryTool.renderSelect(props.query.select);
-    }
-
-    var resultFilter = await repository.find({
-      where: queryTool.renderFilter(props.query.filter),
-      ...queryBuilder,
-    });
-
-    if (props.pagination) {
-      var totalItems = await repository.count({
-        where: props.query.filter,
-        ...queryBuilder,
-      });
-      var totalPages = Math.floor(totalItems / props.pagination.take);
-
-      return Success({
-        items: resultFilter,
-        totalItems,
-        totalPages: totalPages > 0 ? totalPages : 0,
-      });
-    }
-
-    return Success(resultFilter);
-  }
-
-  if (props.query.type === "find") {
-    //@ts-ignore
-    var queryBuilder = {} as QueryBuilder;
-
-    if (props.query.relation) {
-      queryBuilder.relations = queryTool.renderRelations(props.query.relation);
-    }
-
-    if (!props.query.find) {
-      return Exception({
-        name: HttpStatus[400].name,
-        code: HttpStatus[400].code,
-        message: "Search not understood, missing 'find' parameter.",
-      });
-    }
-
-    if (props.query.select) {
-      queryBuilder.select = queryTool.renderSelect(props.query.select);
-    }
-
-    var resultFind = await repository.findOne({
-      where: queryTool.renderFilter(props.query.find),
-      ...queryBuilder,
-    });
-
-    return Success(resultFind);
-  }
-
-  return Exception({
-    name: HttpStatus[400].name,
-    code: HttpStatus[400].code,
-    message: "Search not understood",
+  const queryKeys = [
+    "filter",
+    "find",
+    "count",
+    "exists",
+    "aggregate",
+    "distinct",
+    "group",
+  ];
+  const presentKeys = queryKeys.filter((k) => {
+    return k in props.query;
   });
+
+  if (presentKeys.length > 1) {
+    return Exception({
+      name: HttpStatus[400].name,
+      code: HttpStatus[400].code,
+      message: `Conflicting search parameters: multiple types provided (${presentKeys.join(
+        ", "
+      )}).`,
+    });
+  }
+
+  let type = props.query.type;
+  if (presentKeys.length === 1) {
+    type = presentKeys[0] as any;
+  }
+
+  if (!type) {
+    return Exception({
+      name: HttpStatus[400].name,
+      code: HttpStatus[400].code,
+      message:
+        "Search type not identified. Please provide one of: " +
+        queryKeys.join(", "),
+    });
+  }
+
+  try {
+    switch (type) {
+      case "filter": {
+        const filter = props.query.filter || {};
+        const select = props.query.select || [];
+        const pagination = props.pagination;
+
+        const items = await repository.find({
+          where: filter,
+          select,
+          pagination,
+        });
+
+        if (props.pagination) {
+          const totalItems = await repository.count(filter);
+          const totalPages = Math.ceil(
+            totalItems / (props.pagination.take || 10)
+          );
+
+          return Success({
+            items,
+            totalItems,
+            totalPages: totalPages > 0 ? totalPages : 0,
+          });
+        }
+
+        return Success(items);
+      }
+
+      case "find": {
+        const find = props.query.find || {};
+        const select = props.query.select || [];
+
+        const result = await repository.findOne({
+          where: find,
+          select,
+        });
+
+        return Success(result);
+      }
+
+      case "count": {
+        const count = props.query.count || {};
+        const result = await repository.count(count);
+        return Success({ count: result });
+      }
+
+      case "exists": {
+        const exists = props.query.exists || {};
+        const result = await repository.exists(exists);
+        return Success({ exists: result });
+      }
+
+      case "aggregate": {
+        const aggregate = props.query.aggregate;
+        if (!aggregate) {
+          throw new Error("Aggregate configuration missing.");
+        }
+        const result = await repository.aggregate(aggregate);
+        return Success(result);
+      }
+
+      case "distinct": {
+        const distinct = props.query.distinct;
+        if (!distinct) {
+          throw new Error("Distinct configuration missing.");
+        }
+        const result = await repository.distinct(distinct);
+        return Success(result);
+      }
+
+      case "group": {
+        const group = props.query.group;
+        if (!group) {
+          throw new Error("Group configuration missing.");
+        }
+        const result = await repository.group(group);
+        return Success(result);
+      }
+
+      default:
+        return Exception({
+          name: HttpStatus[400].name,
+          code: HttpStatus[400].code,
+          message: `Search type '${type}' not understood.`,
+        });
+    }
+  } catch (err: any) {
+    return Exception({
+      name: HttpStatus[400].name,
+      code: HttpStatus[400].code,
+      message: err.message,
+    });
+  }
 };

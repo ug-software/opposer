@@ -1,0 +1,134 @@
+import fs from "fs";
+import path from "path";
+import { pathToFileURL } from "url";
+import system from "../system/index.js";
+import { getScheduleMetadata } from "./decorators/index.js";
+import ScheduleHistory from "./models/history.js";
+import opposerServer from "../server/core/index.js";
+import { OpposerDatabase } from "../orm/index.js";
+import { randomUUID } from "crypto";
+
+export interface RegisteredTask {
+  name: string;
+  interval: number;
+  propertyKey: string;
+  target: any;
+  instance: any;
+  timer?: NodeJS.Timeout;
+}
+
+export class Scheduler {
+  private tasks: Map<string, RegisteredTask> = new Map();
+
+  private get db() {
+    return opposerServer.getContext<OpposerDatabase>("db");
+  }
+
+  async initialize(customSchedulesPath?: string) {
+    const root = process.cwd();
+    const settings = system.getSettingsFile();
+    let schedulesPath =
+      customSchedulesPath || path.resolve(root, "src", "schedules");
+
+    if (!customSchedulesPath && settings.schedules) {
+      schedulesPath = path.resolve(root, settings.schedules);
+    }
+
+    if (!fs.existsSync(schedulesPath)) {
+      console.log(`[scheduler] Directory not found: ${schedulesPath}`);
+      return;
+    }
+
+    const files = system.getAllFiles(schedulesPath);
+    for (const file of files) {
+      const fileUrl = pathToFileURL(file).href;
+      const module = await import(fileUrl);
+      const TargetClass = module.default;
+
+      if (TargetClass && typeof TargetClass === "function") {
+        const metadata = getScheduleMetadata(TargetClass);
+        if (metadata.length > 0) {
+          const instance = new TargetClass();
+          for (const taskOptions of metadata) {
+            if (taskOptions.enabled) {
+              this.tasks.set(taskOptions.name, {
+                ...taskOptions,
+                target: TargetClass,
+                instance,
+              });
+              console.log(
+                `[scheduler] Registered task: ${taskOptions.name} (${taskOptions.interval}ms)`
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  start() {
+    for (const [name, task] of this.tasks.entries()) {
+      task.timer = setInterval(() => {
+        this.runTask(name).catch((err) =>
+          console.error(`[scheduler] Error in task ${name}:`, err)
+        );
+      }, task.interval);
+    }
+    console.log("[scheduler] All tasks started.");
+  }
+
+  async runTask(name: string, data?: any): Promise<any> {
+    const task = this.tasks.get(name);
+    if (!task) {
+      throw new Error(`Task ${name} not found.`);
+    }
+
+    const historyRepo = this.db.getRepository(ScheduleHistory);
+    const startTime = new Date();
+    const historyId = randomUUID();
+
+    // Create initial history record
+    await historyRepo.insert({
+      id: historyId,
+      nm: name,
+      st: startTime,
+      sc: false,
+    } as any);
+
+    try {
+      const result = await task.instance[task.propertyKey](data);
+      const endTime = new Date();
+      const duration = endTime.getTime() - startTime.getTime();
+
+      await historyRepo.update({ id: historyId }, {
+        ft: endTime,
+        sc: true,
+        du: duration,
+      } as any);
+
+      return result;
+    } catch (error: any) {
+      const endTime = new Date();
+      const duration = endTime.getTime() - startTime.getTime();
+
+      await historyRepo.update({ id: historyId }, {
+        ft: endTime,
+        sc: false,
+        er: error.message || String(error),
+        du: duration,
+      } as any);
+
+      throw error;
+    }
+  }
+
+  getTasks() {
+    return Array.from(this.tasks.values()).map((t) => ({
+      name: t.name,
+      interval: t.interval,
+      enabled: true,
+    }));
+  }
+}
+
+export default new Scheduler();

@@ -1,7 +1,8 @@
-import { DataSourceOptions } from "typeorm";
+import { ConnectionOptions } from "../orm/index.js";
 
 export interface OpposerSystemConfigOptions {
   models: string;
+  schedules: string;
   handlers: string;
   port: number;
   url?: string;
@@ -9,6 +10,9 @@ export interface OpposerSystemConfigOptions {
   urlencoded?: boolean;
   helmet?: boolean;
   logger?: boolean;
+  cors?: {
+    origin: string | string[];
+  };
   rateLimit?: {
     windowMs: number;
     max: number;
@@ -23,7 +27,7 @@ export interface OpposerSystemConfigOptions {
     refresh: string;
     recover: string;
   };
-  database: DataSourceOptions;
+  database: ConnectionOptions;
   manager: {
     firstName: string;
     lastName: string;
@@ -34,4 +38,9 @@ export interface OpposerSystemConfigOptions {
 
 export interface ClassType<T> {
   new (...args: any[]): T;
+}
+
+export interface ModelDefinition {
+  name: string;
+  entity: ClassType<unknown>;
 }

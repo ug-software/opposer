@@ -9,3 +9,10 @@
 # React Router
 **/.react-router/
 **/build/
+
+#database
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal

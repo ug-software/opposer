@@ -1,259 +1,262 @@
 # Opposer
 
-Opposer é um ecosistema gerenciador em formato de api, para gestão de dados, criação de metodos capazes de tranformar dados em formato Handler. Desenvolvido para ser rápido em solucionar o acesso e manutenção de dados, seja em inserção, deleção, consulta, páginado ou não ao banco.
+Opposer é um ecossistema modular para construção de aplicações modernas, focado em alta produtividade e organização por **Domínios**. Ele unifica Servidor HTTP, Agendamento de Tarefas, ORM e Persistência de Estado em uma única ferramenta extensível.
 
-#### Para começar é necessário instalar 
-1. Opposer:
-		`` npm install git+https://github.com/ug-software/opposer.git#latest ``
-	
-2. Typescript:
-		`` npm install typescript ``
+---
 
-3. Typeorm:
-		``npm install typeorm `` 
+## 🚀 Estrutura de Domínios
 
+O Opposer organiza a lógica da sua aplicação em pastas específicas que ele mapeia automaticamente:
 
+```text
+project/
+├── src/
+│   ├── handlers/    # Domínio de Servidor (Ações da API)
+│   ├── schedules/   # Domínio de Agendamento (Cron)
+│   ├── schemas/     # Domínio de Dados (Entidades ORM)
+│   └── index.ts     # Inicialização
+├── opposer-settings.json
+└── package.json
+```
 
-#### Vamos criar um gerenciador de livros, com duas entidades, Livros e Autores.
+---
 
-Só é possivel para o opposer gerênciar de forma fácil a criação do servidor por causa de sua organização, ele necessáriamente é feito para mapeamento por pastas então criaremos dentro do `` /src `` duas pastas a ``` /schemas ``` onde estará nossas entidades e validações e ``` /handlers ``` onde estará nossas classes com ações customizadas ou serviços necessários dentro da api, no final nossa estrutura de pastas estará desta forma:
-	
-		project/
-		├── src/
-		│   ├── schemas/     # Entidades de Schemas de validações.
-		│   ├── handler/     # Funções responsaveis por customizações.
-		|   └── index.ts     # Nossa porta de entrada para o Servidor.
-		├── opposer-settings.json
-		├── tsconfig.json
-		└── package.json
- 
+## 1. 🌐 Server (Servidor HTTP)
 
-Vamos criar nossos Schemas, eles são declarados com decorators então é necessário que em seu `` tsconfig.json `` esteja com as flags `` "emitDecoratorMetadata": true `` e `` "experimentalDecorators": true ``;
+O motor de servidor do Opposer é baseado em **Handlers**. Cada Handler é um domínio de ações que você expõe para a API.
 
-Para o schema de Autor teremos em `` src/schemas/author.ts `` o seguinte código:
+### Exemplo de Handler (`src/handlers/user.ts`)
+```typescript
+import { Handler, Method, Payload, Success, f, Field } from "opposer/server";
 
-		import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
-		import { f, Field } from "opposer";
-		import Book from "./book";
+class LoginDto {
+    @Field(() => f().string().required())
+    username!: string;
+    
+    @Field(() => f().string().required())
+    password!: string;
+}
 
-		@Entity("author")
-		export default class Author {
-			@PrimaryGeneratedColumn("uuid")
-			id!: string;
+@Handler("auth")
+export default class AuthHandler {
+    @Method()
+    async login(@Payload(LoginDto) payload: any) {
+        const { username } = payload.data;
+        // Lógica de autenticação...
+        return Success({ token: "JWT-AQUI", user: username });
+    }
+}
+```
 
-			@Column({ type: "varchar" })
-			@Field(() => f().string("O campos é do tipo string").required("O campo é de preenchimento obrigatório"))
-			firstName!: string;
+**Como consumir:** Toda a comunicação é feita via `POST` no endpoint `/opposer` (configurável).
+```json
+{
+    "handler": "auth",
+    "method": "login",
+    "payload": { "username": "admin", "password": "123" }
+}
+```
 
-			@Column({ type: "varchar" })
-			@Field(() => f().string("O campos é do tipo string").required("O campo é de preenchimento obrigatório"))
-			lastName!: string;
+---
 
-			@Column({ type: "varchar" })
-			@Field(() =>  f().number("O campo é do tipo numérico").required("O campo é de preenchimento obrigatório"))
-			age!: number;
+## 2. 🎨 Playground (Interface Visual)
 
-			@Column({ type: "jsonb" })
-			@Field(() =>
-				f().json({
-					number: f().number("O campo é do tipo numérico"),
-					street: f().string("O campos é do tipo string"),
-				})
-			)
-			address!: {
-				number: number;
-				street: string;
-			};
+O Opposer inclui nativamente um **Playground**, uma interface web completa para desenvolvedores. Ele mapeia automaticamente todos os seus domínios e permite:
 
-			@OneToMany(() => Book, (book) => book.author)
-			books: Book[];
-		}
+- **Explorar Schemas:** Ver a definição de todas as tabelas e tipos de campos.
+- **Testar Handlers:** Executar métodos de API diretamente pelo navegador com suporte a JSON.
+- **Monitorar Schedulers:** Acompanhar o status das tarefas agendadas em tempo real.
+- **Gestão de Usuários:** Criar, editar e excluir usuários do sistema com validações integradas.
+- **Gestão de API Keys:** Gerar chaves de acesso (`opposer-key`) para integrações externas.
 
+**Acesso:** `http://localhost:3838/playground`
 
-E em ``src/schemas/book.ts`` teremos:
+---
 
-		import { PrimaryGeneratedColumn, Entity, Column, ManyToOne } from "typeorm";
-		import { Field, f } from "opposer";
-		import Author from "./author";
+## 3. ⏰ Schedule (Agendamento de Tarefas)
 
-		@Entity("book")
-		export default class Book {
-			@PrimaryGeneratedColumn("uuid")
-			id!: string;
+O domínio de agendamento permite criar rotinas automáticas com monitoramento integrado e persistência de histórico de falhas/sucessos.
 
-			@Column({ type: "varchar" })
-			@Field(() => f().string("O campos é do tipo string").required("Campo de preenchimento obrigatorio"))
-			name!: string;
+### Exemplo de Tarefa (`src/schedules/sync.ts`)
+```typescript
+import { Schedule } from "opposer/scheduler";
 
-			@Column({ type: "date" })
-			@Field(() => f().date("O campo é necessáriamente uma data").required("Campo de preenchimento obrigatorio"))
-			published!: Date;
+export default class InventoryTask {
+    @Schedule({ 
+        name: "sincronizar-estoque", 
+        interval: 60000 // Executa a cada 1 minuto
+    })
+    async sync() {
+        // Lógica de sincronização...
+        console.log("Estoque atualizado com sucesso!");
+    }
+}
+```
 
-			@Column({ type: "varchar" })
-			@Field(() => f().string("O campos é do tipo string"))
-			description!: string;
+---
 
-			@ManyToOne(() => Author, (author) => author.books)
-			author!: Author;
-		}
+## 4. 🏗️ ORM (Object-Relational Mapping)
 
-Reparemos que nestes arquivos a um misto de Typeorm e Opposer, onde o Orm declara sua entidade e relacionamento entre as tabelas, como as colunas generatinas como o id, e o Opposer será responsavel por validar esse schema com o decorator Field fazendo o objeto de validação, um exemplo do objeto final é muito parecido com isso:
+O ORM do Opposer gerencia o banco de dados e a integridade dos dados através de decorators. Ele suporta SQLite, MySQL e Postgres.
 
-		import { Field, f } from  "opposer";
-		
-		const book = {
-			name: f().string("O campos é do tipo string").required("Campo de preenchimento obrigatorio")
-			published: f().date("O campo é necessáriamente uma data").required("Campo de preenchimento obrigatorio")
-			description: f().string("Campo é do tipo string")
-		}
+### Exemplo de Schema (`src/schemas/product.ts`)
+```typescript
+import { Entity, PrimaryColumn, Field, f, CreateDateColumn } from "opposer/orm";
 
-A outros métodos possiveis na validação de cada campo, como ``match`` para regex, ``min`` e ``max`` para números ou ``case`` para validação contestual, onde há todos os valores atuais e é possivel validar caso algum campo esteja preenchido ou não. A mais sobre as validações sessões para baixo.
+@Entity("products", "Domínio de Produtos")
+export default class Product {
+    @PrimaryColumn({ type: "uuid" })
+    id!: string;
 
-Certo com nossas entidades e schemas criados vamos para instânciar o servidor, onde a mágica realmente acontece.
+    @Field(() => f().string().required())
+    name!: string;
 
-No nosso ``src/index.ts`` precisaremos de algo parecido com isto aqui:
+    @Field({ type: "number", default: 0 })
+    stock!: number;
 
-		import { Server } from  "opposer";
-		
-		(async () => {
-			var opposer = Server({
-				port: 3838, // porta do servidor...
-				cors: {
-					origin: "*", // customização do cors (* neste caso aberto para qualquer endereço ou regra.)
-				},
-			});
-			
-			(await opposer).initialize();
-		})();
+    @Field({ type: "number", default: 0 })
+    price!: number;
 
-Há também a configuração do nosso arquivo matriz o ``opposer-settings.json ``é nele que conseguiremos configurar algumas propriedades bem interessantes sobre nosso serviço, então em ``project/opposer-settings.json`` teremos um exemplo minimo dele algo parecido com isso:
+    @CreateDateColumn()
+    createdAt!: Date;
+}
+```
 
-		{
-			"database": {
-				"type": "postgres",
-				"host": "localhost",
-				"port": 5432,
-				"username": "opposer",
-				"password": "opposer",
-				"database": "opposer",
-				"synchronize": true, // para desenvolvimento, recomendado em produção é false.
-				"logging": true // verte no console o log das consultas.
-			}
-		}
+### 🔍 Query Builder JSON
+O Opposer oferece um motor de busca flexível via JSON. Você não precisa informar o `type` se usar as chaves específicas:
 
-É possivel também deixar no ``env``, caso ele não ache aqui, ele buscará lá, as configurações são as mesmas do Typeorm então neste momento caso sua configuração não bata com esse exemplo, você pode consultar a própria documentação do [Typeorm](https://typeorm.io/docs). 
+#### Filtrar Múltiplos (`filter`)
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "filter": { "stock": { "$lt": 10 } },
+        "select": ["id", "name"]
+    }
+}
+```
 
-Feito isto podemos para desenvolvimento rodar o comando `` npx tsx ./src/index.ts ``, ele inicializará o servidor e você verá `` ⚡ Opposer is running in port 3838 ``. Pronto temos nosso serviço no ar e poderemos acessar fazendo requisições em `` /opposer ``. Já podemos inserir, deletar, buscar ou atualizar nossos autores e livros;
+#### Buscar Um (`find`)
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "find": { "id": "uuid-aqui" }
+    }
+}
+```
 
-Dito isto vamos para a segunda parte do nosso exemplo básico. O Opposer foi projetado para fácilitar o desenvolvimento do back-end, do gerênciamento dos dados, suas consultas são a base para flexibilidade ao obter os dados e robustes para inserir podendo usar relacionamentos, arrays, json dados validos graças ao Typeorm***. Todos os métodos são ``post`` e precisam da chave de api ( descreverei mais a frente no tópico de segurança ). 
+#### Contar Registros (`count`)
+Retorna a quantidade total de itens que batem com o filtro.
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "count": { "stock": { "$gt": 0 } }
+    }
+}
+```
 
-#### Inserção:
+#### Verificar Existência (`exists`)
+Retorna um booleano simples.
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "exists": { "name": "Celular" }
+    }
+}
+```
 
-Vamos inserir alguns livros e autores ? Vamos começar com os autores, para poder inserir um registro utilizando nosso servidor podemos rodar a seguinte requisição:
+#### Agregações (`aggregate`)
+Suporta `sum`, `avg`, `min`, `max` e `count`.
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "aggregate": {
+            "where": { "stock": { "$gt": 0 } },
+            "aggregate": { "price": "avg", "stock": "sum" }
+        }
+    }
+}
+```
 
-		(async () => {
+#### Valores Únicos (`distinct`)
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "distinct": { "field": "category" }
+    }
+}
+```
 
-			const  authors  =  await  fetch("http://localhost:3838/opposer", {
-				method: "POST",
-				body: JSON.stringify({
-				method: "insert",
-				schema: "author",
-				data: [
-						{
-							firstName: "Carl",
-							lastName: "Sagan",
-							age: 62,
-							address: {
-								street: "SN",
-								number: 0,
-							},
-						},
-						{
-							firstName: "Joaquim Maria",
-							lastName: "Machado de Assis",
-							age: 69,
-							address: {
-								street: "SN",
-								number: 0,
-							},
-						},
-					],
-				}),
-			});
-			console.log(await  authors.json());
-		})();
+#### Agrupamento (`group`)
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "group": {
+            "by": ["category"],
+            "aggregate": { "id": "count", "price": "avg" }
+        }
+    }
+}
+```
 
-Inserimos nossos dois autores, vamos aproveitar e inserir alguns livros também ?! Seguiremos definindo já na inserção quem serão nossos autores, passando a propriedade correspondente o `id` deles.
+---
 
+## 5. 💾 Persistent (Gestão de Estado e Cache)
 
+O módulo Persistent permite armazenar estados de forma reativa e transparente usando decorators, eliminando a necessidade de gerenciar Redis ou Memcached manualmente para estados simples.
 
-#### Consulta:
+### Exemplo de Persistência
+```typescript
+import { Global, Session } from "opposer/persistent";
 
-Para obter os dados dos autores, queremos uma lista com todos sem filtro algum, poderemos obter da segunte forma:
+export default class ConfigService {
+    @Global() 
+    appConfig: any; // Valor compartilhado entre todos os usuários do servidor
 
-		(async () => {
-			const  authors = await fetch("http://localhost:3838/opposer", {
-				method: "POST",
-				body: JSON.stringify({
-					method: "get",
-					schema: "author",
-					query: {
-						type: "filter",
-						filter: {},
-					},
-				}),
-			});
+    @Session()
+    userPreferences: any; // Valor isolado e persistente por sessão de usuário (IP/Cookie)
+}
+```
 
-			console.log(await  authors.json())
-		})();
+---
 
-O nosso retorno será:
+## ⚙️ Configuração Principal (`opposer-settings.json`)
 
-		[
-			{
-				"id": "1cace75e-abc7-483d-9a98-cf95a4962997",
-				"firstName": "Carl",
-				"lastName": "Sagan",
-				"age": 62,
-				"address": {
-					"street": "SN",
-					"number": 0
-				}
-			},
-			{
-				"id": "553e4098-b6dd-4889-bb3a-b234396c82a6",
-				"firstName": "Joaquim Maria",
-				"lastName": "Machado de Assis",
-				"age": 69,
-				"address": {
-					"street": "SN",
-					"number": 0
-				}
-			}
-		]
+```json
+{
+  "port": 3838,
+  "database": {
+    "type": "sqlite",
+    "database": "./database.db",
+    "logging": true
+  },
+  "auth": true,
+  "logger": true
+}
+```
 
-Se quisermos pegar os livros de cada autor junto com eles ?, conseguimos também basta passar o seu relacionamento na consulta, desta forma:
+Para começar, inicialize o servidor no seu `index.ts`:
+```typescript
+import { Server } from "opposer";
 
-		(async () => {
-			const  authors = await fetch("http://localhost:3838/opposer", {
-				method: "POST",
-				body: JSON.stringify({
-					method: "get",
-					schema: "author",
-					query: {
-						type: "filter",
-						filter: {},
-						relations: ["books"]
-					},
-				}),
-			});
+const instance = await Server({
+    modelsPath: "./src/schemas",
+    handlersPath: "./src/handlers",
+    schedulesPath: "./src/schedules"
+});
 
-			console.log(await  authors.json())
-		})();
-
-E o nosso retorno trará os livros juntos com cada autor, a também possibilidade de buscar os livros e então seus autores ( uma busca reversa ). Podemos buscar de forma páginada, buscar somente um com ``find``, os métodos nesta parte cridas foram inspiradas no ``javascript`` com suas funções de consulta por array, então pode ser que por agora não tenha uma forma de chegar de forma tão granulada ao dado, mas nas próximas releases existira, consulte na sessão de consulta os outros parametros que podemos utilizar na consulta.
-
-#### Handlers
-
-Digamos que em nosso projeto tenhamos metodos ou funções que gostariamos e que somente com os metodos que o Opposer disponibilize não são totalmente viaveis, e seria necessário então metodos especificos, digamos que queremos mostrar os ulltimos cinco livros publicados em nossa página principal, podemos fazer isso com handlers.
-
+instance.initialize();
+```

@@ -1,13 +1,18 @@
 export interface OpposerMap {
   models: {
     [key: string]: {
-      [key: string]: string;
+      description: string;
+      schema: {
+        [key: string]: string;
+      };
     };
   };
   handlers: {
     [key: string]: {
-      payload: {
-        [key: string]: string;
+      [methodName: string]: {
+        payload: {
+          [key: string]: string;
+        };
       };
     };
   };

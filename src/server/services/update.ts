@@ -1,13 +1,13 @@
 import { Exception, Success } from "../helpers/index.js";
 import { HandleUpdateProps } from "../../interfaces/controller.js";
 import { HttpStatus } from "../constants/index.js";
-import * as system from "../../system/index.js";
-import { db } from "../database/index.js";
-import QueryTool from "../tools/query.js";
+import system from "../../system/index.js";
+import opposerServer from "../core/index.js";
+import { OpposerDatabase } from "../../orm/index.js";
 
 export default async (props: HandleUpdateProps) => {
-  var queryTool = new QueryTool();
-  var schema = (await system.getAllModels()).find(
+  const allModels = await system.getAllModels();
+  const schema = allModels.find(
     (x) => x.name === props.model
   );
 
@@ -15,31 +15,28 @@ export default async (props: HandleUpdateProps) => {
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: "Unabled find schema",
+      message: "Unable to find schema",
     });
   }
+
+  const db = opposerServer.getContext<OpposerDatabase>("db");
 
   if (!db) {
     return Exception({
-      name: HttpStatus[400].name,
-      code: HttpStatus[400].code,
-      message: "Unable to connect for db.",
+      name: HttpStatus[500].name,
+      code: HttpStatus[500].code,
+      message: "Database not connected.",
     });
   }
 
-  var repository = db.getRepository(schema.entity);
+  const repository = db.getRepository(schema.entity);
 
-  //valida se todas as propriedades que existem na data existem no repository
-  var repositoryColumns = repository.metadata.columns;
-  var thereIsPropertyOutsideTheRule = Object.keys(props.data).map((key) => {
-    if (!repositoryColumns.find((x) => x.propertyName == key)) {
-      return true;
-    }
-
-    return false;
+  const repositoryFields = repository.Fields.map(f => f.name);
+  const thereIsPropertyOutsideTheRule = Object.keys(props.data).some((key) => {
+    return !repositoryFields.includes(key) && key !== 'id';
   });
 
-  if (thereIsPropertyOutsideTheRule.includes(true)) {
+  if (thereIsPropertyOutsideTheRule) {
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
@@ -47,17 +44,24 @@ export default async (props: HandleUpdateProps) => {
     });
   }
 
-  const query = queryTool.renderFilter(props.filter);
-  if (!query) {
+  if (!props.filter || Object.keys(props.filter).length === 0) {
     return Exception({
       ...HttpStatus[400],
-      message: "necessary set query params for update items.",
+      message: "Necessary to set query params for update items.",
     });
   }
 
-  await repository.update(query, props.data);
+  try {
+    await repository.update(props.filter, props.data);
 
-  return Success({
-    message: "Success updating item",
-  });
+    return Success({
+      message: "Success updating item",
+    });
+  } catch (err: any) {
+    return Exception({
+      name: HttpStatus[500].name,
+      code: HttpStatus[500].code,
+      message: err.message,
+    });
+  }
 };

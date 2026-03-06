@@ -1,40 +1,35 @@
 import {
+  Entity,
+  Field,
+  PrimaryColumn,
+  Relation,
+  CreateDateColumn,
+  UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToMany,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm";
-import { Field } from "../../decorators/index.js";
-import f from "../../database/field.js";
+  f,
+} from "../../../orm/index.js";
 import bcrypt from "bcrypt";
 import Role from "./rl.js";
 
 @Entity("usr")
 export default class User {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryColumn({ type: "uuid" })
   id!: string;
 
-  @Column({ type: "varchar" })
   @Field(() =>
     f().string("first name is string.").required("first name is required.")
   )
   fn!: string;
 
-  @Column({ type: "varchar" })
   @Field(() =>
     f().string("last name is string.").required("last name is required.")
   )
   ln!: string;
 
-  @Column({ type: "varchar" })
   @Field(() => f().string("ln is string.").required("ln is required."))
   lg!: string;
 
-  @Column({ type: "varchar" })
   @Field(() =>
     f()
       .string("password is string.")
@@ -46,7 +41,7 @@ export default class User {
   )
   ps!: string;
 
-  @Column({ type: "boolean", default: true })
+  @Field({ type: "boolean", default: true })
   ac!: boolean;
 
   @CreateDateColumn()
@@ -55,7 +50,11 @@ export default class User {
   @UpdateDateColumn()
   ut!: Date;
 
-  @OneToMany(() => Role, (role) => role.usr)
+  @Relation({
+    type: "one-to-many",
+    target: () => Role,
+    inverseSide: "usr",
+  })
   rl!: Role[];
 
   @BeforeInsert()
@@ -68,16 +67,6 @@ export default class User {
   }
 
   async comparePassword(plainPassword: string): Promise<boolean> {
-    return bcrypt.compare(plainPassword, this.ps);
+    return await bcrypt.compare(plainPassword, this.ps);
   }
 }
-
-/*
-    fn => firstName,
-    lm => lastName,
-    em => e-mail,
-    ps => password,
-    ac => active,
-    ct => created at,
-    ut => update at
-*/
