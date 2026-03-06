@@ -7,3 +7,4 @@ export {
   getIsPublicMethodMetadata,
 } from "./is-public-method.js";
 export { default as Field, getFieldsMetadata } from "./field.js";
+export { f } from "../../orm/index.js";

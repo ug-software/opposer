@@ -42,6 +42,7 @@ export interface HandleGetProps {
     take: number;
   };
   query: {
+    type?: 'filter' | 'find' | 'count' | 'exists' | 'aggregate' | 'distinct' | 'group';
     select?: string[];
     find?: QueryBuilder;
     filter?: QueryBuilder;

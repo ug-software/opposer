@@ -72,6 +72,7 @@
         "@types/gulp": "^4.0.17",
         "@types/node": "^22.13.14",
         "@types/node-cron": "^3.0.11",
+        "@types/pg": "^8.18.0",
         "@types/yargs": "^17.0.33",
         "del": "^8.0.1",
         "gulp": "^5.0.1",

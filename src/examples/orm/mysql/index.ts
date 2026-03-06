@@ -34,7 +34,7 @@ async function runMySQLExample() {
           { name: "Admin" },
           { email: { $il: "root@%" } }
         ]
-      },
+      } as any,
       select: ["name", "email"]
     });
 
