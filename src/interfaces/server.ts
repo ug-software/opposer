@@ -11,7 +11,7 @@ export interface CreateServerProps {
 }
 
 export interface Request extends http.IncomingMessage {
-  server: any;
+  server: OpposerServer;
   ip?: string;
   cookies: Record<string, string>;
   body: any;
