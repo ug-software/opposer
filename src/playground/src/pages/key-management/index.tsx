@@ -31,6 +31,14 @@ import useRequest from "../../hooks/use-request";
 import { useToast } from "../../context/toast";
 import { useConfirm } from "../../context/confirm";
 
+interface ApiKey {
+  id: string;
+  nm: string;
+  hs: string;
+  ct: string;
+  ex: string;
+}
+
 const validationSchema = Yup.object({
   nm: Yup.string().required("Nome da chave é obrigatório"),
   ex: Yup.date()
@@ -47,7 +55,7 @@ const generateHash = (length = 32) => {
 };
 
 export default () => {
-  const [keys, setKeys] = useState<any[]>([]);
+  const [keys, setKeys] = useState<ApiKey[]>([]);
   const [open, setOpen] = useState(false);
   const [newGeneratedKey, setNewGeneratedKey] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -101,7 +109,7 @@ export default () => {
     showToast("Chave copiada para a área de transferência!", "success");
   };
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: { nm: string; ex: string }) => {
     const hash = generateHash();
     const res = await api.sendRequestOpposer(
       JSON.stringify({

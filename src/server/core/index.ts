@@ -2,10 +2,9 @@ import http from "http";
 import { OpposerSystemConfigOptions } from "../../interfaces/system.js";
 import system from "../../system/index.js";
 import Context from "../../persistent/context/index.js";
+import { Request, Response, NextFunction, OpposerServer as IOpposerServer } from "../../interfaces/server.js";
 
-export type Request = any;
-export type Response = any;
-export type NextFunction = () => void | Promise<void>;
+export { Request, Response, NextFunction };
 
 export type Middleware = (
   req: Request,
@@ -13,7 +12,7 @@ export type Middleware = (
   next: NextFunction
 ) => Promise<void> | void;
 
-export class OpposerServer {
+export class OpposerServer implements IOpposerServer {
   private middlewares: Middleware[] = [];
   private settings: OpposerSystemConfigOptions;
   private context: Map<string, any> = new Map();
@@ -35,7 +34,7 @@ export class OpposerServer {
     return this.context.get(key);
   }
 
-  private async runMiddlewares(req: any, res: any): Promise<void> {
+  private async runMiddlewares(req: Request, res: Response): Promise<void> {
     let index = 0;
     const next = async () => {
       if (index < this.middlewares.length) {
@@ -47,8 +46,8 @@ export class OpposerServer {
   }
 
   async handleRequest(req: http.IncomingMessage, res: http.ServerResponse) {
-    const extendedReq = req as any;
-    const extendedRes = res as any;
+    const extendedReq = req as Request;
+    const extendedRes = res as Response;
 
     await Context.run({ server: this, req: extendedReq, res: extendedRes }, async () => {
       // Inject server instance into request for easy access
@@ -115,7 +114,7 @@ export class OpposerServer {
   }
 
   private parseCookies(cookieHeader: string) {
-    const cookies: any = {};
+    const cookies: Record<string, string> = {};
     cookieHeader.split(";").forEach((cookie) => {
       const parts = cookie.split("=");
       if (parts.length === 2) {

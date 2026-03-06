@@ -1,10 +1,19 @@
 import type { OpposerMap } from "../../interfaces";
 
-async function getAppMap(): Promise<{
+interface AppMapResponse {
   success: boolean;
   error?: string;
   data?: OpposerMap;
-}> {
+}
+
+interface OpposerRequestResponse<T = any> {
+  success: boolean;
+  status: number;
+  error?: string;
+  data?: T;
+}
+
+async function getAppMap(): Promise<AppMapResponse> {
   return await fetch("/opposer-map.json", {
     method: "GET",
   })
@@ -12,12 +21,7 @@ async function getAppMap(): Promise<{
     .catch((err) => ({ success: false, error: err.message }));
 }
 
-async function sendRequestOpposer(props: string): Promise<{
-  success: boolean;
-  status: number;
-  error?: string;
-  data?: any;
-}> {
+async function sendRequestOpposer<T = any>(props: string): Promise<OpposerRequestResponse<T>> {
   try {
     const res = await fetch("/opposer", {
       method: "POST",

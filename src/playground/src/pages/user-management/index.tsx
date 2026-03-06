@@ -42,6 +42,21 @@ import useRequest from "../../hooks/use-request";
 import { useToast } from "../../context/toast";
 import { useConfirm } from "../../context/confirm";
 
+interface User {
+  id: string;
+  fn: string;
+  ln: string;
+  lg: string;
+  ac: boolean;
+}
+
+interface Role {
+  id: string;
+  sm: string;
+  mt: string;
+  usr: string;
+}
+
 const validationSchema = Yup.object({
   fn: Yup.string().required("Primeiro nome é obrigatório"),
   ln: Yup.string().required("Sobrenome é obrigatório"),
@@ -64,10 +79,10 @@ const validationSchema = Yup.object({
 });
 
 export default () => {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [open, setOpen] = useState(false);
-  const [editingUser, setEditUser] = useState<any>(null);
-  const [userRoles, setUserRoles] = useState<any[]>([]);
+  const [editingUser, setEditUser] = useState<User | null>(null);
+  const [userRoles, setUserRoles] = useState<Role[]>([]);
   const [models, setModels] = useState<string[]>([]);
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("");
@@ -112,7 +127,7 @@ export default () => {
     }
   };
 
-  const handleOpen = (user: any = null) => {
+  const handleOpen = (user: User | null = null) => {
     setEditUser(user);
     setUserRoles([]);
     setSelectedModel("");
@@ -170,7 +185,7 @@ export default () => {
           })
         );
 
-        if (res.success) {
+        if (res.success && editingUser) {
           showToast("Permissão removida com sucesso!", "success");
           fetchUserRoles(editingUser.id);
         } else {

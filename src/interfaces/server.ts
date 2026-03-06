@@ -9,8 +9,34 @@ export interface CreateServerProps {
   schedulesPath?: string;
 }
 
+export interface Request extends http.IncomingMessage {
+  server: any;
+  ip?: string;
+  cookies: Record<string, string>;
+  body: any;
+  url: string;
+  method: string;
+}
+
+export interface Response extends http.ServerResponse {
+  status: (code: number) => Response;
+  json: (data: any) => void;
+  send: (data: any) => void;
+  cookie: (name: string, value: string, options?: any) => void;
+  clearCookie: (name: string, options?: any) => void;
+}
+
+export type NextFunction = () => void | Promise<void>;
+
+export interface OpposerServer {
+  use: (middleware: any) => OpposerServer;
+  setContext: (key: string, value: any) => void;
+  getContext: <T>(key: string) => T;
+  listen: (port: number, callback?: () => void) => http.Server;
+}
+
 export interface ServerInstance {
-  opposer: any;
+  opposer: OpposerServer;
   initialize: () => void;
 }
 

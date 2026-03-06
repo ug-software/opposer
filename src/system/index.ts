@@ -1,4 +1,4 @@
-import { OpposerSystemConfigOptions, ClassType } from "../interfaces/system.js";
+import { OpposerSystemConfigOptions, ClassType, ModelDefinition } from "../interfaces/system.js";
 import { pathToFileURL } from "url";
 import path from "path";
 import fs from "fs";
@@ -19,14 +19,14 @@ export class OpposerSystem {
     }
   }
 
-  async getAllModels(): Promise<{ name: string; entity: any }[]> {
+  async getAllModels(): Promise<ModelDefinition[]> {
     const allEntities = MetadataStore.getAllEntities();
     const settings = this.getSettingsFile();
     const authModels = this.getAuthModels(settings);
 
-    const models = allEntities.map((meta) => ({
+    const models: ModelDefinition[] = allEntities.map((meta) => ({
       name: meta.name,
-      entity: meta.target,
+      entity: meta.target as ClassType<unknown>,
     }));
 
     // Combine with auth models if they aren't already there
@@ -41,23 +41,23 @@ export class OpposerSystem {
 
   private getAuthModels(
     settings: OpposerSystemConfigOptions
-  ): { name: string; entity: any }[] {
-    const models = [];
+  ): ModelDefinition[] {
+    const models: ModelDefinition[] = [];
     if (settings.auth) {
       models.push(
-        { name: "crp", entity: ChangeRequestPassword },
-        { name: "ke", entity: Key },
-        { name: "rl", entity: Role },
-        { name: "se", entity: Session },
-        { name: "usr", entity: User }
+        { name: "crp", entity: ChangeRequestPassword as unknown as ClassType<unknown> },
+        { name: "ke", entity: Key as unknown as ClassType<unknown> },
+        { name: "rl", entity: Role as unknown as ClassType<unknown> },
+        { name: "se", entity: Session as unknown as ClassType<unknown> },
+        { name: "usr", entity: User as unknown as ClassType<unknown> }
       );
     }
     // Always include ScheduleHistory as it's a core feature
-    models.push({ name: "sh", entity: ScheduleHistory });
+    models.push({ name: "sh", entity: ScheduleHistory as unknown as ClassType<unknown> });
     return models;
   }
 
-  async getAllHandlers(customHandlersPath?: string): Promise<ClassType<any>[]> {
+  async getAllHandlers(customHandlersPath?: string): Promise<ClassType<unknown>[]> {
     const settings = this.getSettingsFile();
     const root = process.cwd();
     let handlersPath =
@@ -69,7 +69,7 @@ export class OpposerSystem {
 
     // Dynamic import to avoid circular dependency
     const SchedulerHandler = (await import("../scheduler/handlers/index.js")).default;
-    const internalHandlers: ClassType<any>[] = [SchedulerHandler];
+    const internalHandlers: ClassType<unknown>[] = [SchedulerHandler as unknown as ClassType<unknown>];
 
     if (!fs.existsSync(handlersPath)) {
       return internalHandlers;
@@ -189,7 +189,7 @@ export class OpposerSystem {
     return results;
   }
 
-  saveSettingsFile(settings: any) {
+  saveSettingsFile(settings: OpposerSystemConfigOptions) {
     const root = process.cwd();
     const configPath = path.resolve(root, "opposer-settings.json");
 
