@@ -1,0 +1,33 @@
+{
+  "models": {
+    "Category": {
+      "description": "Database Entity Definition",
+      "schema": {
+        "id": "uuid",
+        "title": "string"
+      }
+    },
+    "Book": {
+      "description": "Entity representing a book in the store",
+      "schema": {
+        "id": "uuid",
+        "title": "string",
+        "price": "number",
+        "author": "relation",
+        "category": "relation"
+      }
+    },
+    "Author": {
+      "description": "The author of the book, which contains the name and nationality",
+      "schema": {
+        "id": "uuid",
+        "name": "string",
+        "nationality": "string",
+        "books": "relation"
+      }
+    }
+  },
+  "handlers": {
+    "scheduler": {}
+  }
+}
