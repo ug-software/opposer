@@ -7,6 +7,7 @@ import ScheduleHistory from "./models/history.js";
 import opposerServer from "../server/core/index.js";
 import { OpposerDatabase } from "../orm/index.js";
 import { randomUUID } from "crypto";
+import { ClassType } from "../interfaces/system.js";
 
 export interface RegisteredTask {
   name: string;
@@ -24,31 +25,14 @@ export class Scheduler {
     return opposerServer.getContext<OpposerDatabase>("db");
   }
 
-  async initialize(customSchedulesPath?: string) {
-    const root = process.cwd();
-    const settings = system.getSettingsFile();
-    let schedulesPath =
-      customSchedulesPath || path.resolve(root, "src", "schedules");
+  async initialize(customSchedules?: string | ClassType<unknown>[]) {
+    const schedules = await system.getAllSchedules(customSchedules);
 
-    if (!customSchedulesPath && settings.schedules) {
-      schedulesPath = path.resolve(root, settings.schedules);
-    }
-
-    if (!fs.existsSync(schedulesPath)) {
-      console.log(`[scheduler] Directory not found: ${schedulesPath}`);
-      return;
-    }
-
-    const files = system.getAllFiles(schedulesPath);
-    for (const file of files) {
-      const fileUrl = pathToFileURL(file).href;
-      const module = await import(fileUrl);
-      const TargetClass = module.default;
-
+    for (const TargetClass of schedules) {
       if (TargetClass && typeof TargetClass === "function") {
         const metadata = getScheduleMetadata(TargetClass);
         if (metadata.length > 0) {
-          const instance = new TargetClass();
+          const instance = new (TargetClass as any)();
           for (const taskOptions of metadata) {
             if (taskOptions.enabled) {
               this.tasks.set(taskOptions.name, {

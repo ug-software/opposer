@@ -1,6 +1,7 @@
 import { ResultGetAllHandlers } from "../../interfaces/controller.js";
 import system from "../../system/index.js";
 import * as decorator from "../decorators/index.js";
+import { ClassType } from "../../interfaces/system.js";
 
 const handlers: ResultGetAllHandlers = {};
 
@@ -18,11 +19,11 @@ export function toCamelCase(str: string) {
 }
 
 // function responsible per cache handlers in project;
-export async function loadHandlers(): Promise<ResultGetAllHandlers> {
-  var __handlers = await system.getAllHandlers();
+export async function loadHandlers(customHandlers?: string | ClassType<unknown>[]): Promise<ResultGetAllHandlers> {
+  var __allHandlers = await system.getAllHandlers(customHandlers);
 
-  if (Array.isArray(__handlers) && Object.keys(handlers).length === 0) {
-    return __handlers.reduce((handlers, handler) => {
+  if (Array.isArray(__allHandlers) && Object.keys(handlers).length === 0) {
+    return __allHandlers.reduce((handlers, handler) => {
       var handlerMetadata = decorator.getHandlerMetadata(handler);
       var methodsMetadata = decorator.getMethodMetadata(handler);
 
