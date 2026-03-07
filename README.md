@@ -233,6 +233,21 @@ export default class ConfigService {
 
 ---
 
+## 6. 🌐 Contexto Global (Singleton)
+
+O Opposer permite acessar a instância do servidor e seu contexto (como o banco de dados) de qualquer lugar da aplicação (Handlers, Schedules ou Services) sem a necessidade de passar instâncias via construtor.
+
+### Como utilizar
+```typescript
+import { Context } from "opposer/server";
+import { OpposerDatabase } from "opposer/orm";
+
+// Acessando o banco de dados de qualquer lugar
+const db = Context.get<OpposerDatabase>("db");
+```
+
+---
+
 ## ⚙️ Configuração Principal (`opposer-settings.json`)
 
 ```json
