@@ -1,16 +1,15 @@
-import { HandleGetProps } from "../../interfaces/controller.js";
-import { Exception, Success } from "../helpers/index.js";
-import { HttpStatus } from "../constants/index.js";
-import system from "../../system/index.js";
-import { HandleRequestResult } from "../../interfaces/request.js";
-import opposerServer from "../core/index.js";
-import { OpposerDatabase } from "../../orm/index.js";
-import { ClassType } from "../../interfaces/system.js";
+import { HandleGetProps } from '../../interfaces/controller.js';
+import { Exception, Success } from '../helpers/index.js';
+import { HttpStatus } from '../constants/index.js';
+import system from '../../system/index.js';
+import { HandleRequestResult } from '../../interfaces/request.js';
+import opposerServer from '../core/index.js';
+import { OpposerDatabase } from '../../orm/index.js';
+import { ClassType } from '../../interfaces/system.js';
+import { Context } from '../index.js';
 
-export default async (
-  props: HandleGetProps
-): Promise<HandleRequestResult<unknown>> => {
-  const customModels = opposerServer.getContext<string | ClassType<unknown>[]>("models");
+export default async (props: HandleGetProps): Promise<HandleRequestResult<unknown>> => {
+  const customModels = Context.get<string | ClassType<unknown>[]>('models');
   const allModels = await system.getAllModels(customModels);
   const schema = allModels.find((x) => {
     return x.name.toLowerCase() === props.model.toLowerCase();
@@ -20,17 +19,17 @@ export default async (
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: "Unable to identify Schema.",
+      message: 'Unable to identify Schema.',
     });
   }
 
-  const db = opposerServer.getContext<OpposerDatabase>("db");
+  const db = Context.get<OpposerDatabase>('db');
 
   if (!db) {
     return Exception({
       name: HttpStatus[500].name,
       code: HttpStatus[500].code,
-      message: "Database not connected.",
+      message: 'Database not connected.',
     });
   }
 
@@ -38,21 +37,13 @@ export default async (
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: "Search parameters missing.",
+      message: 'Search parameters missing.',
     });
   }
 
   const repository = db.getRepository(schema.entity);
 
-  const queryKeys = [
-    "filter",
-    "find",
-    "count",
-    "exists",
-    "aggregate",
-    "distinct",
-    "group",
-  ];
+  const queryKeys = ['filter', 'find', 'count', 'exists', 'aggregate', 'distinct', 'group'];
   const presentKeys = queryKeys.filter((k) => {
     return k in props.query;
   });
@@ -61,9 +52,7 @@ export default async (
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: `Conflicting search parameters: multiple types provided (${presentKeys.join(
-        ", "
-      )}).`,
+      message: `Conflicting search parameters: multiple types provided (${presentKeys.join(', ')}).`,
     });
   }
 
@@ -76,15 +65,13 @@ export default async (
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message:
-        "Search type not identified. Please provide one of: " +
-        queryKeys.join(", "),
+      message: 'Search type not identified. Please provide one of: ' + queryKeys.join(', '),
     });
   }
 
   try {
     switch (type) {
-      case "filter": {
+      case 'filter': {
         const filter = props.query.filter || {};
         const select = props.query.select || [];
         const pagination = props.pagination;
@@ -97,9 +84,7 @@ export default async (
 
         if (props.pagination) {
           const totalItems = await repository.count(filter);
-          const totalPages = Math.ceil(
-            totalItems / (props.pagination.take || 10)
-          );
+          const totalPages = Math.ceil(totalItems / (props.pagination.take || 10));
 
           return Success({
             items,
@@ -111,7 +96,7 @@ export default async (
         return Success(items);
       }
 
-      case "find": {
+      case 'find': {
         const find = props.query.find || {};
         const select = props.query.select || [];
 
@@ -123,40 +108,40 @@ export default async (
         return Success(result);
       }
 
-      case "count": {
+      case 'count': {
         const count = props.query.count || {};
         const result = await repository.count(count);
         return Success({ count: result });
       }
 
-      case "exists": {
+      case 'exists': {
         const exists = props.query.exists || {};
         const result = await repository.exists(exists);
         return Success({ exists: result });
       }
 
-      case "aggregate": {
+      case 'aggregate': {
         const aggregate = props.query.aggregate;
         if (!aggregate) {
-          throw new Error("Aggregate configuration missing.");
+          throw new Error('Aggregate configuration missing.');
         }
         const result = await repository.aggregate(aggregate);
         return Success(result);
       }
 
-      case "distinct": {
+      case 'distinct': {
         const distinct = props.query.distinct;
         if (!distinct) {
-          throw new Error("Distinct configuration missing.");
+          throw new Error('Distinct configuration missing.');
         }
         const result = await repository.distinct(distinct);
         return Success(result);
       }
 
-      case "group": {
+      case 'group': {
         const group = props.query.group;
         if (!group) {
-          throw new Error("Group configuration missing.");
+          throw new Error('Group configuration missing.');
         }
         const result = await repository.group(group);
         return Success(result);

@@ -6,6 +6,7 @@ import { getMethodMetadata, getPayloadMetadata, getFieldsMetadata, getHandlerMet
 import { MetadataStore } from '../orm/index.js';
 import type { ClassType } from '../interfaces/system.js';
 import type { Request, Response } from '../interfaces/server.js';
+import { Context } from '../server/index.js';
 
 // @ts-ignore
 const _dirname =
@@ -104,8 +105,8 @@ const MIME_TYPES: Record<string, string> = {
 
 export default async function Playground(req: Request, res: Response, next: () => void) {
   const server = req.server;
-  const models = server.getContext<string | ClassType<unknown>[] | undefined>('models');
-  const handlers = server.getContext<string | ClassType<unknown>[] | undefined>('handlers');
+  const models = Context.get<string | ClassType<unknown>[] | undefined>('models');
+  const handlers = Context.get<string | ClassType<unknown>[] | undefined>('handlers');
 
   // Public map endpoint for the Swagger UI
   if (req.url === '/opposer-map.json') {
