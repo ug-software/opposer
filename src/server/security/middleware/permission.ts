@@ -59,7 +59,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 
-  const db = (req as any).server.getContext('db') as OpposerDatabase;
+  const db = Context.get<OpposerDatabase>('db');
 
   var decoded = null;
   const authorization = req.headers.authorization || req.cookies.access_token;

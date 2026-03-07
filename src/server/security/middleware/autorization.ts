@@ -3,6 +3,7 @@ import { Exception } from "../../helpers/index.js";
 import { HttpStatus } from "../../constants/index.js";
 import { OpposerDatabase } from "../../../orm/index.js";
 import ke from "../models/ke.js";
+import { Context } from "../../index.js";
 
 export default async (req: Request, res: Response, next: NextFunction) => {
   const host = req.headers.host;
@@ -24,7 +25,7 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     );
   }
 
-  const db = (req as any).server.getContext("db") as OpposerDatabase;
+  const db = Context.get<OpposerDatabase>("db");
 
   if (!db) {
     return res.status(HttpStatus[403].code).send(

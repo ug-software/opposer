@@ -3,7 +3,6 @@ import { Exception, Success } from '../helpers/index.js';
 import { HttpStatus } from '../constants/index.js';
 import system from '../../system/index.js';
 import { HandleRequestResult } from '../../interfaces/request.js';
-import opposerServer from '../core/index.js';
 import { OpposerDatabase } from '../../orm/index.js';
 import { ClassType } from '../../interfaces/system.js';
 import { Context } from '../index.js';

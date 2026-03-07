@@ -233,18 +233,20 @@ export default class ConfigService {
 
 ---
 
-## 6. 🌐 Contexto Global (Singleton)
+## 6. 🌐 Contexto de Servidor (Singleton)
 
-O Opposer permite acessar a instância do servidor e seu contexto (como o banco de dados) de qualquer lugar da aplicação (Handlers, Schedules ou Services) sem a necessidade de passar instâncias via construtor.
+O Opposer permite acessar informações globais da aplicação (como a instância do banco de dados) de qualquer lugar (Handlers, Schedules ou Services). Este contexto é isolado das configurações de cache e funciona como um repositório central de estado do motor.
 
 ### Como utilizar
 ```typescript
 import { Context } from "opposer/server";
 import { OpposerDatabase } from "opposer/orm";
 
-// Acessando o banco de dados de qualquer lugar
+// Recuperando o banco de dados de qualquer lugar
 const db = Context.get<OpposerDatabase>("db");
 ```
+
+> **Atenção:** A ordem de execução é fundamental. Você só conseguirá recuperar um valor via `Context.get()` se ele tiver sido previamente inserido via `Context.set()`. O Opposer injeta automaticamente o `db`, `models` e `handlers` durante a inicialização do `Server()`. Se você tentar acessar essas chaves antes do boot do servidor, o retorno será `undefined`.
 
 ---
 
@@ -307,5 +309,14 @@ O Opposer pode ser configurado através do arquivo `opposer-settings.json` na ra
 | `manager.password`| `OPPOSER_MANAGER_PASSWORD`| Senha da conta administradora inicial. | - |
 | `manager.firstName`| `OPPOSER_MANAGER_FIRST_NAME`| Nome do administrador. | - |
 | `manager.lastName` | `OPPOSER_MANAGER_LAST_NAME` | Sobrenome do administrador. | - |
+| **Persistent (Cache)** | | | |
+| `cache.type` | `OPPOSER_CACHE_TYPE` | Tipo de cache (`in-memory`, `persistent`). | `in-memory` |
+| `cache.snapshot.active` | `OPPOSER_CACHE_SNAPSHOT` | Habilita snapshots em disco para persistência. | `false` |
+| `cache.snapshot.timer` | `OPPOSER_CACHE_SNAPSHOT_TIMER`| Intervalo entre cada snapshot. | `1` |
+| `cache.snapshot.unit` | `OPPOSER_CACHE_SNAPSHOT_UNIT` | Unidade do snapshot (`seconds`, `minutes`, etc). | `minutes` |
+| `cache.session.expire` | - | Tempo de expiração dos dados de sessão. | `30` |
+| `cache.session.unit` | - | Unidade de expiração de sessão. | `minutes` |
+| `cache.global.expire` | - | Tempo de expiração dos dados globais. | `10` |
+| `cache.global.unit` | - | Unidade de expiração global. | `seconds` |
 
 > **Nota:** Se o sistema de `auth` estiver ativo e a conta do `manager` não existir no banco de dados, o Opposer irá criá-la automaticamente durante a inicialização usando as configurações acima.
