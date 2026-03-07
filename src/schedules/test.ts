@@ -1,4 +1,4 @@
-import { Schedule } from "../scheduler/decorators/index.js";
+import { Schedule } from "../scheduler/index.js";
 
 export default class TestSchedule {
   @Schedule({

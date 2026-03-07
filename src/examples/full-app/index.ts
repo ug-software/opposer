@@ -1,5 +1,4 @@
-import Server from '../../server/index.js';
-import opposerServer from '../../server/core/index.js';
+import Server, { Context } from '../../server/index.js';
 import { OpposerDatabase } from '../../orm/index.js';
 import Author from './models/author.js';
 import Book from './models/book.js';
@@ -32,7 +31,8 @@ async function runFullExample() {
     });
 
     // 3. Populate Initial Data
-    const db = opposerServer.getContext<OpposerDatabase>('db');
+    // Using the new global Context to get the database
+    const db = Context.get<OpposerDatabase>('db');
 
     console.log('📝 Populating initial data...');
     const authorRepo = db.getRepository(Author);

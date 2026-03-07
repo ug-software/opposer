@@ -31,8 +31,6 @@ export type NextFunction = () => void | Promise<void>;
 
 export interface OpposerServer {
   use: (middleware: any) => OpposerServer;
-  setContext: (key: string, value: any) => void;
-  getContext: <T>(key: string) => T;
   listen: (port: number, callback?: () => void) => http.Server;
 }
 

@@ -1,5 +1,5 @@
-import { Schedule } from "../../../scheduler/decorators/index.js";
-import opposerServer from "../../../server/core/index.js";
+import { Schedule } from "../../../scheduler/index.js";
+import { Context } from "../../../server/index.js";
 import { OpposerDatabase } from "../../../orm/index.js";
 import Book from "../models/book.js";
 
@@ -9,7 +9,8 @@ export default class InventorySchedules {
     interval: 300000, // 5 minutes
   })
   async checkStock() {
-    const db = opposerServer.getContext<OpposerDatabase>("db");
+    // Using the new global Context to get the database
+    const db = Context.get<OpposerDatabase>("db");
     const bookRepo = db.getRepository(Book);
     
     const count = await bookRepo.count({});

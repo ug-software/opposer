@@ -4,10 +4,10 @@ import { pathToFileURL } from "url";
 import system from "../system/index.js";
 import { getScheduleMetadata } from "./decorators/index.js";
 import ScheduleHistory from "./models/history.js";
-import opposerServer from "../server/core/index.js";
 import { OpposerDatabase } from "../orm/index.js";
 import { randomUUID } from "crypto";
 import { ClassType } from "../interfaces/system.js";
+import { CoreContext } from "../persistent/index.js";
 
 export * from "./decorators/index.js";
 
@@ -24,7 +24,7 @@ export class Scheduler {
   private tasks: Map<string, RegisteredTask> = new Map();
 
   private get db() {
-    return opposerServer.getContext<OpposerDatabase>("db");
+    return CoreContext.get<OpposerDatabase>("db");
   }
 
   async initialize(customSchedules?: string | ClassType<unknown>[]) {
