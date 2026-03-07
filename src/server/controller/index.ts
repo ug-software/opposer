@@ -19,7 +19,7 @@ import { getPayloadMetadata } from "../decorators/payload.js";
 import { ClassType } from "../../interfaces/system.js";
 import { Exception, validateData } from "../helpers/index.js";
 import { PayloadRequest } from "../../interfaces/handler.js";
-import { CoreContext } from "../../persistent/index.js";
+import Context from "../context/index.js";
 
 const settings = system.getSettingsFile();
 
@@ -36,7 +36,7 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    const customHandlers = CoreContext.get<string | ClassType<unknown>[]>("handlers");
+    const customHandlers = Context.get<string | ClassType<unknown>[]>("handlers");
     var handlers = await helper.loadHandlers(customHandlers);
     if (settings.auth) {
       var auth = {
@@ -150,7 +150,7 @@ export default async (req: Request, res: Response) => {
   }
 
   //database request...
-  const customModels = CoreContext.get<string | ClassType<unknown>[]>("models");
+  const customModels = Context.get<string | ClassType<unknown>[]>("models");
   var allModels = await system.getAllModels(customModels);
 
   var model = allModels.find(

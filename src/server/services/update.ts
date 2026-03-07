@@ -2,7 +2,6 @@ import { Exception, Success } from '../helpers/index.js';
 import { HandleUpdateProps } from '../../interfaces/controller.js';
 import { HttpStatus } from '../constants/index.js';
 import system from '../../system/index.js';
-import opposerServer from '../core/index.js';
 import { OpposerDatabase } from '../../orm/index.js';
 import { ClassType } from '../../interfaces/system.js';
 import { Context } from '../index.js';
@@ -32,7 +31,7 @@ export default async (props: HandleUpdateProps) => {
 
   const repository = db.getRepository(schema.entity);
 
-  const repositoryFields = repository.Fields.map((f) => f.name);
+  const repositoryFields = repository.Fields.map((f: any) => f.name);
   const thereIsPropertyOutsideTheRule = Object.keys(props.data).some((key) => {
     return !repositoryFields.includes(key) && key !== 'id';
   });

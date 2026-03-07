@@ -7,7 +7,7 @@ import ScheduleHistory from "./models/history.js";
 import { OpposerDatabase } from "../orm/index.js";
 import { randomUUID } from "crypto";
 import { ClassType } from "../interfaces/system.js";
-import { CoreContext } from "../persistent/index.js";
+import Context from "../server/context/index.js";
 
 export * from "./decorators/index.js";
 
@@ -24,7 +24,7 @@ export class Scheduler {
   private tasks: Map<string, RegisteredTask> = new Map();
 
   private get db() {
-    return CoreContext.get<OpposerDatabase>("db");
+    return Context.get<OpposerDatabase>("db");
   }
 
   async initialize(customSchedules?: string | ClassType<unknown>[]) {

@@ -2,7 +2,6 @@ import { HttpStatus } from '../constants/index.js';
 import { Exception, Success } from '../helpers/index.js';
 import { HandleDeleteProps } from '../../interfaces/controller.js';
 import system from '../../system/index.js';
-import opposerServer from '../core/index.js';
 import { OpposerDatabase } from '../../orm/index.js';
 import { ClassType } from '../../interfaces/system.js';
 import { Context } from '../index.js';

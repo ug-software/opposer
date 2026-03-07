@@ -18,7 +18,7 @@ import opposerServer from "./core/index.js";
 import corsMiddleware from "./core/middleware/cors.js";
 import bodyParser from "./core/middleware/body-parser.js";
 import loggerMiddleware from "./core/middleware/logger.js";
-import { CoreContext } from "../persistent/index.js";
+import Context from "./context/index.js";
 
 // Playground
 import Playground from "../playground/index.js";
@@ -124,9 +124,9 @@ export default async function Server(
   await ensureManager(db, settings, props.models);
 
   // Store database in server context
-  CoreContext.set("db", db);
-  CoreContext.set("models", props.models);
-  CoreContext.set("handlers", props.handlers);
+  Context.set("db", db);
+  Context.set("models", props.models);
+  Context.set("handlers", props.handlers);
 
   console.log("-> Initializing scheduler.");
   await scheduler.initialize(props.schedules);
@@ -203,4 +203,4 @@ export {
 } from "./decorators/index.js";
 export type { PayloadRequest } from "../interfaces/handler.js";
 
-export { CoreContext as Context } from "../persistent/index.js";
+export { Context } from "./context/index.js";
