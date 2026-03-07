@@ -1,40 +1,39 @@
-import { HandleInsertProps } from "../../interfaces/controller.js";
-import { Exception, Success } from "../helpers/index.js";
-import { HttpStatus } from "../constants/index.js";
-import system from "../../system/index.js";
-import opposerServer from "../core/index.js";
-import { OpposerDatabase } from "../../orm/index.js";
-import { ClassType } from "../../interfaces/system.js";
+import { HandleInsertProps } from '../../interfaces/controller.js';
+import { Exception, Success } from '../helpers/index.js';
+import { HttpStatus } from '../constants/index.js';
+import system from '../../system/index.js';
+import opposerServer from '../core/index.js';
+import { OpposerDatabase } from '../../orm/index.js';
+import { ClassType } from '../../interfaces/system.js';
+import { Context } from '../index.js';
 
 export default async (props: HandleInsertProps) => {
   try {
-    const customModels = opposerServer.getContext<string | ClassType<unknown>[]>("models");
+    const customModels = Context.get<string | ClassType<unknown>[]>('models');
     const allModels = await system.getAllModels(customModels);
-    const schema = allModels.find(
-      (x) => x.name === props.model
-    );
+    const schema = allModels.find((x) => x.name === props.model);
 
     if (!schema) {
       return Exception({
         name: HttpStatus[400].name,
         code: HttpStatus[400].code,
-        message: "Unable to identify Schema",
+        message: 'Unable to identify Schema',
       });
     }
 
-    const db = opposerServer.getContext<OpposerDatabase>("db");
+    const db = Context.get<OpposerDatabase>('db');
 
     if (!db) {
       return Exception({
         name: HttpStatus[500].name,
         code: HttpStatus[500].code,
-        message: "Database not connected.",
+        message: 'Database not connected.',
       });
     }
 
     const repository = db.getRepository(schema.entity);
 
-    if (typeof props.data !== "object") {
+    if (typeof props.data !== 'object') {
       return Exception({
         name: HttpStatus[400].name,
         code: HttpStatus[400].code,
@@ -42,10 +41,10 @@ export default async (props: HandleInsertProps) => {
       });
     }
 
-    const repositoryFields = repository.Fields.map(f => f.name);
+    const repositoryFields = repository.Fields.map((f) => f.name);
 
     const checkDataProperties = (data: any) => {
-      return Object.keys(data).every(key => repositoryFields.includes(key) || key === 'id');
+      return Object.keys(data).every((key) => repositoryFields.includes(key) || key === 'id');
     };
 
     if (Array.isArray(props.data)) {
@@ -54,12 +53,12 @@ export default async (props: HandleInsertProps) => {
           return Exception({
             name: HttpStatus[400].name,
             code: HttpStatus[400].code,
-            message: "Some data properties are outside the expected range.",
+            message: 'Some data properties are outside the expected range.',
           });
         }
       }
-      
-      const results = await Promise.all(props.data.map(item => repository.insert(item)));
+
+      const results = await Promise.all(props.data.map((item) => repository.insert(item)));
       return Success(results);
     } else {
       if (!checkDataProperties(props.data)) {
@@ -73,7 +72,6 @@ export default async (props: HandleInsertProps) => {
       const result = await repository.insert(props.data);
       return Success(result);
     }
-
   } catch (err: any) {
     return Exception({
       name: HttpStatus[500].name,

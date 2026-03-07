@@ -1,15 +1,15 @@
-import { Handler, Method } from "../../server/decorators/index.js";
-import { Success } from "../../server/helpers/index.js";
-import scheduler from "../index.js";
-import ScheduleHistory from "../models/history.js";
-import opposerServer from "../../server/core/index.js";
-import { OpposerDatabase } from "../../orm/index.js";
-import { PayloadRequest } from "../../interfaces/handler.js";
+import { Handler, Method } from '../../server/decorators/index.js';
+import { Success } from '../../server/helpers/index.js';
+import scheduler from '../index.js';
+import ScheduleHistory from '../models/history.js';
+import { OpposerDatabase } from '../../orm/index.js';
+import { PayloadRequest } from '../../interfaces/handler.js';
+import { Context } from '../../server/index.js';
 
-@Handler("scheduler")
+@Handler('scheduler')
 export default class SchedulerHandler {
   private get db() {
-    return opposerServer.getContext<OpposerDatabase>("db");
+    return Context.get<OpposerDatabase>('db');
   }
 
   @Method()
@@ -24,9 +24,7 @@ export default class SchedulerHandler {
       pagination: { page: 0, take: 50 }, // Last 50 runs
     });
 
-    const sortedHistory = history.sort((a: any, b: any) =>
-      new Date(b.st).getTime() - new Date(a.st).getTime()
-    );
+    const sortedHistory = history.sort((a: any, b: any) => new Date(b.st).getTime() - new Date(a.st).getTime());
 
     return Success(sortedHistory);
   }

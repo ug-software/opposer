@@ -1,26 +1,21 @@
-import { Method, Handler, IsPublicMethod } from "../../decorators/index.js";
-import {
-  PayloadAuthChangePassword,
-  PayloadAuthForgetPassword,
-  PayloadAuthLogin,
-  PayloadAuthRegister,
-  PayloadSocialLogin,
-} from "../../../interfaces/security.js";
-import User from "../models/usr.js";
-import Role from "../models/rl.js";
-import { Exception, Success, validateData } from "../../helpers/index.js";
-import { HttpStatus } from "../../constants/index.js";
-import jwt from "../jwt/index.js";
-import Session from "../models/se.js";
-import ChangeRequestPassword from "../models/crp.js";
-import { PayloadRequest } from "../../../interfaces/handler.js";
-import opposerServer from "../../core/index.js";
-import { OpposerDatabase } from "../../../orm/index.js";
+import { Method, Handler, IsPublicMethod } from '../../decorators/index.js';
+import { PayloadAuthChangePassword, PayloadAuthForgetPassword, PayloadAuthLogin, PayloadAuthRegister, PayloadSocialLogin } from '../../../interfaces/security.js';
+import User from '../models/usr.js';
+import Role from '../models/rl.js';
+import { Exception, Success, validateData } from '../../helpers/index.js';
+import { HttpStatus } from '../../constants/index.js';
+import jwt from '../jwt/index.js';
+import Session from '../models/se.js';
+import ChangeRequestPassword from '../models/crp.js';
+import { PayloadRequest } from '../../../interfaces/handler.js';
+import opposerServer from '../../core/index.js';
+import { OpposerDatabase } from '../../../orm/index.js';
+import { Context } from '../../index.js';
 
-@Handler("auth")
+@Handler('auth')
 export default class Auth {
   private get db() {
-    return opposerServer.getContext<OpposerDatabase>("db");
+    return Context.get<OpposerDatabase>('db');
   }
 
   @Method()
@@ -39,7 +34,7 @@ export default class Auth {
     if (await userRepository.findOne({ where: { lg: payload.data.lg } })) {
       return Exception({
         ...HttpStatus[400],
-        message: "User with this login already exists.",
+        message: 'User with this login already exists.',
       });
     }
 
@@ -52,14 +47,14 @@ export default class Auth {
     if (!payload.data.lg) {
       return Exception({
         ...HttpStatus[400],
-        message: "Login is required",
+        message: 'Login is required',
       });
     }
 
     if (!payload.data.ps) {
       return Exception({
         ...HttpStatus[400],
-        message: "Password is required",
+        message: 'Password is required',
       });
     }
 
@@ -73,14 +68,14 @@ export default class Auth {
     if (!usr) {
       return Exception({
         ...HttpStatus[400],
-        message: "Invalid login or password, check the data and try again.",
+        message: 'Invalid login or password, check the data and try again.',
       });
     }
 
     if (!(await usr.comparePassword(payload.data.ps))) {
       return Exception({
         ...HttpStatus[400],
-        message: "Invalid login or password, check the data and try again.",
+        message: 'Invalid login or password, check the data and try again.',
       });
     }
 
@@ -109,19 +104,19 @@ export default class Auth {
     } as any);
 
     const current = new Date();
-    payload.headers.cookies.set("access_token", token, {
+    payload.headers.cookies.set('access_token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
-      path: "/",
+      sameSite: 'none',
+      path: '/',
       expires: new Date(current.getTime() + 15 * 60 * 1000), // 15 mim
     });
 
-    payload.headers.cookies.set("refresh_token", refresh, {
+    payload.headers.cookies.set('refresh_token', refresh, {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
-      path: "/",
+      sameSite: 'none',
+      path: '/',
       expires: new Date(current.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 dias
     });
 
@@ -143,7 +138,7 @@ export default class Auth {
     if (!payload.data) {
       return Exception({
         ...HttpStatus[400],
-        message: "Refresh token is required.",
+        message: 'Refresh token is required.',
       });
     }
 
@@ -162,15 +157,15 @@ export default class Auth {
     if (!last.ac) {
       return Exception({
         ...HttpStatus[401],
-        message: "Refresh expired.",
+        message: 'Refresh expired.',
       });
     }
 
     var usr = await jwt.validate.refresh(payload.data);
-    if (!usr || typeof usr === "string") {
+    if (!usr || typeof usr === 'string') {
       return Exception({
         ...HttpStatus[401],
-        message: "Invalid token.",
+        message: 'Invalid token.',
       });
     }
 
@@ -180,7 +175,7 @@ export default class Auth {
       {
         ac: false,
         lou: new Date(),
-      }
+      },
     );
 
     var { token, refresh } = await jwt.sign(usr);
@@ -194,19 +189,19 @@ export default class Auth {
     } as any);
 
     const current = new Date();
-    payload.headers.cookies.set("access_token", token, {
+    payload.headers.cookies.set('access_token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
-      path: "/",
+      sameSite: 'none',
+      path: '/',
       expires: new Date(current.getTime() + 15 * 60 * 1000), // 15 mim
     });
 
-    payload.headers.cookies.set("refresh_token", refresh, {
+    payload.headers.cookies.set('refresh_token', refresh, {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
-      path: "/",
+      sameSite: 'none',
+      path: '/',
       expires: new Date(current.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 dias
     });
 
@@ -223,12 +218,12 @@ export default class Auth {
     if (!token) {
       return Exception({
         ...HttpStatus[400],
-        message: "Token is required for logout user.",
+        message: 'Token is required for logout user.',
       });
     }
 
-    payload.headers.cookies.remove("access_token");
-    payload.headers.cookies.remove("refresh_token");
+    payload.headers.cookies.remove('access_token');
+    payload.headers.cookies.remove('refresh_token');
 
     var sessionRepository = this.db.getRepository(Session);
     await sessionRepository.update(
@@ -236,7 +231,7 @@ export default class Auth {
       {
         ac: false,
         lou: new Date(),
-      }
+      },
     );
   }
 
@@ -249,7 +244,7 @@ export default class Auth {
     }
 
     var usr = await jwt.validate.refresh(token);
-    if (typeof usr === "string") {
+    if (typeof usr === 'string') {
       return null;
     }
 
@@ -270,15 +265,15 @@ export default class Auth {
     if (!payload.data.tk) {
       return Exception({
         ...HttpStatus[400],
-        message: "Ticket is required for change password.",
+        message: 'Ticket is required for change password.',
       });
     }
 
     var ticket = await jwt.validate.recover(payload.data.tk);
-    if (typeof ticket === "string" || !ticket) {
+    if (typeof ticket === 'string' || !ticket) {
       return Exception({
         ...HttpStatus[401],
-        message: "Invalid token.",
+        message: 'Invalid token.',
       });
     }
 
@@ -301,7 +296,7 @@ export default class Auth {
       ud: true,
     } as any);
 
-    return Success({ message: "Success for change password." });
+    return Success({ message: 'Success for change password.' });
   }
 
   @Method()
@@ -309,7 +304,7 @@ export default class Auth {
     if (!payload.data.lg) {
       return Exception({
         ...HttpStatus[400],
-        message: "Login is required.",
+        message: 'Login is required.',
       });
     }
 
@@ -327,7 +322,7 @@ export default class Auth {
 
   static async social(payload: PayloadRequest<PayloadSocialLogin>) {
     const usr = payload.data;
-    const db = opposerServer.getContext<OpposerDatabase>("db");
+    const db = Context.get<OpposerDatabase>('db');
     var sessionRepository = db.getRepository(Session);
     var { token, refresh } = await jwt.sign({
       ...usr,
