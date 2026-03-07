@@ -9,6 +9,8 @@ import { OpposerDatabase } from "../orm/index.js";
 import { randomUUID } from "crypto";
 import { ClassType } from "../interfaces/system.js";
 
+export * from "./decorators/index.js";
+
 export interface RegisteredTask {
   name: string;
   interval: number;

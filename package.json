@@ -25,6 +25,14 @@
             "import": "./lib/esm/playground/index.js",
             "require": "./lib/cjs/playground/index.js"
         },
+        "./schedule": {
+            "import": "./lib/esm/scheduler/index.js",
+            "require": "./lib/cjs/scheduler/index.js"
+        },
+        "./scheduler": {
+            "import": "./lib/esm/scheduler/index.js",
+            "require": "./lib/cjs/scheduler/index.js"
+        },
         "./server": {
             "import": "./lib/esm/server/index.js",
             "require": "./lib/cjs/server/index.js"
