@@ -79,7 +79,7 @@ O domínio de agendamento permite criar rotinas automáticas com monitoramento i
 
 ### Exemplo de Tarefa (`src/schedules/sync.ts`)
 ```typescript
-import { Schedule } from "opposer/scheduler";
+import { Schedule } from "opposer/schedule";
 
 export default class InventoryTask {
     @Schedule({ 
