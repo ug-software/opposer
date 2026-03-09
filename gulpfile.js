@@ -115,6 +115,16 @@ export const build = gulp.series(
 /*------ build --------*/
 
 /*------ release --------*/
+const runTests = (cb) => {
+  console.log("-> Running tests before release...");
+  try {
+    chilp.execSync("npm test", { stdio: "inherit" });
+    cb();
+  } catch (err) {
+    cb(err);
+  }
+};
+
 const changeBranch = (cb) => {
   var release_version = process.env.RELEASE;
 
@@ -132,6 +142,7 @@ const removeFilesNotNecessaries = () => {
   return deleteAsync([
     ".vscode",
     "src",
+    "test",
     "node_modules",
     ".gitignore",
     "gulpfile.js",
@@ -180,6 +191,7 @@ const changeBranchForDevelopAndStashRelease = (cb) => {
 };
 
 export const release = gulp.series(
+  runTests,
   build,
   changeBranch,
   removeFilesNotNecessaries,
