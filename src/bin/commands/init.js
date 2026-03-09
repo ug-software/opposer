@@ -1,25 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 
-export const command = "init";
-export const desc = "Scaffold a new Opposer project structure.";
+export const command = 'init';
+export const desc = 'Scaffold a new Opposer project structure.';
 
 export const builder = {};
 
 export const handler = async () => {
   const root = process.cwd();
-  
+
   // 1. Create Directories
-  const dirs = [
-    'src',
-    'src/controllers',
-    'src/models',
-    'src/schedules'
-  ];
+  const dirs = ['src', 'src/controllers', 'src/models', 'src/schedules'];
 
   console.log('--> Creating project structure...');
-  
-  dirs.forEach(dir => {
+
+  dirs.forEach((dir) => {
     const fullPath = path.join(root, dir);
     if (!fs.existsSync(fullPath)) {
       fs.mkdirSync(fullPath, { recursive: true });
@@ -30,18 +25,20 @@ export const handler = async () => {
   });
 
   // 2. Create Files Content
-  
+
   // src/index.ts
   const indexTsContent = `import { Server } from "@ug.software/opposer";
 
-const app = await Server({
-    models: "./src/models",
-    controllers: "./src/controllers",
-    schedules: "./src/schedules",
-    cors: { origin: "*" }
-});
-
-app.initialize();
+(async () => {
+  const app = await Server({
+      models: "./models",
+      controllers: "./controllers",
+      schedules: "./schedules",
+      cors: { origin: "*" }
+  });
+  
+  app.initialize();
+})()
 `;
 
   // src/controllers/health.ts
@@ -68,7 +65,7 @@ export default class Example {
     @PrimaryColumn({ type: "uuid" })
     id!: string;
 
-    @Field(() => f().string().required())
+    @Field(() => f().string("typeof field is string").required("field is required"))
     name!: string;
 
     @CreateDateColumn()
@@ -124,10 +121,10 @@ OPPOSER_DATABASE_LOGGING=true
     { path: 'src/controllers/health.ts', content: healthControllerContent },
     { path: 'src/models/example.ts', content: exampleModelContent },
     { path: 'opposer-settings.json', content: settingsContent },
-    { path: '.env', content: envContent }
+    { path: '.env', content: envContent },
   ];
 
-  files.forEach(file => {
+  files.forEach((file) => {
     const fullPath = path.join(root, file.path);
     if (!fs.existsSync(fullPath)) {
       fs.writeFileSync(fullPath, file.content);
@@ -146,19 +143,19 @@ OPPOSER_DATABASE_LOGGING=true
   } else {
     packageJson = {
       name: path.basename(root),
-      version: "1.0.0",
-      type: "module",
-      description: "Opposer project",
-      main: "src/index.ts",
+      version: '1.0.0',
+      type: 'module',
+      description: 'Opposer project',
+      main: 'src/index.ts',
       dependencies: {},
-      devDependencies: {}
+      devDependencies: {},
     };
   }
 
   packageJson.scripts = {
     ...(packageJson.scripts || {}),
-    "dev": "npx tsx src/index.ts",
-    "build": "npx opposer build"
+    dev: 'npx tsx src/index.ts',
+    build: 'npx opposer build',
   };
 
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
