@@ -19,7 +19,7 @@ const recoverJwt = process.env.RECOVER_JWT
 async function access(token: string) {
   if (!accessJwt) {
     throw new Error(
-      "[jwt] - Don't finded token for access jwt, generate running 'npx opposer jwt generate' or consulting documentation."
+      "[jwt] - Don't finded token for access jwt, generate running 'npx @ug.software/opposer jwt generate' or consulting documentation."
     );
   }
 
@@ -42,7 +42,7 @@ async function access(token: string) {
 async function refresh(token: string) {
   if (!refreshJwt) {
     throw new Error(
-      "[jwt] - Don't finded token for refresh jwt, generate running 'npx opposer jwt generate' or consulting documentation."
+      "[jwt] - Don't finded token for refresh jwt, generate running 'npx @ug.software/opposer jwt generate' or consulting documentation."
     );
   }
 
@@ -65,7 +65,7 @@ async function refresh(token: string) {
 async function sign({ exp, ...payload }: SignJwt) {
   if (!accessJwt) {
     throw new Error(
-      "[jwt] - Don't finded token secret, generate running 'npx opposer jwt generate' or consulting documentation."
+      "[jwt] - Don't finded token secret, generate running 'npx @ug.software/opposer jwt generate' or consulting documentation."
     );
   }
 
@@ -79,7 +79,7 @@ async function sign({ exp, ...payload }: SignJwt) {
 async function forget(payload: ForgetJwt) {
   if (!recoverJwt) {
     throw new Error(
-      "[jwt] - Don't finded token secret for recover password, generate running 'npx opposer jwt generate' or consulting documentation."
+      "[jwt] - Don't finded token secret for recover password, generate running 'npx @ug.software/opposer jwt generate' or consulting documentation."
     );
   }
 
@@ -90,7 +90,7 @@ async function forget(payload: ForgetJwt) {
 async function recover(token: string) {
   if (!recoverJwt) {
     throw new Error(
-      "[jwt] - Don't finded token secret for recover password, generate running 'npx opposer jwt generate' or consulting documentation."
+      "[jwt] - Don't finded token secret for recover password, generate running 'npx @ug.software/opposer jwt generate' or consulting documentation."
     );
   }
 

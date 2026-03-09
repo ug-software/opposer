@@ -1,6 +1,7 @@
 {
-  "name": "opposer",
+  "name": "@ug.software/opposer",
   "version": "1.0.0",
+  "description": "Ecossistema modular para construção de aplicações modernas focado em alta produtividade e organização por Domínios.",
   "type": "module",
   "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
@@ -8,6 +9,29 @@
   "bin": {
     "opposer": "./lib/bin/opposer.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://www.opposer.uiaranguilherme.com"
+  },
+  "keywords": [
+    "orm",
+    "scheduler",
+    "http-server",
+    "modular",
+    "typescript",
+    "opposer",
+    "backend",
+    "framework"
+  ],
+  "author": "UG Software",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ug-software/opposer/issues"
+  },
+  "homepage": "https://github.com/ug-software/opposer#readme",
   "exports": {
     ".": {
       "import": "./lib/esm/index.js",
