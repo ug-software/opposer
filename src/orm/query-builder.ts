@@ -240,6 +240,15 @@ export class QueryTranslator {
             joins.push(`LEFT JOIN ${targetTable} AS ${relationAlias} ON ${joinCondition}`);
             
             const selectedFields = typeof rel === 'object' && rel.select ? rel.select : ['*'];
+            const targetPrimaryFields = targetFields.filter(f => f.primary);
+
+            // Always ensure primary keys are included for hydration
+            for (const pf of targetPrimaryFields) {
+              if (!selectedFields.includes(pf.name) && !selectedFields.includes('*')) {
+                select.push(`${relationAlias}.${this.driver.quoteIdentifier(pf.name)} AS ${this.driver.quoteIdentifier(`${relationName}.${pf.name}`)}`);
+              }
+            }
+
             for (const f of selectedFields) {
               if (typeof f === 'string') {
                 if (f === '*') {

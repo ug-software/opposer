@@ -49,6 +49,22 @@ describe('ORM Integrity', () => {
     expect(author.books.length).toBe(2);
   });
 
+  test('should correctly handle one-to-many relations with specific select', async () => {
+    const authorId = crypto.randomUUID();
+    await authorRepo.insert({ id: authorId, name: 'Specific Author' });
+    await bookRepo.insert({ id: crypto.randomUUID(), title: 'Specific Book', author: authorId as any } as any);
+
+    const authors = await authorRepo.find({ 
+      where: { id: authorId },
+      relation: [{ model: 'books', select: ['title'] }] 
+    });
+    
+    expect(authors.length).toBe(1);
+    expect(authors[0].books).toBeDefined();
+    expect(authors[0].books.length).toBe(1);
+    expect(authors[0].books[0].title).toBe('Specific Book');
+  });
+
   test('should filter using complex operators like $in', async () => {
     const results = await bookRepo.find({ 
       where: { 
@@ -60,7 +76,7 @@ describe('ORM Integrity', () => {
 
   test('should aggregate values correctly', async () => {
     const result = await bookRepo.count({});
-    expect(result).toBe(2);
+    expect(result).toBe(3); // 2 from first test + 1 from specific select test
   });
 
   test('should group by field and aggregate', async () => {
@@ -68,7 +84,8 @@ describe('ORM Integrity', () => {
       by: ['author'], 
       aggregate: { id: 'count' } 
     });
-    expect(groups.length).toBe(1);
-    expect(Number(groups[0].count_id)).toBe(2);
+    expect(groups.length).toBe(2); // Two different authors
+    const specificAuthorGroup = groups.find((g: any) => g.count_id == 1);
+    expect(specificAuthorGroup).toBeDefined();
   });
 });
