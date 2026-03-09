@@ -24,6 +24,13 @@ import Context from "../context/index.js";
 const settings = system.getSettingsFile();
 
 export default async (req: Request, res: Response) => {
+  if (!req.body || typeof req.body !== 'object' || Object.keys(req.body).length === 0) {
+    return res.status(400).json({
+      ...HttpStatus[400],
+      message: 'Request body is empty or invalid. Please provide a valid JSON payload.',
+    });
+  }
+
   var props = req.body as ControllerApiProps;
   //handler method call
   if (props.handler) {

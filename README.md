@@ -101,7 +101,8 @@ O ORM do Opposer gerencia o banco de dados e a integridade dos dados através de
 
 ### Exemplo de Schema (`src/schemas/product.ts`)
 ```typescript
-import { Entity, PrimaryColumn, Field, f, CreateDateColumn } from "opposer/orm";
+import { Entity, PrimaryColumn, Field, f, CreateDateColumn, Relation } from "opposer/orm";
+import Category from "./category";
 
 @Entity("products", "Domínio de Produtos")
 export default class Product {
@@ -117,10 +118,28 @@ export default class Product {
     @Field({ type: "number", default: 0 })
     price!: number;
 
+    @Relation({
+        type: "many-to-one",
+        target: () => Category,
+        inverseSide: "products"
+    })
+    category!: Category;
+
     @CreateDateColumn()
     createdAt!: Date;
 }
 ```
+
+### 🔗 Relacionamentos
+O ORM suporta os seguintes tipos de relacionamentos:
+- `one-to-one`: Um para um.
+- `one-to-many`: Um para muitos.
+- `many-to-one`: Muitos para um.
+- `many-to-many`: Muitos para muitos.
+
+Você define relacionamentos usando o decorator `@Relation`. No caso de `many-to-one` e `one-to-one` (com `joinColumn`), uma coluna física é criada no banco de dados para armazenar a chave estrangeira.
+
+---
 
 ### 🔍 Query Builder JSON
 O Opposer oferece um motor de busca flexível via JSON. Você não precisa informar o `type` se usar as chaves específicas:
@@ -137,16 +156,35 @@ O Opposer oferece um motor de busca flexível via JSON. Você não precisa infor
 }
 ```
 
+#### Busca por Relacionamento e Seleção de Campos
+Você pode carregar dados relacionados e até filtrar por propriedades deles usando a notação de ponto (`.`).
+
+```json
+{
+    "method": "get",
+    "model": "products",
+    "query": {
+        "filter": { "category.title": "Eletrônicos" },
+        "relation": [
+            { "model": "category", "select": ["id", "title"] }
+        ]
+    }
+}
+```
+*Se você passar apenas o nome da relação no array (ex: `"relation": ["category"]`), o Opposer trará todos os campos daquela entidade.*
+
 #### Buscar Um (`find`)
 ```json
 {
     "method": "get",
     "model": "products",
     "query": {
-        "find": { "id": "uuid-aqui" }
+        "find": { "id": "uuid-aqui" },
+        "relation": ["category"]
     }
 }
 ```
+
 
 #### Contar Registros (`count`)
 Retorna a quantidade total de itens que batem com o filtro.

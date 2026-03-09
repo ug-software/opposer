@@ -2,7 +2,7 @@ import http from 'http';
 import { OpposerSystemConfigOptions } from '../../interfaces/system.js';
 import system from '../../system/index.js';
 import Context from '../../persistent/context/index.js';
-import { Request, Response, NextFunction, OpposerServer as IOpposerServer } from '../../interfaces/server.js';
+import { type Request, type Response, type NextFunction, OpposerServer as IOpposerServer } from '../../interfaces/server.js';
 
 export { Request, Response, NextFunction };
 
