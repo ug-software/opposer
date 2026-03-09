@@ -1,10 +1,12 @@
 import { EntityMetadata, FieldMetadata, MetadataStore } from "./metadata.js";
 import { Repository } from "./repository.js";
 
+export type QueryResultRow = { [key: string]: unknown };
+
 export interface DatabaseDriver {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  query<T = any>(sql: string, params?: any[]): Promise<T[]>;
+  query<T = QueryResultRow>(sql: string, params?: any[]): Promise<T[]>;
   createTable(entity: EntityMetadata, fields: FieldMetadata[]): Promise<void>;
   quoteIdentifier(identifier: string): string;
 }

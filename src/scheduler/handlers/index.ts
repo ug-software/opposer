@@ -1,4 +1,4 @@
-import { Handler, Method } from '../../server/decorators/index.js';
+import { Controller, Method } from '../../server/decorators/index.js';
 import { Success } from '../../server/helpers/index.js';
 import scheduler from '../index.js';
 import ScheduleHistory from '../models/history.js';
@@ -6,7 +6,7 @@ import { OpposerDatabase } from '../../orm/index.js';
 import { PayloadRequest } from '../../interfaces/controller.js';
 import { Context } from '../../server/index.js';
 
-@Handler('scheduler')
+@Controller('scheduler')
 export default class SchedulerHandler {
   private get db() {
     return Context.get<OpposerDatabase>('db');
