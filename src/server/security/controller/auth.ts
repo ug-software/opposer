@@ -1,9 +1,16 @@
 import { Method, Controller, IsPublicMethod } from '../../decorators/index.js';
-import { Success } from '../../helpers/index.js';
-import { PayloadRequest } from '../../../interfaces/controller.js';
-import { Context } from '../../index.js';
-import { OpposerDatabase } from '../../../orm/index.js';
+import { PayloadAuthChangePassword, PayloadAuthForgetPassword, PayloadAuthLogin, PayloadAuthRegister, PayloadSocialLogin } from '../../../interfaces/security.js';
 import User from '../models/usr.js';
+import Role from '../models/rl.js';
+import { Exception, Success, validateData } from '../../helpers/index.js';
+import { HttpStatus } from '../../constants/index.js';
+import jwt from '../jwt/index.js';
+import Session from '../models/se.js';
+import ChangeRequestPassword from '../models/crp.js';
+import { PayloadRequest } from '../../../interfaces/controller.js';
+import opposerServer from '../../core/index.js';
+import { OpposerDatabase } from '../../../orm/index.js';
+import { Context } from '../../index.js';
 
 @Controller('auth')
 export default class Auth {
@@ -11,71 +18,336 @@ export default class Auth {
     return Context.get<OpposerDatabase>('db');
   }
 
-  @IsPublicMethod()
   @Method()
-  async login(payload: PayloadRequest<any>) {
-    const { lg, ps } = payload.data;
-    const repo = this.db.getRepository(User);
-    const user = await repo.findOne({ where: { lg, ps, ac: true } });
+  async register(payload: PayloadRequest<PayloadAuthRegister>) {
+    var errors = validateData(User, payload.data);
 
-    if (!user) {
-      throw new Error('Invalid credentials or inactive account.');
+    if (Object.keys(errors).length > 0) {
+      return Exception({
+        ...HttpStatus[400],
+        message: errors as any,
+      });
     }
 
-    // This is a simplified example, in a real app you'd generate a real JWT
+    var userRepository = this.db.getRepository(User);
+
+    if (await userRepository.findOne({ where: { lg: payload.data.lg } })) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'User with this login already exists.',
+      });
+    }
+
+    const result = await userRepository.insert(payload.data as any);
+    return Success(result);
+  }
+
+  @Method()
+  async login(payload: PayloadRequest<PayloadAuthLogin>) {
+    if (!payload.data.lg) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Login is required',
+      });
+    }
+
+    if (!payload.data.ps) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Password is required',
+      });
+    }
+
+    var userRepository = this.db.getRepository(User);
+    var sessionRepository = this.db.getRepository(Session);
+
+    var usr = await userRepository.findOne({
+      where: { lg: payload.data.lg },
+    });
+
+    if (!usr) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Invalid login or password, check the data and try again.',
+      });
+    }
+
+    if (!(await usr.comparePassword(payload.data.ps))) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Invalid login or password, check the data and try again.',
+      });
+    }
+
+    var roleRepository = this.db.getRepository(Role);
+    var roles = await roleRepository.find({
+      where: { usr: usr.id },
+    });
+
+    var { token, refresh } = await jwt.sign({
+      fn: usr.fn,
+      id: usr.id,
+      lg: usr.lg,
+      ln: usr.ln,
+      exp: 0,
+      rl: roles.map(({ sm, mt }: any) => ({ sm, mt })),
+    });
+
+    // register new session init
+    await sessionRepository.insert({
+      ac: true,
+      ag: payload.headers.userAgent,
+      ip: payload.headers.ip,
+      loi: new Date(),
+      rt: refresh,
+      usr: usr.id,
+    } as any);
+
+    const current = new Date();
+    payload.headers.cookies.set('access_token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      expires: new Date(current.getTime() + 15 * 60 * 1000), // 15 mim
+    });
+
+    payload.headers.cookies.set('refresh_token', refresh, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      expires: new Date(current.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 dias
+    });
+
     return Success({
-      token: 'JWT-TOKEN-EXAMPLE',
-      user: {
-        id: user.id,
-        fn: user.fn,
-        ln: user.ln,
-        lg: user.lg,
+      token,
+      refresh,
+      usr: {
+        id: usr.id,
+        fn: usr.fn,
+        ln: usr.ln,
+        lg: usr.lg,
+        rl: roles.map(({ sm, mt }: any) => ({ sm, mt })),
       },
     });
   }
 
-  @IsPublicMethod()
   @Method()
-  async register(payload: PayloadRequest<any>) {
-    const { fn, ln, lg, ps } = payload.data;
-    const repo = this.db.getRepository(User);
-
-    const existing = await repo.findOne({ where: { lg } });
-    if (existing) {
-      throw new Error('User already exists.');
+  async refresh(payload: PayloadRequest<string>) {
+    if (!payload.data) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Refresh token is required.',
+      });
     }
 
-    const user = await repo.insert({
-      fn,
-      ln,
-      lg,
-      ps,
+    var sessionRepository = this.db.getRepository(Session);
+
+    var last = await sessionRepository.findOne({
+      where: { rt: payload.data },
+    });
+    if (!last) {
+      return Exception({
+        ...HttpStatus[401],
+        message: "Don't find session.",
+      });
+    }
+
+    if (!last.ac) {
+      return Exception({
+        ...HttpStatus[401],
+        message: 'Refresh expired.',
+      });
+    }
+
+    var usr = await jwt.validate.refresh(payload.data);
+    if (!usr || typeof usr === 'string') {
+      return Exception({
+        ...HttpStatus[401],
+        message: 'Invalid token.',
+      });
+    }
+
+    //cancel last session and update in database;
+    await sessionRepository.update(
+      { rt: last.rt },
+      {
+        ac: false,
+        lou: new Date(),
+      },
+    );
+
+    var { token, refresh } = await jwt.sign(usr);
+    await sessionRepository.insert({
       ac: true,
+      ag: last.ag,
+      ip: last.ip,
+      loi: new Date(),
+      rt: refresh,
+      usr: usr.id,
     } as any);
 
-    return Success(user);
+    const current = new Date();
+    payload.headers.cookies.set('access_token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      expires: new Date(current.getTime() + 15 * 60 * 1000), // 15 mim
+    });
+
+    payload.headers.cookies.set('refresh_token', refresh, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      expires: new Date(current.getTime() + 15 * 24 * 60 * 60 * 1000), // 15 dias
+    });
+
+    return Success({
+      token,
+      refresh,
+      ...usr,
+    });
   }
 
   @Method()
-  async me() {
-    // Current user context would be handled by middleware
-    return Success({ message: 'User profile' });
+  async logout(payload: PayloadRequest<string>) {
+    const token = payload.data || payload.headers.cookies.data.refresh_token;
+    if (!token) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Token is required for logout user.',
+      });
+    }
+
+    payload.headers.cookies.remove('access_token');
+    payload.headers.cookies.remove('refresh_token');
+
+    var sessionRepository = this.db.getRepository(Session);
+    await sessionRepository.update(
+      { rt: token },
+      {
+        ac: false,
+        lou: new Date(),
+      },
+    );
   }
 
   @Method()
-  async logout() {
-    return Success({ message: 'Logged out' });
+  @IsPublicMethod()
+  async me(payload: PayloadRequest<any>) {
+    const token = payload.headers.cookies.data.refresh_token;
+    if (!token) {
+      return null;
+    }
+
+    var usr = await jwt.validate.refresh(token);
+    if (typeof usr === 'string') {
+      return null;
+    }
+
+    return Success(usr);
   }
 
   @Method()
-  async refresh() {
-    return Success({ token: 'NEW-JWT-TOKEN' });
+  async changePassword(payload: PayloadRequest<PayloadAuthChangePassword>) {
+    var errors = validateData(User, { ps: payload.data.ps });
+
+    if (Object.keys(errors).length > 0) {
+      return Exception({
+        ...HttpStatus[400],
+        message: errors as any,
+      });
+    }
+
+    if (!payload.data.tk) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Ticket is required for change password.',
+      });
+    }
+
+    var ticket = await jwt.validate.recover(payload.data.tk);
+    if (typeof ticket === 'string' || !ticket) {
+      return Exception({
+        ...HttpStatus[401],
+        message: 'Invalid token.',
+      });
+    }
+
+    var changePasswordRepository = this.db.getRepository(ChangeRequestPassword);
+    var userRepository = this.db.getRepository(User);
+    var usr = await userRepository.findOne({
+      where: { lg: ticket.lg },
+    });
+
+    if (!usr) {
+      return Exception({
+        ...HttpStatus[401],
+        message: "Don't find user, verify payload and try again.",
+      });
+    }
+
+    // finaly update password...
+    await userRepository.update({ lg: ticket.lg }, { ps: payload.data.ps });
+    await changePasswordRepository.update({ tk: payload.data.tk }, {
+      ud: true,
+    } as any);
+
+    return Success({ message: 'Success for change password.' });
   }
 
-  static get social() {
-    return {
-      login: () => {},
-      callback: () => {},
-    };
+  @Method()
+  async forgotPassword(payload: PayloadRequest<PayloadAuthForgetPassword>) {
+    if (!payload.data.lg) {
+      return Exception({
+        ...HttpStatus[400],
+        message: 'Login is required.',
+      });
+    }
+
+    var { token } = await jwt.forget(payload.data);
+
+    var changePasswordRepository = this.db.getRepository(ChangeRequestPassword);
+    await changePasswordRepository.insert({
+      ...(payload.data as any),
+      tk: token,
+      ex: new Date(new Date().getTime() + 5 * 60 * 1000), // five min
+    });
+
+    return Success({ token });
+  }
+
+  static async social(payload: PayloadRequest<PayloadSocialLogin>) {
+    const usr = payload.data;
+    const db = Context.get<OpposerDatabase>('db');
+    var sessionRepository = db.getRepository(Session);
+    var { token, refresh } = await jwt.sign({
+      ...usr,
+      exp: 0,
+    });
+
+    // register new session init
+    await sessionRepository.insert({
+      ac: true,
+      ag: payload.headers.userAgent,
+      ip: payload.headers.ip,
+      loi: new Date(),
+      rt: refresh,
+      usr: usr.id,
+    } as any);
+
+    return Success({
+      token,
+      refresh,
+      usr: {
+        id: usr.id,
+        fn: usr.fn,
+        ln: usr.ln,
+        lg: usr.lg,
+      },
+    });
   }
 }
