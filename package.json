@@ -1,6 +1,6 @@
 {
   "name": "@ug.software/opposer",
-  "version": "3.0.9",
+  "version": "3.0.10",
   "description": "Ecossistema modular para construção de aplicações modernas focado em alta produtividade e organização por Domínios.",
   "type": "module",
   "main": "./lib/cjs/index.js",
