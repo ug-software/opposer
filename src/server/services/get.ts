@@ -10,15 +10,15 @@ import { Context } from '../index.js';
 export default async (props: HandleGetProps): Promise<HandleRequestResult<unknown>> => {
   const customModels = Context.get<string | ClassType<unknown>[]>('models');
   const allModels = await system.getAllModels(customModels);
-  const schema = allModels.find((x) => {
+  const model = allModels.find((x) => {
     return x.name.toLowerCase() === props.model.toLowerCase();
   });
 
-  if (!schema) {
+  if (!model) {
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: 'Unable to identify Schema.',
+      message: 'Unable to identify Model.',
     });
   }
 
@@ -40,7 +40,7 @@ export default async (props: HandleGetProps): Promise<HandleRequestResult<unknow
     });
   }
 
-  const repository = db.getRepository(schema.entity);
+  const repository = db.getRepository(model.entity);
 
   const queryKeys = ['filter', 'find', 'count', 'exists', 'aggregate', 'distinct', 'group'];
   const presentKeys = queryKeys.filter((k) => {

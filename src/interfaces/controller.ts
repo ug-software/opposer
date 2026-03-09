@@ -1,6 +1,6 @@
 import { ClassType } from './system.js';
 export interface ControllerApiProps {
-  handler?: string;
+  controller?: string;
   method: 'get' | 'insert' | 'update' | 'delete' | string;
   model: string;
   payload?: any;
@@ -86,7 +86,7 @@ export interface HandleUpdateProps {
   };
 }
 
-export interface ResultGetAllHandlers {
+export interface ResultGetAllControllers {
   [key: string]: {
     metadata: {
       name: string;
@@ -94,6 +94,24 @@ export interface ResultGetAllHandlers {
     methods: {
       name: string;
     }[];
-    handler: ClassType<any>;
+    controller: ClassType<any>;
+  };
+}
+
+export interface PayloadRequest<D> {
+  data: D;
+  headers: {
+    autorization: string;
+    contentType: string;
+    accept: string;
+    origin: string;
+    referer: string;
+    userAgent: string;
+    ip: string;
+    cookies: {
+      data: Record<string, string>;
+      set: (name: string, value: string, options: any) => void;
+      remove: (name: string, options?: any) => void;
+    };
   };
 }

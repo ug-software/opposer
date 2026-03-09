@@ -1,242 +1,163 @@
 # Opposer
 
-Opposer é um ecossistema modular para construção de aplicações modernas, focado em alta produtividade e organização por **Domínios**. Ele unifica Servidor HTTP, Agendamento de Tarefas, ORM e Persistência de Estado em uma única ferramenta extensível.
+Opposer é um ecossistema modular para construção de aplicações modernas, focado em alta produtividade e organização por **Domínios**. Ele unifica Servidor HTTP, Agendamento de Tarefas, ORM e Persistência de Estado em uma única ferramenta extensível e altamente performática.
 
 ---
 
 ## 🚀 Estrutura de Domínios
 
-O Opposer organiza a lógica da sua aplicação em pastas específicas que ele mapeia automaticamente:
+O Opposer organiza a lógica da sua aplicação em pastas específicas que ele mapeia automaticamente. Esta arquitetura orientada a domínios facilita a escalabilidade e a manutenção do código:
 
 ```text
 project/
 ├── src/
-│   ├── handlers/    # Domínio de Servidor (Ações da API)
-│   ├── schedules/   # Domínio de Agendamento (Cron)
-│   ├── schemas/     # Domínio de Dados (Entidades ORM)
-│   └── index.ts     # Inicialização
-├── opposer-settings.json
+│   ├── controllers/ # Domínio de Servidor (Endpoints da API e Lógica de Negócio)
+│   ├── schedules/   # Domínio de Agendamento (Tarefas Agendadas e Background Jobs)
+│   ├── models/      # Domínio de Dados (Entidades do Banco de Dados e Regras de Validação)
+│   └── index.ts     # Ponto de entrada para inicialização do ecossistema
+├── opposer-settings.json # Arquivo de configuração centralizado
 └── package.json
 ```
 
 ---
 
-## 1. 🌐 Server (Servidor HTTP)
+## 1. 🌐 Controller (Servidor HTTP)
 
-O motor de servidor do Opposer é baseado em **Handlers**. Cada Handler é um domínio de ações que você expõe para a API.
+O motor de servidor do Opposer utiliza o conceito de **Controllers**. Cada Controller agrupa ações relacionadas a um domínio específico. Utilizando decorators, você define métodos que serão expostos automaticamente como endpoints da API.
 
-### Exemplo de Handler (`src/handlers/user.ts`)
+### Exemplo de Controller (`src/controllers/auth.ts`)
 ```typescript
-import { Handler, Method, Payload, Success, f, Field } from "opposer/server";
+import { Controller, Method, Payload, Success, f, Field } from "opposer/server";
 
+// DTO (Data Transfer Object) para validação rigorosa de entrada
 class LoginDto {
-    @Field(() => f().string().required())
+    @Field(() => f().string().required().description("Usuário cadastrado"))
     username!: string;
     
-    @Field(() => f().string().required())
+    @Field(() => f().string().required().min(6).description("Senha de acesso"))
     password!: string;
 }
 
-@Handler("auth")
-export default class AuthHandler {
+@Controller("auth")
+export default class AuthController {
     @Method()
     async login(@Payload(LoginDto) payload: any) {
         const { username } = payload.data;
-        // Lógica de autenticação...
-        return Success({ token: "JWT-AQUI", user: username });
+        
+        // O Opposer garante que 'payload.data' já está validado conforme o LoginDto
+        // Implemente sua lógica de negócio aqui...
+        
+        return Success({ 
+            token: "JWT-TOKEN-EXEMPLO", 
+            user: username,
+            message: "Bem-vindo ao sistema!"
+        });
     }
 }
 ```
 
-**Como consumir:** Toda a comunicação é feita via `POST` no endpoint `/opposer` (configurável).
+**Como consumir:** A comunicação é centralizada via `POST` no endpoint `/opposer` (padrão). Isso simplifica a gestão de rotas e permite um protocolo de comunicação estruturado.
+
 ```json
 {
-    "handler": "auth",
+    "controller": "auth",
     "method": "login",
-    "payload": { "username": "admin", "password": "123" }
+    "payload": { "username": "admin", "password": "safe-password" }
 }
 ```
 
 ---
 
-## 2. 🎨 Playground (Interface Visual)
+## 2. 🎨 Playground (Dashboard de Desenvolvimento)
 
-O Opposer inclui nativamente um **Playground**, uma interface web completa para desenvolvedores. Ele mapeia automaticamente todos os seus domínios e permite:
+O Opposer inclui nativamente o **Playground**, uma interface administrativa e de desenvolvimento que se auto-configura com base nos seus domínios:
 
-- **Explorar Schemas:** Ver a definição de todas as tabelas e tipos de campos.
-- **Testar Handlers:** Executar métodos de API diretamente pelo navegador com suporte a JSON.
-- **Monitorar Schedulers:** Acompanhar o status das tarefas agendadas em tempo real.
-- **Gestão de Usuários:** Criar, editar e excluir usuários do sistema com validações integradas.
-- **Gestão de API Keys:** Gerar chaves de acesso (`opposer-key`) para integrações externas.
+- **Explorar Models:** Visualize todas as tabelas, tipos de dados e relacionamentos definidos no sistema.
+- **Testar Controllers:** Interface interativa para disparar métodos dos seus controllers, visualizar retornos e validar payloads JSON.
+- **Monitorar Schedulers:** Painel em tempo real para acompanhar execuções, erros e status das tarefas agendadas.
+- **Gestão de Usuários:** Módulo completo para administração de contas, com suporte nativo a Roles e Permissions.
+- **Gestão de Segurança:** Geração de API Keys e gerenciamento de segredos JWT diretamente pela interface.
 
-**Acesso:** `http://localhost:3838/playground`
+**Acesso:** [http://localhost:3838/playground](http://localhost:3838/playground)
 
 ---
 
-## 3. ⏰ Schedule (Agendamento de Tarefas)
+## 3. ⏰ Schedule (Automação de Tarefas)
 
-O domínio de agendamento permite criar rotinas automáticas com monitoramento integrado e persistência de histórico de falhas/sucessos.
+O módulo de Schedule permite automatizar processos com controle total de execução e histórico de logs.
 
-### Exemplo de Tarefa (`src/schedules/sync.ts`)
+### Exemplo de Tarefa Agendada (`src/schedules/cleanup.ts`)
 ```typescript
 import { Schedule } from "opposer/schedule";
 
-export default class InventoryTask {
+export default class MaintenanceTask {
     @Schedule({ 
-        name: "sincronizar-estoque", 
-        interval: 60000 // Executa a cada 1 minuto
+        name: "limpeza-logs", 
+        interval: "24h", // Suporta formatos legíveis como "1m", "1h", "1d"
+        description: "Remove logs antigos do banco de dados diariamente"
     })
-    async sync() {
-        // Lógica de sincronização...
-        console.log("Estoque atualizado com sucesso!");
+    async run() {
+        // Lógica de manutenção preventiva...
+        console.log("Rotina de limpeza executada.");
     }
 }
 ```
 
 ---
 
-## 4. 🏗️ ORM (Object-Relational Mapping)
+## 4. 🏗️ ORM (Gestão de Dados Inteligente)
 
-O ORM do Opposer gerencia o banco de dados e a integridade dos dados através de decorators. Ele suporta SQLite, MySQL e Postgres.
+O ORM do Opposer é uma camada de abstração poderosa que permite definir seu banco de dados usando classes TypeScript. Ele cuida da criação de tabelas, índices e relacionamentos complexos automaticamente.
 
-### Exemplo de Schema (`src/schemas/product.ts`)
+### Exemplo de Model (`src/models/user.ts`)
 ```typescript
 import { Entity, PrimaryColumn, Field, f, CreateDateColumn, Relation } from "opposer/orm";
-import Category from "./category";
+import Role from "./role";
 
-@Entity("products", "Domínio de Produtos")
-export default class Product {
+@Entity("users", "Domínio de Usuários do Sistema")
+export default class User {
     @PrimaryColumn({ type: "uuid" })
     id!: string;
 
-    @Field(() => f().string().required())
-    name!: string;
+    @Field(() => f().string().required().unique())
+    email!: string;
 
-    @Field({ type: "number", default: 0 })
-    stock!: number;
-
-    @Field({ type: "number", default: 0 })
-    price!: number;
+    @Field({ type: "string", select: false }) // Não retorna no 'select' por padrão por segurança
+    password!: string;
 
     @Relation({
-        type: "many-to-one",
-        target: () => Category,
-        inverseSide: "products"
+        type: "one-to-many",
+        target: () => Role,
+        inverseSide: "user"
     })
-    category!: Category;
+    roles!: Role[];
 
     @CreateDateColumn()
     createdAt!: Date;
 }
 ```
 
-### 🔗 Relacionamentos
-O ORM suporta os seguintes tipos de relacionamentos:
-- `one-to-one`: Um para um.
-- `one-to-many`: Um para muitos.
-- `many-to-one`: Muitos para um.
-- `many-to-many`: Muitos para muitos.
-
-Você define relacionamentos usando o decorator `@Relation`. No caso de `many-to-one` e `one-to-one` (com `joinColumn`), uma coluna física é criada no banco de dados para armazenar a chave estrangeira.
-
 ---
 
-### 🔍 Query Builder JSON
-O Opposer oferece um motor de busca flexível via JSON. Você não precisa informar o `type` se usar as chaves específicas:
+### 🔍 Query Builder O-API (JSON)
 
-#### Filtrar Múltiplos (`filter`)
+O Opposer expõe um motor de busca avançado via JSON que permite consultas complexas sem a necessidade de criar novos endpoints.
+
+#### Filtros e Seleção
 ```json
 {
     "method": "get",
-    "model": "products",
+    "model": "users",
     "query": {
-        "filter": { "stock": { "$lt": 10 } },
-        "select": ["id", "name"]
+        "filter": { "active": true },
+        "select": ["id", "email"],
+        "relation": ["roles"],
+        "limit": 10
     }
 }
 ```
 
-#### Busca por Relacionamento e Seleção de Campos
-Você pode carregar dados relacionados e até filtrar por propriedades deles usando a notação de ponto (`.`).
-
-```json
-{
-    "method": "get",
-    "model": "products",
-    "query": {
-        "filter": { "category.title": "Eletrônicos" },
-        "relation": [
-            { "model": "category", "select": ["id", "title"] }
-        ]
-    }
-}
-```
-*Se você passar apenas o nome da relação no array (ex: `"relation": ["category"]`), o Opposer trará todos os campos daquela entidade.*
-
-#### Buscar Um (`find`)
-```json
-{
-    "method": "get",
-    "model": "products",
-    "query": {
-        "find": { "id": "uuid-aqui" },
-        "relation": ["category"]
-    }
-}
-```
-
-
-#### Contar Registros (`count`)
-Retorna a quantidade total de itens que batem com o filtro.
-```json
-{
-    "method": "get",
-    "model": "products",
-    "query": {
-        "count": { "stock": { "$gt": 0 } }
-    }
-}
-```
-
-#### Verificar Existência (`exists`)
-Retorna um booleano simples.
-```json
-{
-    "method": "get",
-    "model": "products",
-    "query": {
-        "exists": { "name": "Celular" }
-    }
-}
-```
-
-#### Agregações (`aggregate`)
-Suporta `sum`, `avg`, `min`, `max` e `count`.
-```json
-{
-    "method": "get",
-    "model": "products",
-    "query": {
-        "aggregate": {
-            "where": { "stock": { "$gt": 0 } },
-            "aggregate": { "price": "avg", "stock": "sum" }
-        }
-    }
-}
-```
-
-#### Valores Únicos (`distinct`)
-```json
-{
-    "method": "get",
-    "model": "products",
-    "query": {
-        "distinct": { "field": "category" }
-    }
-}
-```
-
-#### Agrupamento (`group`)
+#### Agregações e Agrupamentos
 ```json
 {
     "method": "get",
@@ -244,7 +165,7 @@ Suporta `sum`, `avg`, `min`, `max` e `count`.
     "query": {
         "group": {
             "by": ["category"],
-            "aggregate": { "id": "count", "price": "avg" }
+            "aggregate": { "price": "avg", "id": "count" }
         }
     }
 }
@@ -252,109 +173,69 @@ Suporta `sum`, `avg`, `min`, `max` e `count`.
 
 ---
 
-## 5. 💾 Persistent (Gestão de Estado e Cache)
+## 5. 💾 Persistent (Estado e Cache Reativo)
 
-O módulo Persistent permite armazenar estados de forma reativa e transparente usando decorators, eliminando a necessidade de gerenciar Redis ou Memcached manualmente para estados simples.
+Gerencie estados globais ou de sessão de forma transparente. O Opposer lida com a persistência em memória ou disco automaticamente.
 
-### Exemplo de Persistência
+### Exemplo
 ```typescript
 import { Global, Session } from "opposer/persistent";
 
-export default class ConfigService {
+export default class AppState {
     @Global() 
-    appConfig: any; // Valor compartilhado entre todos os usuários do servidor
+    maintenanceMode: boolean = false; // Estado compartilhado em toda a instância
 
     @Session()
-    userPreferences: any; // Valor isolado e persistente por sessão de usuário (IP/Cookie)
+    themePreference: string = "dark"; // Estado persistente por usuário
 }
 ```
 
 ---
 
-## 6. 🌐 Contexto de Servidor (Singleton)
+## 🌐 Contexto de Aplicação
 
-O Opposer permite acessar informações globais da aplicação (como a instância do banco de dados) de qualquer lugar (Handlers, Schedules ou Services). Este contexto é isolado das configurações de cache e funciona como um repositório central de estado do motor.
+Acesse recursos do ecossistema de qualquer lugar do seu código através do Singleton de Contexto.
 
-### Como utilizar
 ```typescript
 import { Context } from "opposer/server";
 import { OpposerDatabase } from "opposer/orm";
 
-// Recuperando o banco de dados de qualquer lugar
 const db = Context.get<OpposerDatabase>("db");
 ```
 
-> **Atenção:** A ordem de execução é fundamental. Você só conseguirá recuperar um valor via `Context.get()` se ele tiver sido previamente inserido via `Context.set()`. O Opposer injeta automaticamente o `db`, `models` e `handlers` durante a inicialização do `Server()`. Se você tentar acessar essas chaves antes do boot do servidor, o retorno será `undefined`.
-
 ---
 
-## ⚙️ Configuração Principal (`opposer-settings.json`)
+## ⚙️ Inicialização do Projeto
 
-```json
-{
-  "port": 3838,
-  "database": {
-    "type": "sqlite",
-    "database": "./database.db",
-    "logging": true
-  },
-  "auth": true,
-  "logger": true
-}
-```
+Configure e inicie seu servidor Opposer em poucos segundos:
 
-Para começar, inicialize o servidor no seu `index.ts`:
 ```typescript
 import { Server } from "opposer";
 
-const instance = await Server({
-    models: "./src/schemas",
-    handlers: "./src/handlers",
+const app = await Server({
+    models: "./src/models",
+    controllers: "./src/controllers",
     schedules: "./src/schedules"
 });
 
-instance.initialize();
+app.initialize();
 ```
 
 ---
 
-## ⚙️ Configurações e Variáveis de Ambiente
+## 🛠️ Variáveis de Ambiente e Configurações
 
-O Opposer pode ser configurado através do arquivo `opposer-settings.json` na raiz do projeto ou via variáveis de ambiente. As variáveis de ambiente têm precedência sobre o arquivo JSON.
+O arquivo `opposer-settings.json` na raiz do projeto permite configurar o comportamento do ecossistema. Variáveis de ambiente (`.env`) sempre terão prioridade.
 
-### Tabela de Referência
+| JSON Path | Variável de Ambiente | Descrição |
+| :--- | :--- | :--- |
+| `port` | `OPPOSER_PORT` | Porta do servidor (Default: 3838) |
+| `database.type` | `OPPOSER_DATABASE_TYPE` | `postgres`, `mysql` ou `sqlite` |
+| `auth` | - | Habilita sistema de segurança nativo |
+| `jwt.access` | `OPPOSER_JWT_ACCESS` | Segredo para assinatura de tokens |
 
-| Propriedade JSON | Variável de Ambiente | Descrição | Padrão |
-| :--- | :--- | :--- | :--- |
-| `port` | `OPPOSER_PORT` | Porta onde o servidor HTTP irá rodar. | `3000` |
-| `url` | `OPPOSER_URL` | Endpoint base da API (POST). | `/opposer` |
-| `logger` | - | Habilita o middleware de logs de requisição. | `false` |
-| `auth` | - | Habilita o sistema de autenticação e permissões. | `false` |
-| **Database** | | | |
-| `database.type` | `OPPOSER_DATABASE_TYPE` | Tipo do banco (`postgres`, `mysql`, `sqlite`). | - |
-| `database.host` | `OPPOSER_DATABASE_HOST` | Host do banco de dados. | - |
-| `database.port` | `OPPOSER_DATABASE_PORT` | Porta do banco de dados. | - |
-| `database.username` | `OPPOSER_DATABASE_USER` | Usuário do banco de dados. | - |
-| `database.password` | `OPPOSER_DATABASE_PASSWORD` | Senha do banco de dados. | - |
-| `database.database` | `OPPOSER_DATABASE_NAME` | Nome do banco ou caminho (se sqlite). | - |
-| `database.logging` | `OPPOSER_DATABASE_LOGGING`| Habilita logs de queries SQL (`true`/`false`). | `false` |
-| **JWT** | | | |
-| `jwt.access` | `OPPOSER_JWT_ACCESS` | Secret para o token de acesso (Access Token). | - |
-| `jwt.refresh` | `OPPOSER_JWT_REFRESH` | Secret para o token de atualização (Refresh Token). | - |
-| `jwt.recover` | `OPPOSER_JWT_RECOVER` | Secret para o token de recuperação de senha. | - |
-| **Manager (Admin)**| | | |
-| `manager.login` | `OPPOSER_MANAGER_LOGIN` | Login da conta administradora inicial. | - |
-| `manager.password`| `OPPOSER_MANAGER_PASSWORD`| Senha da conta administradora inicial. | - |
-| `manager.firstName`| `OPPOSER_MANAGER_FIRST_NAME`| Nome do administrador. | - |
-| `manager.lastName` | `OPPOSER_MANAGER_LAST_NAME` | Sobrenome do administrador. | - |
-| **Persistent (Cache)** | | | |
-| `cache.type` | `OPPOSER_CACHE_TYPE` | Tipo de cache (`in-memory`, `persistent`). | `in-memory` |
-| `cache.snapshot.active` | `OPPOSER_CACHE_SNAPSHOT` | Habilita snapshots em disco para persistência. | `false` |
-| `cache.snapshot.timer` | `OPPOSER_CACHE_SNAPSHOT_TIMER`| Intervalo entre cada snapshot. | `1` |
-| `cache.snapshot.unit` | `OPPOSER_CACHE_SNAPSHOT_UNIT` | Unidade do snapshot (`seconds`, `minutes`, etc). | `minutes` |
-| `cache.session.expire` | - | Tempo de expiração dos dados de sessão. | `30` |
-| `cache.session.unit` | - | Unidade de expiração de sessão. | `minutes` |
-| `cache.global.expire` | - | Tempo de expiração dos dados globais. | `10` |
-| `cache.global.unit` | - | Unidade de expiração global. | `seconds` |
+---
 
-> **Nota:** Se o sistema de `auth` estiver ativo e a conta do `manager` não existir no banco de dados, o Opposer irá criá-la automaticamente durante a inicialização usando as configurações acima.
+### ⌨️ CLI Helpers
+- `npx opposer generate:jwt-key`: Gera um segredo seguro para JWT.
+- `npx opposer generate:api-key`: Gera uma chave de acesso para integrações externas.

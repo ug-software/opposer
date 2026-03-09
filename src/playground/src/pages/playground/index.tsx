@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import {
   Navegation,
-  WrapperHandlersAndMethods,
+  WrapperControllersAndMethods,
   ContainerRequestAndResponse,
   HeaderRequestAndResponse,
   LeftPanel,
@@ -38,14 +38,14 @@ export function meta() {
 
 export default () => {
   const [opposerMap, setOpposerMap] = useState<OpposerMap>({
-    handlers: {},
+    controllers: {},
     models: {},
   });
-  const [isView, setIsView] = useState<"models" | "handlers">("models");
+  const [isView, setIsView] = useState<"models" | "controllers">("models");
   const [modelMethod, setModelMethod] = useState<ModelMethod | undefined>(
     undefined
   );
-  const [handler, setHandler] = useState<string>("");
+  const [controller, setController] = useState<string>("");
   const [selected, setSelected] = useState<string>("");
   const [statusResult, setStatusResult] = useState<number>(0);
   const [paneResponse, setPaneResponse] = useState<string>("");
@@ -83,10 +83,10 @@ export default () => {
     return setPaneRequest(value);
   };
 
-  const handleSelecteHandlerMethod = (method: string, handler: string) => {
-    setIsView("handlers");
+  const handleSelecteControllerMethod = (method: string, controller: string) => {
+    setIsView("controllers");
     setSelected(method);
-    setHandler(handler);
+    setController(controller);
   };
 
   const handleSelecteModel = (model: string) => {
@@ -109,8 +109,8 @@ export default () => {
 
     switch (isView) {
       case "models":
-        const modelData = opposerMap.models[selected] || { schema: {} };
-        const modelFields = modelData.schema;
+        const modelData = opposerMap.models[selected] || { model: {} };
+        const modelFields = modelData.model;
         const initialData = Object.keys(modelFields).reduce((acc: any, key) => {
           acc[key] =
             modelFields[key] === "number"
@@ -183,8 +183,8 @@ export default () => {
         break;
 
       default:
-        const handlerMethods = opposerMap.handlers[handler] || {};
-        const methodPayload = (handlerMethods as any)[selected]?.payload || {};
+        const controllerMethods = opposerMap.controllers[controller] || {};
+        const methodPayload = (controllerMethods as any)[selected]?.payload || {};
         const initialPayload = Object.keys(methodPayload).reduce(
           (acc: any, key) => {
             acc[key] =
@@ -201,7 +201,7 @@ export default () => {
         setPaneRequest(
           JSON.stringify(
             {
-              handler,
+              controller,
               method: selected,
               payload: initialPayload,
             },
@@ -215,7 +215,7 @@ export default () => {
   }, [modelMethod, selected, isView, opposerMap]);
 
   return (
-    <WrapperHandlersAndMethods>
+    <WrapperControllersAndMethods>
       <Backdrop
         sx={(theme) => {
           return { zIndex: theme.zIndex.drawer + 1 };
@@ -254,7 +254,7 @@ export default () => {
           })}
         </List>
         <List>
-          {Object.keys(opposerMap.handlers).map((handler, index) => {
+          {Object.keys(opposerMap.controllers).map((controller, index) => {
             return (
               <div key={index}>
                 <ListItem disablePadding disableGutters>
@@ -264,18 +264,18 @@ export default () => {
                     </ListItemIcon>
                     <ListItemText
                       slotProps={{ primary: { noWrap: true } }}
-                      primary={handler}
+                      primary={controller}
                     />
                   </ListItemButton>
                 </ListItem>
-                {Object.keys(opposerMap.handlers[handler]).map(
+                {Object.keys(opposerMap.controllers[controller]).map(
                   (method, index) => {
                     return (
                       <ListItem key={index} disablePadding disableGutters>
                         <ListItemButton
                           selected={selected === method}
                           onClick={() => {
-                            return handleSelecteHandlerMethod(method, handler);
+                            return handleSelecteControllerMethod(method, controller);
                           }}
                         >
                           <ListItemText
@@ -386,6 +386,6 @@ export default () => {
           </SplitPaneItem>
         </SplitPane>
       </ContainerRequestAndResponse>
-    </WrapperHandlersAndMethods>
+    </WrapperControllersAndMethods>
   );
 };

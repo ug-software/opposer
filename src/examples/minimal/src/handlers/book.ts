@@ -1,7 +1,7 @@
 import {
   f,
   Field,
-  Handler,
+  Controller,
   Method,
   Payload,
 } from "../../../../server/index.js";
@@ -16,7 +16,7 @@ class GetAllBooksPerAuthorDto {
   author!: string;
 }
 
-@Handler("books")
+@Controller("books")
 export default class Books {
   @Method()
   getAllBooksPerDate(@Payload(GetAllPerDateDto) filter: GetAllPerDateDto) {

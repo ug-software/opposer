@@ -3,7 +3,7 @@ import { ConnectionOptions } from "../orm/index.js";
 export interface OpposerSystemConfigOptions {
   models: string;
   schedules: string;
-  handlers: string;
+  controllers: string;
   port: number;
   url?: string;
   text?: boolean;

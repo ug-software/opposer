@@ -9,13 +9,13 @@ import { Context } from '../index.js';
 export default async (props: HandleUpdateProps) => {
   const customModels = Context.get<string | ClassType<unknown>[]>('models');
   const allModels = await system.getAllModels(customModels);
-  const schema = allModels.find((x) => x.name === props.model);
+  const model = allModels.find((x) => x.name === props.model);
 
-  if (!schema) {
+  if (!model) {
     return Exception({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: 'Unable to find schema',
+      message: 'Unable to identify Model',
     });
   }
 
@@ -29,7 +29,7 @@ export default async (props: HandleUpdateProps) => {
     });
   }
 
-  const repository = db.getRepository(schema.entity);
+  const repository = db.getRepository(model.entity);
 
   const repositoryFields = repository.Fields.map((f: any) => f.name);
   const thereIsPropertyOutsideTheRule = Object.keys(props.data).some((key) => {

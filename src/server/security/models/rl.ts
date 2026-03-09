@@ -14,10 +14,10 @@ export default class Role {
   @PrimaryColumn({ type: "uuid" })
   id!: string;
 
-  @Field(() => f().string("schema is string.").required("schema is required."))
+  @Field(() => f().string("model is string.").required("model is required."))
   sm!: string;
 
-  @Field(() => f().string("method is string.").required("method is required."))
+  @Field(() => f().string("model is string.").required("model is required."))
   mt!: string;
 
   @CreateDateColumn()

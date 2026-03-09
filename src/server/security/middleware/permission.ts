@@ -24,12 +24,12 @@ export default async (req: Request, res: Response, next: NextFunction) => {
 
   const request = req.body as ControllerApiProps;
 
-  //skep session method
+  //skip session method
   if (['login', 'register', 'refresh'].includes(request.method)) {
     return next();
   }
 
-  //skep for public models
+  //skip for public models
   if (request.model) {
     const customModels = Context.get<string | ClassType<unknown>[]>('models');
     var allModels = await system.getAllModels(customModels);
@@ -44,14 +44,14 @@ export default async (req: Request, res: Response, next: NextFunction) => {
     }
   }
 
-  //skep for public methods
-  if (request.handler) {
-    const customHandlers = Context.get<string | ClassType<unknown>[]>('handlers');
-    const allHandlers = await system.getAllHandlers(customHandlers);
-    var handler = allHandlers.find((x) => x.name.toUpperCase() === request.handler?.toUpperCase());
+  //skip for public methods
+  if (request.controller) {
+    const customControllers = Context.get<string | ClassType<unknown>[]>('controllers');
+    const allControllers = await system.getAllControllers(customControllers);
+    var controller = allControllers.find((x) => x.name.toUpperCase() === request.controller?.toUpperCase());
 
-    if (handler) {
-      var methods = getIsPublicMethodMetadata(handler);
+    if (controller) {
+      var methods = getIsPublicMethodMetadata(controller);
 
       if (methods.some((x: { name: string }) => x.name === request.method)) {
         return next();

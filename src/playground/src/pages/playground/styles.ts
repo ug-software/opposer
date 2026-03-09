@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import { blue, green, grey, orange, red } from "@mui/material/colors";
 
-export const WrapperHandlersAndMethods = styled(Box)({
+export const WrapperControllersAndMethods = styled(Box)({
   display: "flex",
   height: "100%",
 });

@@ -7,7 +7,7 @@ import {
   TableContainer,
 } from "@mui/material";
 
-export const WrapperSchema = styled(Box)({
+export const WrapperModel = styled(Box)({
   display: "flex",
   height: "100%",
 });
@@ -26,7 +26,7 @@ export const ContentArea = styled(Box)({
   overflowY: "auto",
 });
 
-export const SchemaCard = styled(Paper)(({ theme }) => ({
+export const ModelCard = styled(Paper)(({ theme }) => ({
   padding: "2rem",
   borderRadius: "15px",
   backgroundColor: theme.palette.background.paper,

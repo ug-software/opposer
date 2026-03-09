@@ -4,7 +4,7 @@ import system from '../system/index.js';
 import { ClassType } from '../interfaces/system.js';
 import permission from './security/middleware/permission.js';
 import autorization from './security/middleware/autorization.js';
-import Auth from './security/handler/auth.js';
+import Auth from './security/controller/auth.js';
 import scheduler from '../scheduler/index.js';
 import { OpposerDatabase, PostgresDriver, SQLiteDriver, MySQLDriver } from '../orm/index.js';
 
@@ -110,7 +110,7 @@ export default async function Server(props: CreateServerProps): Promise<ServerIn
   // Store database in server context
   Context.set('db', db);
   Context.set('models', props.models);
-  Context.set('handlers', props.handlers);
+  Context.set('controllers', props.controllers);
 
   console.log('-> Initializing scheduler.');
   await scheduler.initialize(props.schedules);
@@ -173,8 +173,8 @@ export default async function Server(props: CreateServerProps): Promise<ServerIn
 export const auth = { social: Auth.social };
 export * from './constants/index.js';
 export * from './helpers/index.js';
-export type { SchemaResult } from '../interfaces/schema.js';
-export { Method, Handler, Field, Payload, IsPublic, IsPublicMethod, f } from './decorators/index.js';
-export type { PayloadRequest } from '../interfaces/handler.js';
+export type { ModelResult } from '../interfaces/model.js';
+export { Method, Controller, Field, Payload, IsPublic, IsPublicMethod, f } from './decorators/index.js';
+export type { PayloadRequest } from '../interfaces/controller.js';
 
 export { default as Context } from './context/index.js';

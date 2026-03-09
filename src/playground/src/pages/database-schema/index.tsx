@@ -16,10 +16,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import {
-  WrapperSchema,
+  WrapperModel,
   Navigation,
   ContentArea,
-  SchemaCard,
+  ModelCard,
   StyledTableContainer,
   ListItemButton,
 } from "./styles";
@@ -29,12 +29,12 @@ import useRequest from "../../hooks/use-request";
 import { useToast } from "../../context/toast";
 
 export function meta() {
-  return [{ title: "Opposer - Database Schemas" }];
+  return [{ title: "Opposer - Database Models" }];
 }
 
-export default function DatabaseSchema() {
+export default function DatabaseModel() {
   const [opposerMap, setOpposerMap] = useState<OpposerMap>({
-    handlers: {},
+    controllers: {},
     models: {},
   });
   const [selectedModel, setSelectedModel] = useState<string>("");
@@ -59,11 +59,11 @@ export default function DatabaseSchema() {
   }, []);
 
   const modelData = selectedModel ? opposerMap.models[selectedModel] : null;
-  const fields = modelData?.schema || {};
+  const fields = modelData?.model || {};
   const description = modelData?.description || "Database Entity Definition";
 
   return (
-    <WrapperSchema>
+    <WrapperModel>
       <Backdrop
         sx={(theme) => {
           return { zIndex: theme.zIndex.drawer + 1 };
@@ -101,7 +101,7 @@ export default function DatabaseSchema() {
 
       <ContentArea>
         {selectedModel ? (
-          <SchemaCard elevation={0}>
+          <ModelCard elevation={0}>
             <Box mb={3}>
               <Typography variant="h4" color="primary" gutterBottom>
                 {selectedModel}
@@ -165,7 +165,7 @@ export default function DatabaseSchema() {
                 </TableBody>
               </Table>
             </StyledTableContainer>
-          </SchemaCard>
+          </ModelCard>
         ) : (
           <Box
             display="flex"
@@ -174,11 +174,11 @@ export default function DatabaseSchema() {
             height="100%"
           >
             <Typography variant="h6" color="textSecondary">
-              Select an entity to view its schema
+              Select an entity to view its model
             </Typography>
           </Box>
         )}
       </ContentArea>
-    </WrapperSchema>
+    </WrapperModel>
   );
 }

@@ -2,12 +2,12 @@ export interface OpposerMap {
   models: {
     [key: string]: {
       description: string;
-      schema: {
+      model: {
         [key: string]: string;
       };
     };
   };
-  handlers: {
+  controllers: {
     [key: string]: {
       [methodName: string]: {
         payload: {

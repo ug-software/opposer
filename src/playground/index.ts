@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import system from '../system/index.js';
-import { getMethodMetadata, getPayloadMetadata, getFieldsMetadata, getHandlerMetadata } from '../server/decorators/index.js';
+import { getMethodMetadata, getPayloadMetadata, getFieldsMetadata, getControllerMetadata } from '../server/decorators/index.js';
 import { MetadataStore } from '../orm/index.js';
 import type { ClassType } from '../interfaces/system.js';
 import type { Request, Response } from '../interfaces/server.js';
@@ -15,10 +15,10 @@ const _dirname =
     : // @ts-ignore
       path.dirname(fileURLToPath(import.meta.url));
 
-async function generateMap(server?: any, models?: string | ClassType<unknown>[], handlers?: string | ClassType<unknown>[]) {
+async function generateMap(server?: any, models?: string | ClassType<unknown>[], controllers?: string | ClassType<unknown>[]) {
   var map = {
     models: {},
-    handlers: {},
+    controllers: {},
   };
 
   var allModels = await system.getAllModels(models);
@@ -27,19 +27,19 @@ async function generateMap(server?: any, models?: string | ClassType<unknown>[],
   if (Array.isArray(allModels)) {
     var modelsMap = allModels
       .filter((m) => !internalModels.includes(m.name))
-      .reduce((__models: any, model) => {
-        var fields = getFieldsMetadata(model.entity);
-        const meta = MetadataStore.getEntity(model.entity);
+      .reduce((__models: any, m) => {
+        var fields = getFieldsMetadata(m.entity);
+        const meta = MetadataStore.getEntity(m.entity);
 
         if (Array.isArray(fields)) {
-          var schema = fields.reduce((__schema: any, field: any) => {
-            __schema[field.name] = field.schema?.type || 'string';
-            return __schema;
+          var model = fields.reduce((__model: any, field: any) => {
+            __model[field.name] = field.model?.type || 'string';
+            return __model;
           }, {});
 
-          __models[model.name] = {
+          __models[m.name] = {
             description: meta?.description || 'Database Entity Definition',
-            schema: schema,
+            model: model,
           };
         }
 
@@ -49,12 +49,12 @@ async function generateMap(server?: any, models?: string | ClassType<unknown>[],
     map.models = modelsMap;
   }
 
-  var allHandlers = await system.getAllHandlers(handlers);
-  if (Array.isArray(allHandlers)) {
-    var handlersMap = allHandlers.reduce((__handlers: any, handler) => {
-      var handleMetadata = getHandlerMetadata(handler);
-      var allMethods = getMethodMetadata(handler);
-      var allPayloads = getPayloadMetadata(handler);
+  var allControllers = await system.getAllControllers(controllers);
+  if (Array.isArray(allControllers)) {
+    var controllersMap = allControllers.reduce((__controllers: any, controller) => {
+      var controllerMetadata = getControllerMetadata(controller);
+      var allMethods = getMethodMetadata(controller);
+      var allPayloads = getPayloadMetadata(controller);
 
       if (Array.isArray(allMethods)) {
         var methods = allMethods.reduce((__methods: any, method) => {
@@ -66,7 +66,7 @@ async function generateMap(server?: any, models?: string | ClassType<unknown>[],
             if (Array.isArray(fields)) {
               __methods[method.name] = {
                 payload: fields.reduce((__fields: any, field: any) => {
-                  __fields[field.name] = field.schema?.type || 'string';
+                  __fields[field.name] = field.model?.type || 'string';
                   return __fields;
                 }, {}),
               };
@@ -76,13 +76,13 @@ async function generateMap(server?: any, models?: string | ClassType<unknown>[],
           return __methods;
         }, {});
 
-        __handlers[handleMetadata.name] = methods;
+        __controllers[controllerMetadata.name] = methods;
       }
 
-      return __handlers;
+      return __controllers;
     }, {});
 
-    map.handlers = handlersMap;
+    map.controllers = controllersMap;
 
     const mapPath = path.resolve(process.cwd(), 'opposer-map.json');
     fs.writeFileSync(mapPath, JSON.stringify(map, null, 2));
@@ -106,18 +106,18 @@ const MIME_TYPES: Record<string, string> = {
 export default async function Playground(req: Request, res: Response, next: () => void) {
   const server = req.server;
   const models = Context.get<string | ClassType<unknown>[] | undefined>('models');
-  const handlers = Context.get<string | ClassType<unknown>[] | undefined>('handlers');
+  const controllers = Context.get<string | ClassType<unknown>[] | undefined>('controllers');
 
   // Public map endpoint for the Swagger UI
   if (req.url === '/opposer-map.json') {
-    const map = await generateMap(server, models, handlers);
+    const map = await generateMap(server, models, controllers);
     res.status(200).json(map);
     return;
   }
 
   // Base playground route - Serve static files from build/client
   if (req.url.startsWith('/playground')) {
-    await generateMap(server, models, handlers);
+    await generateMap(server, models, controllers);
 
     const _buildPath = path.resolve(_dirname, 'build', 'client');
     let relativePath = req.url.replace('/playground', '');
