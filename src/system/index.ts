@@ -76,32 +76,32 @@ export class OpposerSystem {
     return models;
   }
 
-  async getAllHandlers(customHandlers?: string | ClassType<unknown>[]): Promise<ClassType<unknown>[]> {
+  async getAllControllers(customControllers?: string | ClassType<unknown>[]): Promise<ClassType<unknown>[]> {
     const settings = this.getSettingsFile();
     const root = process.cwd();
     
     // Dynamic import to avoid circular dependency
-    const SchedulerHandler = (await import("../scheduler/handlers/index.js")).default;
-    const internalHandlers: ClassType<unknown>[] = [SchedulerHandler as unknown as ClassType<unknown>];
+    const SchedulerController = (await import("../scheduler/controllers/index.js")).default;
+    const internalControllers: ClassType<unknown>[] = [SchedulerController as unknown as ClassType<unknown>];
 
-    if (Array.isArray(customHandlers)) {
-      return [...internalHandlers, ...customHandlers];
+    if (Array.isArray(customControllers)) {
+      return [...internalControllers, ...customControllers];
     }
 
-    let handlersPath =
-      (customHandlers as string) || path.resolve(root, "src", "handlers");
+    let controllersPath =
+      (customControllers as string) || path.resolve(root, "src", "controllers");
 
-    if (!customHandlers && settings.handlers) {
-      handlersPath = path.resolve(root, settings.handlers, "handlers");
+    if (!customControllers && settings.controllers) {
+      controllersPath = path.resolve(root, settings.controllers, "controllers");
     }
 
-    if (!fs.existsSync(handlersPath)) {
-      return internalHandlers;
+    if (!fs.existsSync(controllersPath)) {
+      return internalControllers;
     }
 
-    const handlersFiles = this.getAllFiles(handlersPath);
-    const userHandlers = await Promise.all(
-      handlersFiles.map(async (filePath) => {
+    const controllersFiles = this.getAllFiles(controllersPath);
+    const userControllers = await Promise.all(
+      controllersFiles.map(async (filePath) => {
         const fileUrl = pathToFileURL(filePath).href;
 
         //@ts-ignore
@@ -109,7 +109,7 @@ export class OpposerSystem {
       })
     );
 
-    return [...internalHandlers, ...userHandlers.filter((h) => h)];
+    return [...internalControllers, ...userControllers.filter((h) => h)];
   }
 
   async getAllSchedules(customSchedules?: string | ClassType<unknown>[]): Promise<ClassType<unknown>[]> {

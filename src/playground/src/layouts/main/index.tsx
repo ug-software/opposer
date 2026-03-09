@@ -16,14 +16,14 @@ import { useAuth } from "../../context/auth";
 
 const ConsultationItems = [
     {
-        label: "Handlers",
+        label: "Controllers",
         Icon: <BubbleChartRoundedIcon/>,
         path: "/"
     },
     {
-        label: "Schemas",
+        label: "Models",
         Icon: <AutoStoriesRoundedIcon/>,
-        path: "/database-schema"
+        path: "/database-model"
     },
     {
         label: "Scheduler",

@@ -1,4 +1,4 @@
-import { Field } from './field.js';
+import { Field } from "./field.js";
 
 export interface ModelDefinition {
   [key: string]: Field;

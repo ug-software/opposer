@@ -1,4 +1,4 @@
-import { Navigate, redirect } from "react-router";
+import { Navigate } from "react-router";
 
 export function meta() {
   return [
@@ -7,5 +7,5 @@ export function meta() {
 }
 
 export default function Dashboard() {
-    return <Navigate to="/handlers" />
+    return <Navigate to="/" />
 }

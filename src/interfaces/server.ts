@@ -6,7 +6,7 @@ export interface CreateServerProps {
     origin: string | string[];
   };
   models?: string | ClassType<unknown>[];
-  handlers?: string | ClassType<unknown>[];
+  controllers?: string | ClassType<unknown>[];
   schedules?: string | ClassType<unknown>[];
 }
 

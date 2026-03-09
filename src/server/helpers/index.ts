@@ -16,13 +16,13 @@ export function Exception(error: HandleRequestResultError["error"]) {
 }
 
 /**
- * Validates data against a schema (Entity or DTO) decorated with @Field
+ * Validates data against a model (Entity or DTO) decorated with @Field
  */
-export function validateData(schema: any, values: Record<string, any>) {
+export function validateData(model: any, values: Record<string, any>) {
   const errors: Record<string, string[]> = {};
   
   // Get fields from MetadataStore (supports both legacy and new ORM decorators)
-  const fields = MetadataStore.getFields(schema);
+  const fields = MetadataStore.getFields(model);
 
   for (const field of fields) {
     const value = values[field.name || field.propertyKey];

@@ -7,7 +7,7 @@ import { HttpStatus } from '../../constants/index.js';
 import jwt from '../jwt/index.js';
 import Session from '../models/se.js';
 import ChangeRequestPassword from '../models/crp.js';
-import { PayloadRequest } from '../../../interfaces/handler.js';
+import { PayloadRequest } from '../../../interfaces/controller.js';
 import opposerServer from '../../core/index.js';
 import { OpposerDatabase } from '../../../orm/index.js';
 import { Context } from '../../index.js';

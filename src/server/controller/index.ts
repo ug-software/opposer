@@ -13,12 +13,12 @@ import {
 } from "../../interfaces/controller.js";
 import { HttpStatus } from "../constants/index.js";
 import system from "../../system/index.js";
-import * as helper from "../handlers/index.js";
-import Auth from "../security/handler/auth.js";
+import * as helper from "../controllers/index.js";
+import Auth from "../security/controller/auth.js";
 import { getPayloadMetadata } from "../decorators/payload.js";
 import { ClassType } from "../../interfaces/system.js";
 import { Exception, validateData } from "../helpers/index.js";
-import { PayloadRequest } from "../../interfaces/handler.js";
+import { PayloadRequest } from "../../interfaces/controller.js";
 import Context from "../context/index.js";
 
 const settings = system.getSettingsFile();
@@ -32,19 +32,19 @@ export default async (req: Request, res: Response) => {
   }
 
   var props = req.body as ControllerApiProps;
-  //handler method call
-  if (props.handler) {
-    var { method, payload, handler } = props;
+  //controller method call
+  if (props.controller) {
+    var { method, payload, controller } = props;
 
-    if (!handler) {
+    if (!controller) {
       return res.status(400).json({
         ...HttpStatus[400],
-        message: "Unable to identify handler name.",
+        message: "Unable to identify controller name.",
       });
     }
 
-    const customHandlers = Context.get<string | ClassType<unknown>[]>("handlers");
-    var handlers = await helper.loadHandlers(customHandlers);
+    const customControllers = Context.get<string | ClassType<unknown>[]>("controllers");
+    var controllers = await helper.loadControllers(customControllers);
     if (settings.auth) {
       var auth = {
         methods: [
@@ -54,7 +54,7 @@ export default async (req: Request, res: Response) => {
           { name: "logout" },
           { name: "me" },
         ],
-        handler: Auth,
+        controller: Auth,
         metadata: { name: "Auth" },
       };
 
@@ -67,7 +67,7 @@ export default async (req: Request, res: Response) => {
         );
       }
 
-      Object.defineProperty(handlers, "Auth", {
+      Object.defineProperty(controllers, "Auth", {
         enumerable: true,
         configurable: true,
         writable: true,
@@ -75,10 +75,10 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    if (!handlers[handler]) {
+    if (!controllers[controller]) {
       return res.status(400).json({
         ...HttpStatus[400],
-        message: "Impossible to find handler.",
+        message: "Impossible to find controller.",
       });
     }
 
@@ -89,7 +89,7 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    var __meta = handlers[handler];
+    var __meta = controllers[controller];
     if (!__meta.methods.find((x: any) => x.name === method)) {
       return res.status(400).json({
         ...HttpStatus[400],
@@ -97,7 +97,7 @@ export default async (req: Request, res: Response) => {
       });
     }
 
-    var allDto = getPayloadMetadata(__meta.handler);
+    var allDto = getPayloadMetadata(__meta.controller);
     //realize validation dto
     if (Array.isArray(allDto) && allDto.length > 0) {
       var payloadMetadata = allDto.find(
@@ -142,9 +142,9 @@ export default async (req: Request, res: Response) => {
         data,
       } as PayloadRequest<any>;
 
-      var resultHandler = await new __meta.handler()[method](payload);
+      var resultController = await new __meta.controller()[method](payload);
 
-      return res.status(200).json(resultHandler);
+      return res.status(200).json(resultController);
     } catch (err) {
       const error = err as Error;
       return res.status(400).json(
@@ -168,7 +168,7 @@ export default async (req: Request, res: Response) => {
     res.status(400).json({
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: "Unable to identify Schema.",
+      message: "Unable to identify Model.",
     });
     return;
   }
@@ -178,7 +178,7 @@ export default async (req: Request, res: Response) => {
     error: {
       name: HttpStatus[400].name,
       code: HttpStatus[400].code,
-      message: "Unable to identify Schema",
+      message: "Unable to identify Model",
     },
   };
 

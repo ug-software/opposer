@@ -5,8 +5,12 @@ export class FieldValidator {
   protected _cases: ValidationFunction[] = [];
   protected _default: any = undefined;
 
-  get type() { return this._type; }
-  get defaultValue() { return this._default; }
+  get type() {
+    return this._type;
+  }
+  get defaultValue() {
+    return this._default;
+  }
 
   default(value: any) {
     this._default = value;
@@ -19,31 +23,29 @@ export class FieldValidator {
   }
 
   validate(value: unknown, context: object): string[] {
-    return this._cases
-      .map((fn) => fn(value, context))
-      .filter((res): res is string => res !== null);
+    return this._cases.map((fn) => fn(value, context)).filter((res): res is string => res !== null);
   }
 }
 
 class NumberValidator extends FieldValidator {
   constructor(message: string) {
     super();
-    this._type = "number";
-    this._cases.push((value) => (value === null || value === undefined) ? null : (typeof value !== "number" ? message : null));
+    this._type = 'number';
+    this._cases.push((value) => (value === null || value === undefined ? null : typeof value !== 'number' ? message : null));
   }
 
   required(message: string) {
-    this._cases.push((value) => (value === undefined || value === null || String(value).trim() === "") ? message : null);
+    this._cases.push((value) => (value === undefined || value === null || String(value).trim() === '' ? message : null));
     return this;
   }
 
   min(min: number, message: string) {
-    this._cases.push((value) => (typeof value === "number" && value < min) ? message : null);
+    this._cases.push((value) => (typeof value === 'number' && value < min ? message : null));
     return this;
   }
 
   max(max: number, message: string) {
-    this._cases.push((value) => (typeof value === "number" && value > max) ? message : null);
+    this._cases.push((value) => (typeof value === 'number' && value > max ? message : null));
     return this;
   }
 }
@@ -51,17 +53,17 @@ class NumberValidator extends FieldValidator {
 class StringValidator extends FieldValidator {
   constructor(message: string) {
     super();
-    this._type = "string";
-    this._cases.push((value) => (value === null || value === undefined) ? null : (typeof value !== "string" ? message : null));
+    this._type = 'string';
+    this._cases.push((value) => (value === null || value === undefined ? null : typeof value !== 'string' ? message : null));
   }
 
   required(message: string) {
-    this._cases.push((value) => (!value || String(value).trim() === "") ? message : null);
+    this._cases.push((value) => (!value || String(value).trim() === '' ? message : null));
     return this;
   }
 
   match(regex: RegExp, message: string) {
-    this._cases.push((value) => (value === null || value === undefined) ? null : (!regex.test(String(value)) ? message : null));
+    this._cases.push((value) => (value === null || value === undefined ? null : !regex.test(String(value)) ? message : null));
     return this;
   }
 }
@@ -69,12 +71,12 @@ class StringValidator extends FieldValidator {
 class BooleanValidator extends FieldValidator {
   constructor(message: string) {
     super();
-    this._type = "boolean";
-    this._cases.push((value) => (value === null || value === undefined) ? null : (typeof value !== "boolean" ? message : null));
+    this._type = 'boolean';
+    this._cases.push((value) => (value === null || value === undefined ? null : typeof value !== 'boolean' ? message : null));
   }
 
   required(message: string) {
-    this._cases.push((value) => typeof value !== "boolean" ? message : null);
+    this._cases.push((value) => (typeof value !== 'boolean' ? message : null));
     return this;
   }
 }
@@ -82,7 +84,7 @@ class BooleanValidator extends FieldValidator {
 class DateValidator extends FieldValidator {
   constructor(message: string) {
     super();
-    this._type = "date";
+    this._type = 'date';
     this._cases.push((value) => {
       if (value === null || value === undefined) return null;
       const d = new Date(value as any);
@@ -91,19 +93,19 @@ class DateValidator extends FieldValidator {
   }
 
   required(message: string) {
-    return this.when((value) => !value ? message : null);
+    return this.when((value) => (!value ? message : null));
   }
 }
 
 class JsonValidator extends FieldValidator {
   constructor(private children?: Record<string, FieldValidator>) {
     super();
-    this._type = "jsonb";
+    this._type = 'jsonb';
   }
 
   validate(value: any, context: object): string[] {
-    if (typeof value !== "object" || value === null) {
-      return ["Must be a valid JSON object."];
+    if (typeof value !== 'object' || value === null) {
+      return ['Must be a valid JSON object.'];
     }
     if (!this.children) return [];
 
@@ -117,11 +119,21 @@ class JsonValidator extends FieldValidator {
 }
 
 export class ValidationBuilder {
-  string(message: string) { return new StringValidator(message); }
-  number(message: string) { return new NumberValidator(message); }
-  boolean(message: string) { return new BooleanValidator(message); }
-  date(message: string) { return new DateValidator(message); }
-  json(schema: Record<string, FieldValidator>) { return new JsonValidator(schema); }
+  string(message: string) {
+    return new StringValidator(message);
+  }
+  number(message: string) {
+    return new NumberValidator(message);
+  }
+  boolean(message: string) {
+    return new BooleanValidator(message);
+  }
+  date(message: string) {
+    return new DateValidator(message);
+  }
+  json(model: Record<string, FieldValidator>) {
+    return new JsonValidator(model);
+  }
 }
 
 export const f = () => new ValidationBuilder();

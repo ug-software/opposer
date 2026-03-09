@@ -24,7 +24,7 @@ async function runRepro() {
   const categoryRepo = db.getRepository(Category);
   const bookRepo = db.getRepository(Book);
 
-  // Sync schemas
+  // Sync models
   await driver.createTable(MetadataStore.getEntity(Author)!, MetadataStore.getFields(Author));
   await driver.createTable(MetadataStore.getEntity(Category)!, MetadataStore.getFields(Category));
   await driver.createTable(MetadataStore.getEntity(Book)!, MetadataStore.getFields(Book));

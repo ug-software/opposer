@@ -64,7 +64,7 @@ export default () => {
   const [loadingTasks, fetchTasks] = useRequest(() => {
     return playgroundApi.sendRequestOpposer(
       JSON.stringify({
-        handler: "scheduler",
+        controller: "scheduler",
         method: "listTasks",
         payload: {},
       })
@@ -74,7 +74,7 @@ export default () => {
   const [loadingHistory, fetchHistory] = useRequest(() => {
     return playgroundApi.sendRequestOpposer(
       JSON.stringify({
-        handler: "scheduler",
+        controller: "scheduler",
         method: "getHistory",
         payload: {},
       })
@@ -84,7 +84,7 @@ export default () => {
   const [runningTask, executeTask] = useRequest((name: string) => {
     return playgroundApi.sendRequestOpposer(
       JSON.stringify({
-        handler: "scheduler",
+        controller: "scheduler",
         method: "runTask",
         payload: { name },
       })

@@ -3,7 +3,7 @@ import playground from "./playground";
 async function login(lg: string, ps: string) {
   return playground.sendRequestOpposer(
     JSON.stringify({
-      handler: "Auth",
+      controller: "Auth",
       method: "login",
       payload: { lg, ps },
     })
@@ -13,7 +13,7 @@ async function login(lg: string, ps: string) {
 async function me() {
   return playground.sendRequestOpposer(
     JSON.stringify({
-      handler: "Auth",
+      controller: "Auth",
       method: "me",
     })
   );
@@ -22,7 +22,7 @@ async function me() {
 async function logout() {
   return playground.sendRequestOpposer(
     JSON.stringify({
-      handler: "Auth",
+      controller: "Auth",
       method: "logout",
     })
   );

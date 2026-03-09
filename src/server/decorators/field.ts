@@ -2,15 +2,15 @@ import { Field as OrmField, MetadataStore } from "../../orm/index.js";
 
 const FIELD_KEY = Symbol("field");
 
-export default function Field(schema: any) {
+export default function Field(model: any) {
   return (target: Object, name: string, context?: any) => {
     // 1. Legacy server metadata (for existing code that uses getFieldsMetadata)
     const fields = Reflect.getMetadata(FIELD_KEY, target.constructor) || [];
-    fields.push({ name, schema: typeof schema === 'function' ? schema() : schema });
+    fields.push({ name, model: typeof model === 'function' ? model() : model });
     Reflect.defineMetadata(FIELD_KEY, fields, target.constructor);
 
     // 2. ORM metadata (calling the ORM decorator logic)
-    const ormDecorator = OrmField(typeof schema === 'function' ? { validation: schema } : schema);
+    const ormDecorator = OrmField(typeof model === 'function' ? { validation: model } : model);
     return ormDecorator(target, name);
   };
 }
@@ -25,7 +25,7 @@ export function getFieldsMetadata(target: Object) {
   // 2. Get from ORM MetadataStore
   const ormFields = MetadataStore.getFields(constructor as Function).map(f => ({
     name: f.name,
-    schema: { type: f.type }
+    model: { type: f.type }
   }));
 
   // Combine and remove duplicates (by name)

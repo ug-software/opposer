@@ -9,7 +9,7 @@ import { Context } from '../index.js';
 export default async (props: HandleDeleteProps) => {
   const customModels = Context.get<string | ClassType<unknown>[]>('models');
   const allModels = await system.getAllModels(customModels);
-  const schema = allModels.find((x) => x.name === props.model);
+  const model = allModels.find((x) => x.name === props.model);
 
   const db = Context.get<OpposerDatabase>('db');
 
@@ -21,8 +21,8 @@ export default async (props: HandleDeleteProps) => {
     });
   }
 
-  if (schema) {
-    const repository = db.getRepository(schema.entity);
+  if (model) {
+    const repository = db.getRepository(model.entity);
 
     if (!props.filter || Object.keys(props.filter).length === 0) {
       return Exception({
@@ -49,6 +49,6 @@ export default async (props: HandleDeleteProps) => {
   return Exception({
     name: HttpStatus[400].name,
     code: HttpStatus[400].code,
-    message: 'Unable to identify Schema.',
+    message: 'Unable to identify Model.',
   });
 };
