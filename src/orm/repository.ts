@@ -1,4 +1,4 @@
-import { OpposerDatabase } from './opposer.js';
+import { OpposerDatabase, QueryResultRow } from './opposer.js';
 import { MetadataStore, EntityMetadata, FieldMetadata } from './metadata.js';
 import { QueryTranslator } from './query-builder.js';
 import { QueryBuilder as OpposerQueryBuilder, RelationBuilder } from '../interfaces/controller.js';
@@ -62,7 +62,7 @@ export class Repository<T> {
 
     const joinsSql = Array.from(allJoins).join(' ');
     const sql = `SELECT ${selectParts.join(', ')} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${joinsSql} ${where} ${pagination};`;
-    const results = await driver.query<T>(sql, params);
+    const results = await driver.query(sql, params);
 
     const primaryFields = this.fields.filter((f) => f.primary);
     const entitiesMap = new Map<string, T>();
@@ -88,13 +88,13 @@ export class Repository<T> {
     return results.length > 0 ? results[0] : null;
   }
 
-  private reconstruct(row: any): T {
+  private reconstruct(row: QueryResultRow): T {
     const entity = new (this.target as any)();
     this.merge(entity, row);
     return entity;
   }
 
-  private merge(entity: any, row: any) {
+  private merge(entity: any, row: QueryResultRow) {
     for (const [key, value] of Object.entries(row)) {
       if (key.includes('.')) {
         const parts = key.split('.');
@@ -175,6 +175,7 @@ export class Repository<T> {
       }
     }
   }
+
 
 
   private async executeHooks(type: 'before-insert' | 'before-update', entity: T) {
