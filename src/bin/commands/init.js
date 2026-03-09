@@ -32,7 +32,7 @@ export const handler = async () => {
   // 2. Create Files Content
   
   // src/index.ts
-  const indexTsContent = `import { Server } from "opposer";
+  const indexTsContent = `import { Server } from "@ug.software/opposer";
 
 const app = await Server({
     models: "./src/models",
@@ -45,7 +45,7 @@ app.initialize();
 `;
 
   // src/controllers/health.ts
-  const healthControllerContent = `import { Controller, Method, Success, IsPublicMethod } from "opposer/server";
+  const healthControllerContent = `import { Controller, Method, Success, IsPublicMethod } from "@ug.software/opposer/server";
 
 @Controller("health")
 export default class HealthController {
@@ -61,7 +61,7 @@ export default class HealthController {
 `;
 
   // src/models/example.ts
-  const exampleModelContent = `import { Entity, PrimaryColumn, Field, f, CreateDateColumn } from "opposer/orm";
+  const exampleModelContent = `import { Entity, PrimaryColumn, Field, f, CreateDateColumn } from "@ug.software/opposer/orm";
 
 @Entity("examples", "Example Entity")
 export default class Example {

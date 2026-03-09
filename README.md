@@ -11,13 +11,13 @@ Inicie um novo projeto Opposer em segundos utilizando o CLI.
 ### 1. Instalação
 No diretório do seu projeto, instale o pacote principal:
 ```bash
-npm install opposer
+npm install @ug.software/opposer
 ```
 
 ### 2. Inicialização (Scaffold)
 Rode o comando de inicialização para criar as pastas, arquivos de exemplo e configurações padrões:
 ```bash
-npx opposer init
+npx @ug.software/opposer init
 ```
 
 ### Estrutura de Domínios Gerada
@@ -45,7 +45,7 @@ O comando init configura automaticamente os scripts essenciais no seu package.js
 
 ## 1. Controller (Servidor HTTP)
 
-O motor de servidor do Opposer utiliza o conceito de Controllers. Cada Controller agrupa ações relacionadas a um domínio específico. Através de Decorators, você define rotas, validações e comportamentos de segurança de forma declarativa.
+O motor de servidor do Opposer utiliza le conceito de Controllers. Cada Controller agrupa ações relacionadas a um domínio específico. Através de Decorators, você define rotas, validações e comportamentos de segurança de forma declarativa.
 
 ### Configuração do Servidor
 | Variável de Ambiente | Descrição | Padrão |
@@ -54,7 +54,7 @@ O motor de servidor do Opposer utiliza o conceito de Controllers. Cada Controlle
 | OPPOSER_URL | Caminho base para as requisições POST. | /opposer |
 
 ### Componentes do Servidor
-Todos os componentes abaixo podem ser importados de "opposer/server".
+Todos os componentes abaixo podem ser importados de "@ug.software/opposer/server".
 
 | Componente | Tipo | Descrição |
 | :--- | :--- | :--- |
@@ -67,7 +67,7 @@ Todos os componentes abaixo podem ser importados de "opposer/server".
 
 ### Exemplo de Controller (src/controllers/user.ts)
 ```typescript
-import { Controller, Method, Payload, Success, IsPublicMethod, f, Field } from "opposer/server";
+import { Controller, Method, Payload, Success, IsPublicMethod, f, Field } from "@ug.software/opposer/server";
 
 // 1. Definição do DTO para Validação
 class CreateUserDto {
@@ -107,7 +107,7 @@ Os helpers Success e Exception seguem o conceito de Either Result. O servidor n�
 O módulo de Schedule permite automatizar processos com controle total de execução e persistência de histórico.
 
 ### Componentes de Agendamento
-Importe de "opposer/schedule".
+Importe de "@ug.software/opposer/schedule".
 
 | Componente | Parâmetro | Descrição |
 | :--- | :--- | :--- |
@@ -117,7 +117,7 @@ Importe de "opposer/schedule".
 
 ### Exemplo de Tarefa Agendada (src/schedules/cleanup.ts)
 ```typescript
-import { Schedule } from "opposer/schedule";
+import { Schedule } from "@ug.software/opposer/schedule";
 
 export default class MaintenanceTask {
     @Schedule({ 
@@ -136,7 +136,7 @@ export default class MaintenanceTask {
 
 ## 3. ORM (Gestão de Dados)
 
-O ORM do Opposer gerencia a persistência de dados com uma abordagem Code-First.
+O ORM do @ug.software/opposer gerencia a persistência de dados com uma abordagem Code-First.
 
 ### Configuração do Banco de Dados
 | Variável de Ambiente | Descrição | Necessário |
@@ -149,7 +149,7 @@ O ORM do Opposer gerencia a persistência de dados com uma abordagem Code-First.
 | OPPOSER_DATABASE_LOGGING | Habilita logs SQL (true/false). | Não |
 
 ### Componentes do ORM
-Importe de "opposer/orm".
+Importe de "@ug.software/opposer/orm".
 
 | Componente | Tipo | Descrição |
 | :--- | :--- | :--- |
@@ -160,7 +160,7 @@ Importe de "opposer/orm".
 
 ### Exemplo de Model (src/models/product.ts)
 ```typescript
-import { Entity, PrimaryColumn, Field, f, Relation } from "opposer/orm";
+import { Entity, PrimaryColumn, Field, f, Relation } from "@ug.software/opposer/orm";
 import Category from "./category";
 
 @Entity("products", "Domínio de Produtos")
@@ -369,7 +369,7 @@ Gerencie estados globais ou de sessão de forma transparente.
 | OPPOSER_CACHE_SNAPSHOT_UNIT | Unidade (minutes, seconds). | minutes |
 
 ### Componentes de Persistência
-Importe de "opposer/persistent".
+Importe de "@ug.software/opposer/persistent".
 
 | Componente | Escopo | Descrição |
 | :--- | :--- | :--- |
@@ -378,7 +378,7 @@ Importe de "opposer/persistent".
 
 ### Exemplo de Persistência
 ```typescript
-import { Global, Session } from "opposer/persistent";
+import { Global, Session } from "@ug.software/opposer/persistent";
 
 export default class ConfigService {
     @Global() 
@@ -446,8 +446,8 @@ Chaves Injetadas: db (Database), models (Entidades), controllers (Ações).
 
 1. Recuperando uma instância (Get):
 ```typescript
-import { Context } from "opposer/server";
-import { OpposerDatabase } from "opposer/orm";
+import { Context } from "@ug.software/opposer/server";
+import { OpposerDatabase } from "@ug.software/opposer/orm";
 
 // Recuperando o banco de dados dentro de um Helper ou Service
 const db = Context.get<OpposerDatabase>("db");
@@ -456,7 +456,7 @@ const db = Context.get<OpposerDatabase>("db");
 2. Inserindo uma instância personalizada (Set):
 Você pode usar o contexto para compartilhar seus próprios serviços ou instâncias globais.
 ```typescript
-import { Context } from "opposer/server";
+import { Context } from "@ug.software/opposer/server";
 
 // Inserindo um serviço customizado durante a inicialização
 Context.set("mailService", new MailService());
@@ -473,7 +473,7 @@ A função Server orquestra o carregamento de todos os domínios.
 
 ### Exemplo de Inicialização (src/index.ts)
 ```typescript
-import { Server } from "opposer";
+import { Server } from "@ug.software/opposer";
 
 const app = await Server({
     models: "./src/models",
@@ -498,7 +498,7 @@ Acesso padrão: http://localhost:3838/playground
 ---
 
 ### CLI Helpers
-- npx opposer init: Inicializa a estrutura base de um novo projeto.
-- npx opposer build: Gera um bundle minificado em um único arquivo (dist/index.js).
-- npx opposer generate:jwt-key: Gera um segredo seguro para JWT.
-- npx opposer generate:api-key: Gera uma chave de acesso externa.
+- npx @ug.software/opposer init: Inicializa a estrutura base de um novo projeto.
+- npx @ug.software/opposer build: Gera um bundle minificado em um único arquivo (dist/index.js).
+- npx @ug.software/opposer generate:jwt-key: Gera um segredo seguro para JWT.
+- npx @ug.software/opposer generate:api-key: Gera uma chave de acesso externa.

@@ -137,6 +137,18 @@ const changeBranch = (cb) => {
   cb();
 };
 
+const cleanPackageJson = (cb) => {
+  console.log("-> Cleaning package.json for release...");
+  const packagePath = path.resolve(process.cwd(), "package.json");
+  const pkg = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+
+  delete pkg.scripts;
+  delete pkg.devDependencies;
+
+  fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2));
+  cb();
+};
+
 const removeFilesNotNecessaries = () => {
   console.log("-> Removing development files from release branch...");
   return deleteAsync([
@@ -193,6 +205,7 @@ const changeBranchForDevelopAndStashRelease = (cb) => {
 export const release = gulp.series(
   runTests,
   build,
+  cleanPackageJson,
   changeBranch,
   removeFilesNotNecessaries,
   createTag,
