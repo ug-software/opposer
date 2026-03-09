@@ -1,7 +1,7 @@
 import * as crypto from "../../helpers/crypto.js";
-import * as system from "../../../esm/system/index.js";
+import system from "../../../esm/system/index.js";
 
-export const command = "generate jwt-key";
+export const command = "generate:jwt-key";
 export const desc = "Generate a random JWT key.";
 
 export const builder = {
@@ -30,27 +30,17 @@ export const handler = ({ length, phrase, salt }) => {
     throw new Error("Pass only one argument, either length or phrase.");
   }
 
-  if (!length) {
+  if (!length && !phrase) {
     length = 32;
   }
 
   if (length) {
     const hash = crypto.hash(length);
-    const settings = system.getSettingsFile();
-
-    settings.jwt = hash;
-    system.saveSettingsFile(settings);
-
-    console.log(`JWT Key (${length} chars):`);
+    console.log(`--> Generated JWT Key (${length} chars): ${hash}`);
   }
 
   if (phrase) {
     const hash = crypto.deterministic(phrase, salt);
-    const settings = system.getSettingsFile();
-
-    settings.jwt = hash;
-    system.saveSettingsFile(settings);
-
-    console.log(`JWT deterministic phase generated (${phrase}):`);
+    console.log(`--> Generated JWT Key from phrase: ${hash}`);
   }
 };
