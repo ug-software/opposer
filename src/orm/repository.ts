@@ -1,7 +1,7 @@
 import { OpposerDatabase } from './opposer.js';
 import { MetadataStore, EntityMetadata, FieldMetadata } from './metadata.js';
 import { QueryTranslator } from './query-builder.js';
-import { QueryBuilder as OpposerQueryBuilder } from '../interfaces/controller.js';
+import { QueryBuilder as OpposerQueryBuilder, RelationBuilder } from '../interfaces/controller.js';
 import crypto from 'crypto';
 
 export class Repository<T> {
@@ -28,27 +28,83 @@ export class Repository<T> {
     return this.fields;
   }
 
-  async find(options: { where?: OpposerQueryBuilder; select?: string[]; pagination?: { page: number; take: number } }): Promise<T[]> {
+  async find(options: {
+    where?: OpposerQueryBuilder;
+    select?: string[];
+    pagination?: { page: number; take: number };
+    relation?: (string | RelationBuilder)[];
+  }): Promise<T[]> {
     const driver = this.connection.getDriver();
-    const select = this.translator.translateSelect(options.select || []);
-    const { sql: where, params } = this.translator.translateFilter(options.where || {});
+    const selectParts: string[] = [];
+
+    // Main entity select
+    selectParts.push(this.translator.translateSelect(options.select || []));
+
+    // Relations
+    const relationResult = this.translator.translateRelations(options.relation || []);
+    if (relationResult.select.length > 0) {
+      selectParts.push(...relationResult.select);
+    }
+
+    const { sql: where, params, joins: whereJoins } = this.translator.translateFilter(options.where || {});
     const pagination = this.translator.translatePagination(options.pagination);
 
-    const sql = `SELECT ${select} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${where} ${pagination};`;
+    const allJoins = new Set(relationResult.joins);
+    
+    // Add missing joins from where clause
+    if (whereJoins.size > 0) {
+      const neededJoins = Array.from(whereJoins);
+      // We need to translate these joins if they are not already in allJoins
+      // For simplicity, let's assume translateRelations can be called for individual relations
+      const missingJoinsResult = this.translator.translateRelations(neededJoins.filter(rj => !options.relation?.some(r => (typeof r === 'string' ? r === rj : r.model === rj))));
+      missingJoinsResult.joins.forEach(j => allJoins.add(j));
+    }
+
+    const joinsSql = Array.from(allJoins).join(' ');
+    const sql = `SELECT ${selectParts.join(', ')} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${joinsSql} ${where} ${pagination};`;
     const results = await driver.query<T>(sql, params);
 
     return results.map((row) => {
-      return Object.assign(new (this.target as any)(), row);
+      return this.reconstruct(row);
     });
   }
 
-  async findOne(options: { where?: OpposerQueryBuilder; select?: string[] }): Promise<T | null> {
+  async findOne(options: { where?: OpposerQueryBuilder; select?: string[]; relation?: (string | RelationBuilder)[] }): Promise<T | null> {
     const results = await this.find({
       ...options,
       pagination: { page: 0, take: 1 },
     });
     return results.length > 0 ? results[0] : null;
   }
+
+  private reconstruct(row: any): T {
+    const entity = new (this.target as any)();
+    for (const [key, value] of Object.entries(row)) {
+      if (key.includes('.')) {
+        const parts = key.split('.');
+        let current = entity;
+        for (let i = 0; i < parts.length - 1; i++) {
+          const part = parts[i];
+          // Se o campo já existe e é uma string (provavelmente o ID da FK),
+          // precisamos transformá-lo em um objeto para aceitar as propriedades da relação.
+          if (typeof current[part] === 'string' || current[part] === undefined || current[part] === null) {
+            const id = typeof current[part] === 'string' ? current[part] : undefined;
+            current[part] = id ? { id } : {};
+          }
+          current = current[part];
+        }
+        current[parts[parts.length - 1]] = value;
+      } else {
+        // Se o valor for nulo e já existir um objeto (vindo de um campo aninhado), não sobrescrevemos.
+        if (value === null && typeof entity[key] === 'object' && entity[key] !== null) {
+          continue;
+        }
+        entity[key] = value;
+      }
+    }
+    return entity;
+  }
+
 
   private async executeHooks(type: 'before-insert' | 'before-update', entity: T) {
     const hooks = MetadataStore.getHooks(this.target).filter((h) => {

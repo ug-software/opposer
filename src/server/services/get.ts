@@ -73,11 +73,13 @@ export default async (props: HandleGetProps): Promise<HandleRequestResult<unknow
       case 'filter': {
         const filter = props.query.filter || {};
         const select = props.query.select || [];
+        const relation = props.query.relation || [];
         const pagination = props.pagination;
 
         const items = await repository.find({
           where: filter,
           select,
+          relation,
           pagination,
         });
 
@@ -98,10 +100,12 @@ export default async (props: HandleGetProps): Promise<HandleRequestResult<unknow
       case 'find': {
         const find = props.query.find || {};
         const select = props.query.select || [];
+        const relation = props.query.relation || [];
 
         const result = await repository.findOne({
           where: find,
           select,
+          relation,
         });
 
         return Success(result);

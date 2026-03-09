@@ -1,96 +1,98 @@
 {
-    "name": "opposer",
-    "version": "1.0.0",
-    "type": "module",
-    "main": "./lib/cjs/index.js",
-    "module": "./lib/esm/index.js",
-    "types": "./lib/esm/index.d.ts",
-    "bin": {
-        "opposer": "./lib/bin/opposer.js"
+  "name": "opposer",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./lib/cjs/index.js",
+  "module": "./lib/esm/index.js",
+  "types": "./lib/esm/index.d.ts",
+  "bin": {
+    "opposer": "./lib/bin/opposer.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./lib/esm/index.js",
+      "require": "./lib/cjs/index.js"
     },
-    "exports": {
-        ".": {
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
-        },
-        "./orm": {
-            "import": "./lib/esm/orm/index.js",
-            "require": "./lib/cjs/orm/index.js"
-        },
-        "./persistent": {
-            "import": "./lib/esm/persistent/index.js",
-            "require": "./lib/cjs/persistent/index.js"
-        },
-        "./playground": {
-            "import": "./lib/esm/playground/index.js",
-            "require": "./lib/cjs/playground/index.js"
-        },
-        "./schedule": {
-            "import": "./lib/esm/scheduler/index.js",
-            "require": "./lib/cjs/scheduler/index.js"
-        },
-        "./scheduler": {
-            "import": "./lib/esm/scheduler/index.js",
-            "require": "./lib/cjs/scheduler/index.js"
-        },
-        "./server": {
-            "import": "./lib/esm/server/index.js",
-            "require": "./lib/cjs/server/index.js"
-        },
-        "./system": {
-            "import": "./lib/esm/system/index.js",
-            "require": "./lib/cjs/system/index.js"
-        }
+    "./orm": {
+      "import": "./lib/esm/orm/index.js",
+      "require": "./lib/cjs/orm/index.js"
     },
-    "scripts": {
-        "build": "gulp build",
-        "release": "RELEASE=1.0.4 DESC='Latest version' npx gulp release"
+    "./persistent": {
+      "import": "./lib/esm/persistent/index.js",
+      "require": "./lib/cjs/persistent/index.js"
     },
-    "files": [
-        "lib"
-    ],
-    "dependencies": {
-        "bcrypt": "^6.0.0",
-        "jsonwebtoken": "^9.0.2",
-        "node-cron": "^4.2.1",
-        "reflect-metadata": "^0.2.2",
-        "yargs": "^17.7.2"
+    "./playground": {
+      "import": "./lib/esm/playground/index.js",
+      "require": "./lib/cjs/playground/index.js"
     },
-    "peerDependencies": {
-        "mysql2": "^3.12.0",
-        "pg": "^8.13.3",
-        "sqlite3": "^5.1.7"
+    "./schedule": {
+      "import": "./lib/esm/scheduler/index.js",
+      "require": "./lib/cjs/scheduler/index.js"
     },
-    "peerDependenciesMeta": {
-        "mysql2": {
-            "optional": true
-        },
-        "pg": {
-            "optional": true
-        },
-        "sqlite3": {
-            "optional": true
-        }
+    "./scheduler": {
+      "import": "./lib/esm/scheduler/index.js",
+      "require": "./lib/cjs/scheduler/index.js"
     },
-    "devDependencies": {
-        "@types/bcrypt": "^6.0.0",
-        "@types/cookie-parser": "^1.4.10",
-        "@types/cors": "^2.8.17",
-        "@types/express": "^5.0.5",
-        "@types/gulp": "^4.0.17",
-        "@types/node": "^22.13.14",
-        "@types/node-cron": "^3.0.11",
-        "@types/pg": "^8.18.0",
-        "@types/yargs": "^17.0.33",
-        "del": "^8.0.1",
-        "gulp": "^5.0.1",
-        "gulp-typescript": "^6.0.0-alpha.1",
-        "merge-stream": "^2.0.0",
-        "mysql2": "^3.12.0",
-        "pg": "^8.14.1",
-        "sqlite3": "^5.1.7",
-        "ts-node": "^10.9.2",
-        "tsx": "^4.20.6",
-        "typescript": "^5.9.3"
+    "./server": {
+      "import": "./lib/esm/server/index.js",
+      "require": "./lib/cjs/server/index.js"
+    },
+    "./system": {
+      "import": "./lib/esm/system/index.js",
+      "require": "./lib/cjs/system/index.js"
     }
+  },
+  "scripts": {
+    "build": "gulp build",
+    "release": "RELEASE=1.0.4 DESC='Latest version' npx gulp release",
+    "full-app": "npx tsx ./src/examples/full-app/index.ts",
+    "build-playground": "cd src/playground/ && npx react-router build && cd ../../"
+  },
+  "files": [
+    "lib"
+  ],
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "node-cron": "^4.2.1",
+    "reflect-metadata": "^0.2.2",
+    "yargs": "^17.7.2"
+  },
+  "peerDependencies": {
+    "mysql2": "^3.12.0",
+    "pg": "^8.13.3",
+    "sqlite3": "^5.1.7"
+  },
+  "peerDependenciesMeta": {
+    "mysql2": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "sqlite3": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.5",
+    "@types/gulp": "^4.0.17",
+    "@types/node": "^22.13.14",
+    "@types/node-cron": "^3.0.11",
+    "@types/pg": "^8.18.0",
+    "@types/yargs": "^17.0.33",
+    "del": "^8.0.1",
+    "gulp": "^5.0.1",
+    "gulp-typescript": "^6.0.0-alpha.1",
+    "merge-stream": "^2.0.0",
+    "mysql2": "^3.12.0",
+    "pg": "^8.14.1",
+    "sqlite3": "^5.1.7",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
 }
