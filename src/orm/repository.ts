@@ -64,9 +64,20 @@ export class Repository<T> {
     const sql = `SELECT ${selectParts.join(', ')} FROM ${driver.quoteIdentifier(this.metadata.tableName)} ${joinsSql} ${where} ${pagination};`;
     const results = await driver.query<T>(sql, params);
 
-    return results.map((row) => {
-      return this.reconstruct(row);
-    });
+    const primaryFields = this.fields.filter((f) => f.primary);
+    const entitiesMap = new Map<string, T>();
+
+    for (const row of results) {
+      const pk = primaryFields.map((f) => row[f.name]).join(':');
+      if (!entitiesMap.has(pk)) {
+        entitiesMap.set(pk, this.reconstruct(row));
+      } else {
+        const existing = entitiesMap.get(pk)!;
+        this.merge(existing, row);
+      }
+    }
+
+    return Array.from(entitiesMap.values());
   }
 
   async findOne(options: { where?: OpposerQueryBuilder; select?: string[]; relation?: (string | RelationBuilder)[] }): Promise<T | null> {
@@ -79,30 +90,90 @@ export class Repository<T> {
 
   private reconstruct(row: any): T {
     const entity = new (this.target as any)();
+    this.merge(entity, row);
+    return entity;
+  }
+
+  private merge(entity: any, row: any) {
     for (const [key, value] of Object.entries(row)) {
       if (key.includes('.')) {
         const parts = key.split('.');
         let current = entity;
+        let currentTarget = this.target;
+
         for (let i = 0; i < parts.length - 1; i++) {
           const part = parts[i];
-          // Se o campo já existe e é uma string (provavelmente o ID da FK),
-          // precisamos transformá-lo em um objeto para aceitar as propriedades da relação.
-          if (typeof current[part] === 'string' || current[part] === undefined || current[part] === null) {
-            const id = typeof current[part] === 'string' ? current[part] : undefined;
-            current[part] = id ? { id } : {};
+          const relationField = MetadataStore.getFields(currentTarget).find((f) => f.name === part);
+
+          if (relationField && relationField.relation) {
+            const isArray = relationField.relation.type === 'one-to-many' || relationField.relation.type === 'many-to-many';
+            const nextTarget = relationField.relation.target();
+
+            if (isArray) {
+              if (!Array.isArray(current[part])) {
+                current[part] = [];
+              }
+              
+              // We need to find if the item already exists in the array
+              // To do that we need the primary key of the target entity
+              const targetFields = MetadataStore.getFields(nextTarget);
+              const targetPrimaryFields = targetFields.filter(f => f.primary);
+              
+              // Find child row values for child PK
+              const childPkValues: any = {};
+              let hasAnyValue = false;
+              targetPrimaryFields.forEach(pf => {
+                const fullKey = [...parts.slice(0, i + 1), pf.name].join('.');
+                if (row[fullKey] !== undefined && row[fullKey] !== null) {
+                   childPkValues[pf.name] = row[fullKey];
+                   hasAnyValue = true;
+                }
+              });
+
+              if (!hasAnyValue) {
+                // If all PK fields of the relation are null, it means there's no related record (LEFT JOIN result)
+                break; 
+              }
+
+              let existingChild = current[part].find((item: any) => {
+                return targetPrimaryFields.every(pf => item[pf.name] === childPkValues[pf.name]);
+              });
+
+              if (!existingChild) {
+                existingChild = new (nextTarget as any)();
+                current[part].push(existingChild);
+              }
+              
+              current = existingChild;
+              currentTarget = nextTarget;
+            } else {
+              if (typeof current[part] === 'string' || current[part] === undefined || current[part] === null) {
+                const id = typeof current[part] === 'string' ? current[part] : undefined;
+                current[part] = id ? { id } : new (nextTarget as any)();
+              }
+              current = current[part];
+              currentTarget = nextTarget;
+            }
+          } else {
+            // Fallback for non-metadata relations (should not happen with decorators)
+            if (current[part] === undefined || current[part] === null) {
+              current[part] = {};
+            }
+            current = current[part];
           }
-          current = current[part];
         }
-        current[parts[parts.length - 1]] = value;
+
+        const lastPart = parts[parts.length - 1];
+        if (value !== null || current[lastPart] === undefined) {
+           current[lastPart] = value;
+        }
       } else {
-        // Se o valor for nulo e já existir um objeto (vindo de um campo aninhado), não sobrescrevemos.
         if (value === null && typeof entity[key] === 'object' && entity[key] !== null) {
           continue;
         }
         entity[key] = value;
       }
     }
-    return entity;
   }
 
 

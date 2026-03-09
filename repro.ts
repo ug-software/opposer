@@ -7,27 +7,19 @@ import { MetadataStore } from './src/orm/metadata.js';
 import crypto from 'crypto';
 
 async function runRepro() {
-  const db = new OpposerDatabase({
+  const driver = new SQLiteDriver({
     type: 'sqlite',
     database: ':memory:',
-    logging: true,
+    logging: false,
   });
 
-  await db.connect();
+  const db = new OpposerDatabase(driver, [Author, Book, Category]);
 
-  const driver = db.getDriver();
-  
-  // Register entities manually because we are not using the full server initialization
-  // Actually they should be registered when imported because of decorators
+  await db.connect();
   
   const authorRepo = db.getRepository(Author);
   const categoryRepo = db.getRepository(Category);
   const bookRepo = db.getRepository(Book);
-
-  // Sync models
-  await driver.createTable(MetadataStore.getEntity(Author)!, MetadataStore.getFields(Author));
-  await driver.createTable(MetadataStore.getEntity(Category)!, MetadataStore.getFields(Category));
-  await driver.createTable(MetadataStore.getEntity(Book)!, MetadataStore.getFields(Book));
 
   console.log('📝 Populating data...');
   const authorId = crypto.randomUUID();
@@ -72,7 +64,7 @@ async function runRepro() {
     console.log('Test 3 Failed:', e.message);
   }
 
-  await db.disconnect();
+  await driver.disconnect();
 }
 
 runRepro();
