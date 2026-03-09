@@ -4,10 +4,14 @@ import { hideBin } from "yargs/helpers";
 
 import * as generateJwtKey from "./commands/generate/jwt-key.js";
 import * as generateApiKey from "./commands/generate/api-key.js";
+import * as init from "./commands/init.js";
+import * as build from "./commands/build.js";
 
 yargs(hideBin(process.argv))
   .scriptName("opposer")
   .usage("$0 <cmd> [args]")
+  .command(init)
+  .command(build)
   .command(generateJwtKey)
   .command(generateApiKey)
   .demandCommand(
