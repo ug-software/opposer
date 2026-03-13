@@ -102,6 +102,18 @@ const changeBranch = (cb) => {
   cb();
 };
 
+const checkoutExistingBranch = (cb) => {
+  var release_version = process.env.RELEASE;
+
+  if (!release_version) {
+    throw new Error("Necessario informar a release para atualizar. Ex: RELEASE=1.0.4 DESC='...' npm run updateRelease");
+  }
+
+  console.log(`-> Checking out existing release branch: release/${release_version}`);
+  chilp.execSync(`git checkout release/${release_version}`);
+  cb();
+};
+
 const cleanPackageJson = (cb) => {
   console.log('-> Cleaning package.json for release...');
   const packagePath = path.resolve(process.cwd(), 'package.json');
@@ -126,6 +138,13 @@ const createTag = (cb) => {
   cb();
 };
 
+const forceUpdateTag = (cb) => {
+  var release_version = process.env.RELEASE;
+  console.log(`-> Force updating tag locally: v${release_version}`);
+  chilp.execSync(`git tag -f v${release_version}`);
+  cb();
+};
+
 const commitReleaseAndPublishe = (cb) => {
   var release = process.env.RELEASE;
   var description = process.env.DESC || `Release v${release}`;
@@ -145,6 +164,25 @@ const commitReleaseAndPublishe = (cb) => {
   cb();
 };
 
+const forcePushReleaseAndTag = (cb) => {
+  var release = process.env.RELEASE;
+  var description = process.env.DESC || `Update Release v${release}`;
+
+  console.log(`-> Updating package version to ${release}...`);
+  chilp.execSync(`npm version ${release} --no-git-tag-version`, {
+    stdio: 'inherit',
+  });
+
+  console.log('-> Committing updates to release branch...');
+  chilp.execSync('git add --all', { stdio: 'inherit' });
+  chilp.execSync(`git commit -m "${description}"`, { stdio: 'inherit' });
+
+  console.log('-> Force pushing release branch and tag...');
+  chilp.execSync(`git push origin release/${release} --force`, { stdio: 'inherit' });
+  chilp.execSync(`git push origin v${release} --force`, { stdio: 'inherit' });
+  cb();
+};
+
 const changeBranchForDevelopAndStashRelease = (cb) => {
   console.log('-> Returning to develop branch...');
   try {
@@ -156,5 +194,7 @@ const changeBranchForDevelopAndStashRelease = (cb) => {
 };
 
 export const release = gulp.series(runTests, build, cleanPackageJson, changeBranch, removeFilesNotNecessaries, createTag, commitReleaseAndPublishe, changeBranchForDevelopAndStashRelease);
+
+export const updateRelease = gulp.series(runTests, build, cleanPackageJson, checkoutExistingBranch, removeFilesNotNecessaries, forceUpdateTag, forcePushReleaseAndTag, changeBranchForDevelopAndStashRelease);
 
 /*------ release --------*/
