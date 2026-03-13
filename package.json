@@ -14,7 +14,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://www.opposer.uiaranguilherme.com"
+    "url": "https://github.com/ug-software/opposer"
   },
   "keywords": [
     "orm",
@@ -31,7 +31,7 @@
   "bugs": {
     "url": "https://github.com/ug-software/opposer/issues"
   },
-  "homepage": "https://github.com/ug-software/opposer#readme",
+  "homepage": "https://opposer.uiaranguilherme.com",
   "exports": {
     ".": {
       "import": "./lib/esm/index.js",
