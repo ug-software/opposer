@@ -1,14 +1,14 @@
-import { OpposerSystemConfigOptions, ClassType, ModelDefinition } from "../interfaces/system.js";
-import { pathToFileURL } from "url";
-import path from "path";
-import fs from "fs";
-import ChangeRequestPassword from "../server/security/models/crp.js";
-import Key from "../server/security/models/ke.js";
-import Role from "../server/security/models/rl.js";
-import Session from "../server/security/models/se.js";
-import User from "../server/security/models/usr.js";
-import ScheduleHistory from "../scheduler/models/history.js";
-import { MetadataStore } from "../orm/metadata.js";
+import { OpposerSystemConfigOptions, ClassType, ModelDefinition } from '../interfaces/system.js';
+import { pathToFileURL } from 'url';
+import path from 'path';
+import fs from 'fs';
+import ChangeRequestPassword from '../server/security/models/crp.js';
+import Key from '../server/security/models/ke.js';
+import Role from '../server/security/models/rl.js';
+import Session from '../server/security/models/se.js';
+import User from '../server/security/models/usr.js';
+import ScheduleHistory from '../scheduler/models/history.js';
+import { MetadataStore } from '../orm/metadata.js';
 
 export class OpposerSystem {
   getFileName(filePath: string, withExtension: boolean = true): string {
@@ -23,7 +23,7 @@ export class OpposerSystem {
     const settings = this.getSettingsFile();
     const root = process.cwd();
 
-    if (typeof customModels === "string") {
+    if (typeof customModels === 'string') {
       const modelsPath = path.resolve(root, customModels);
       if (fs.existsSync(modelsPath)) {
         const modelsFiles = this.getAllFiles(modelsPath);
@@ -31,7 +31,7 @@ export class OpposerSystem {
           modelsFiles.map(async (filePath) => {
             const fileUrl = pathToFileURL(filePath).href;
             return await import(fileUrl);
-          })
+          }),
         );
       }
     } else if (Array.isArray(customModels)) {
@@ -58,41 +58,38 @@ export class OpposerSystem {
     return models;
   }
 
-  private getAuthModels(
-    settings: OpposerSystemConfigOptions
-  ): ModelDefinition[] {
+  private getAuthModels(settings: OpposerSystemConfigOptions): ModelDefinition[] {
     const models: ModelDefinition[] = [];
     if (settings.auth) {
       models.push(
-        { name: "crp", entity: ChangeRequestPassword as unknown as ClassType<unknown> },
-        { name: "ke", entity: Key as unknown as ClassType<unknown> },
-        { name: "rl", entity: Role as unknown as ClassType<unknown> },
-        { name: "se", entity: Session as unknown as ClassType<unknown> },
-        { name: "usr", entity: User as unknown as ClassType<unknown> }
+        { name: 'crp', entity: ChangeRequestPassword as unknown as ClassType<unknown> },
+        { name: 'ke', entity: Key as unknown as ClassType<unknown> },
+        { name: 'rl', entity: Role as unknown as ClassType<unknown> },
+        { name: 'se', entity: Session as unknown as ClassType<unknown> },
+        { name: 'usr', entity: User as unknown as ClassType<unknown> },
       );
     }
     // Always include ScheduleHistory as it's a core feature
-    models.push({ name: "sh", entity: ScheduleHistory as unknown as ClassType<unknown> });
+    models.push({ name: 'sh', entity: ScheduleHistory as unknown as ClassType<unknown> });
     return models;
   }
 
   async getAllControllers(customControllers?: string | ClassType<unknown>[]): Promise<ClassType<unknown>[]> {
     const settings = this.getSettingsFile();
     const root = process.cwd();
-    
+
     // Dynamic import to avoid circular dependency
-    const SchedulerController = (await import("../scheduler/controllers/index.js")).default;
+    const SchedulerController = (await import('../scheduler/controllers/index.js')).default;
     const internalControllers: ClassType<unknown>[] = [SchedulerController as unknown as ClassType<unknown>];
 
     if (Array.isArray(customControllers)) {
       return [...internalControllers, ...customControllers];
     }
 
-    let controllersPath =
-      (customControllers as string) || path.resolve(root, "src", "controllers");
+    let controllersPath = (customControllers as string) || path.resolve(root, 'src', 'controllers');
 
     if (!customControllers && settings.controllers) {
-      controllersPath = path.resolve(root, settings.controllers, "controllers");
+      controllersPath = path.resolve(root, settings.controllers, 'controllers');
     }
 
     if (!fs.existsSync(controllersPath)) {
@@ -106,7 +103,7 @@ export class OpposerSystem {
 
         //@ts-ignore
         return (await import(fileUrl)).default;
-      })
+      }),
     );
 
     return [...internalControllers, ...userControllers.filter((h) => h)];
@@ -120,11 +117,10 @@ export class OpposerSystem {
       return customSchedules;
     }
 
-    let schedulesPath =
-      (customSchedules as string) || path.resolve(root, "src", "schedules");
+    let schedulesPath = (customSchedules as string) || path.resolve(root, 'src', 'schedules');
 
     if (!customSchedules && settings.schedules) {
-      schedulesPath = path.resolve(root, settings.schedules, "schedules");
+      schedulesPath = path.resolve(root, settings.schedules, 'schedules');
     }
 
     if (!fs.existsSync(schedulesPath)) {
@@ -138,7 +134,7 @@ export class OpposerSystem {
 
         //@ts-ignore
         return (await import(fileUrl)).default;
-      })
+      }),
     );
 
     return userSchedules.filter((s) => s);
@@ -149,9 +145,9 @@ export class OpposerSystem {
 
     try {
       const root = process.cwd();
-      const configPath = path.resolve(root, "opposer-settings.json");
+      const configPath = path.resolve(root, 'opposer-settings.json');
       if (fs.existsSync(configPath)) {
-        const fileContent = fs.readFileSync(configPath, "utf8");
+        const fileContent = fs.readFileSync(configPath, 'utf8');
         config = JSON.parse(fileContent);
       }
     } catch (error) {
@@ -159,65 +155,44 @@ export class OpposerSystem {
     }
 
     // Override with Environment Variables
-    config.port = process.env.OPPOSER_PORT
-      ? parseInt(process.env.OPPOSER_PORT)
-      : config.port || 3000;
+    config.port = process.env.OPPOSER_PORT ? parseInt(process.env.OPPOSER_PORT) : config.port || 3000;
     config.url = process.env.OPPOSER_URL || config.url;
+    config.auth = process.env.OPPOSER_AUTH ? JSON.parse(process.env.OPPOSER_AUTH) : config.auth || false;
 
     if (process.env.OPPOSER_DATABASE_TYPE || config.database) {
       config.database = {
         ...(config.database as any),
-        type:
-          (process.env.OPPOSER_DATABASE_TYPE as any) ||
-          (config.database as any)?.type,
-        host:
-          process.env.OPPOSER_DATABASE_HOST || (config.database as any)?.host,
-        port: process.env.OPPOSER_DATABASE_PORT
-          ? parseInt(process.env.OPPOSER_DATABASE_PORT)
-          : (config.database as any)?.port,
-        username:
-          process.env.OPPOSER_DATABASE_USER ||
-          (config.database as any)?.username,
-        password:
-          process.env.OPPOSER_DATABASE_PASSWORD ||
-          (config.database as any)?.password,
-        database:
-          process.env.OPPOSER_DATABASE_NAME || (config.database as any)?.database,
-        logging:
-          process.env.OPPOSER_DATABASE_LOGGING === "true" || (config.database as any)?.logging,
+        type: (process.env.OPPOSER_DATABASE_TYPE as any) || (config.database as any)?.type,
+        host: process.env.OPPOSER_DATABASE_HOST || (config.database as any)?.host,
+        port: process.env.OPPOSER_DATABASE_PORT ? parseInt(process.env.OPPOSER_DATABASE_PORT) : (config.database as any)?.port,
+        username: process.env.OPPOSER_DATABASE_USER || (config.database as any)?.username,
+        password: process.env.OPPOSER_DATABASE_PASSWORD || (config.database as any)?.password,
+        database: process.env.OPPOSER_DATABASE_NAME || (config.database as any)?.database,
+        logging: process.env.OPPOSER_DATABASE_LOGGING === 'true' || (config.database as any)?.logging,
       };
     }
 
     if (process.env.OPPOSER_JWT_ACCESS || config.jwt) {
       config.jwt = {
-        ...(config.jwt || { access: "", refresh: "", recover: "" }),
-        access: process.env.OPPOSER_JWT_ACCESS || config.jwt?.access || "",
-        refresh: process.env.OPPOSER_JWT_REFRESH || config.jwt?.refresh || "",
-        recover: process.env.OPPOSER_JWT_RECOVER || config.jwt?.recover || "",
+        ...(config.jwt || { access: '', refresh: '', recover: '' }),
+        access: process.env.OPPOSER_JWT_ACCESS || config.jwt?.access || '',
+        refresh: process.env.OPPOSER_JWT_REFRESH || config.jwt?.refresh || '',
+        recover: process.env.OPPOSER_JWT_RECOVER || config.jwt?.recover || '',
       };
     }
 
     if (process.env.OPPOSER_MANAGER_LOGIN || config.manager) {
       config.manager = {
         ...(config.manager || {
-          login: "",
-          password: "",
-          firstName: "",
-          lastName: "",
+          login: '',
+          password: '',
+          firstName: '',
+          lastName: '',
         }),
-        login: process.env.OPPOSER_MANAGER_LOGIN || config.manager?.login || "",
-        password:
-          process.env.OPPOSER_MANAGER_PASSWORD ||
-          config.manager?.password ||
-          "",
-        firstName:
-          process.env.OPPOSER_MANAGER_FIRST_NAME ||
-          config.manager?.firstName ||
-          "",
-        lastName:
-          process.env.OPPOSER_MANAGER_LAST_NAME ||
-          config.manager?.lastName ||
-          "",
+        login: process.env.OPPOSER_MANAGER_LOGIN || config.manager?.login || '',
+        password: process.env.OPPOSER_MANAGER_PASSWORD || config.manager?.password || '',
+        firstName: process.env.OPPOSER_MANAGER_FIRST_NAME || config.manager?.firstName || '',
+        lastName: process.env.OPPOSER_MANAGER_LAST_NAME || config.manager?.lastName || '',
       };
     }
 
@@ -234,10 +209,7 @@ export class OpposerSystem {
       const filePath = path.resolve(dir, file.name);
       if (file.isDirectory()) {
         results = results.concat(this.getAllFiles(filePath));
-      } else if (
-        file.isFile() &&
-        (file.name.endsWith(".js") || file.name.endsWith(".ts"))
-      ) {
+      } else if (file.isFile() && (file.name.endsWith('.js') || file.name.endsWith('.ts'))) {
         results.push(filePath);
       }
     });
@@ -247,10 +219,10 @@ export class OpposerSystem {
 
   saveSettingsFile(settings: OpposerSystemConfigOptions) {
     const root = process.cwd();
-    const configPath = path.resolve(root, "opposer-settings.json");
+    const configPath = path.resolve(root, 'opposer-settings.json');
 
     return fs.writeFileSync(configPath, JSON.stringify(settings, null, 2), {
-      encoding: "utf8",
+      encoding: 'utf8',
     });
   }
 }
