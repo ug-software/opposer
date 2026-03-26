@@ -173,6 +173,7 @@ export default async function Server(props: CreateServerProps): Promise<ServerIn
 export const auth = { social: Auth.social };
 export * from './constants/index.js';
 export * from './helpers/index.js';
+export * from './security/index.js';
 export type { ModelResult } from '../interfaces/model.js';
 export { Method, Controller, Field, Payload, IsPublic, IsPublicMethod, f } from './decorators/index.js';
 export type { PayloadRequest } from '../interfaces/controller.js';
