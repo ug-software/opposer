@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Ecossistema modular para construção de aplicações modernas focado em alta produtividade e organização por Domínios.",
   "type": "module",
-  "main": "./lib/cjs/index.js",
   "module": "./lib/esm/index.js",
+  "main": "./lib/esm/index.js",
   "types": "./lib/esm/index.d.ts",
   "bin": {
     "opposer": "./lib/bin/opposer.js"
@@ -34,36 +34,32 @@
   "homepage": "https://github.com/ug-software/opposer#readme",
   "exports": {
     ".": {
-      "import": "./lib/esm/index.js",
-      "require": "./lib/cjs/index.js"
+      "types": "./lib/esm/index.d.ts",
+      "default": "./lib/esm/index.js"
     },
     "./orm": {
-      "import": "./lib/esm/orm/index.js",
-      "require": "./lib/cjs/orm/index.js"
+      "types": "./lib/esm/orm/index.d.ts",
+      "default": "./lib/esm/orm/index.js"
     },
     "./persistent": {
-      "import": "./lib/esm/persistent/index.js",
-      "require": "./lib/cjs/persistent/index.js"
+      "types": "./lib/esm/persistent/index.d.ts",
+      "default": "./lib/esm/persistent/index.js"
     },
     "./playground": {
-      "import": "./lib/esm/playground/index.js",
-      "require": "./lib/cjs/playground/index.js"
-    },
-    "./schedule": {
-      "import": "./lib/esm/scheduler/index.js",
-      "require": "./lib/cjs/scheduler/index.js"
+      "types": "./lib/esm/playground/index.d.ts",
+      "default": "./lib/esm/playground/index.js"
     },
     "./scheduler": {
-      "import": "./lib/esm/scheduler/index.js",
-      "require": "./lib/cjs/scheduler/index.js"
+      "types": "./lib/esm/scheduler/index.d.ts",
+      "default": "./lib/esm/scheduler/index.js"
     },
     "./server": {
-      "import": "./lib/esm/server/index.js",
-      "require": "./lib/cjs/server/index.js"
+      "types": "./lib/esm/server/index.d.ts",
+      "default": "./lib/esm/server/index.js"
     },
     "./system": {
-      "import": "./lib/esm/system/index.js",
-      "require": "./lib/cjs/system/index.js"
+      "types": "./lib/esm/system/index.d.ts",
+      "default": "./lib/esm/system/index.js"
     }
   },
   "scripts": {
