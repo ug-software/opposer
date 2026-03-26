@@ -102,7 +102,7 @@
     "@types/express": "^5.0.5",
     "@types/gulp": "^4.0.17",
     "@types/jest": "^30.0.0",
-    "@types/node": "^22.13.14",
+    "@types/node": "^22.19.15",
     "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.18.0",
     "@types/yargs": "^17.0.33",

@@ -25,8 +25,13 @@ async function runFullExample() {
     // 2. Start Opposer Server
     // Passing the local models and schedules path so initialization can find our entities
     const { initialize } = await Server({
-      cors: { origin: '*' },
-      models: path.resolve(_dirname, 'models'),
+      cors: {
+        origin: '*',
+        //credentials: true,
+        //methods: ["POST", "OPTIONS"],
+        //allowedHeaders: ["Content-Type", "opposer-key", "Authorization"]
+      },
+      //models: path.resolve(_dirname, 'models'),
       schedules: path.resolve(_dirname, 'schedules'),
     });
 

@@ -34,7 +34,12 @@ export const handler = async () => {
       models: "./models",
       controllers: "./controllers",
       schedules: "./schedules",
-      cors: { origin: "*" }
+      cors: { 
+          origin: "*",
+          //credentials: true,
+          //methods: ["POST", "OPTIONS"],
+          //allowedHeaders: ["Content-Type", "opposer-key", "Authorization"]
+      }
   });
   
   app.initialize();

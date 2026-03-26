@@ -7,6 +7,8 @@ import autorization from './security/middleware/autorization.js';
 import Auth from './security/controller/auth.js';
 import scheduler from '../scheduler/index.js';
 import { OpposerDatabase, PostgresDriver, SQLiteDriver, MySQLDriver } from '../orm/index.js';
+import path from 'path';
+import fs from 'node:fs/promises';
 
 // Core
 import opposerServer from './core/index.js';
@@ -17,6 +19,9 @@ import Context from './context/index.js';
 
 // Playground
 import Playground from '../playground/index.js';
+
+const __filename = process.argv[1];
+const __dirname = path.dirname(__filename);
 
 async function initializeDatabase(props: any, models?: string | ClassType<unknown>[]): Promise<OpposerDatabase> {
   const settings = system.getSettingsFile();
@@ -107,13 +112,55 @@ export default async function Server(props: CreateServerProps): Promise<ServerIn
   const db = await initializeDatabase(settings.database, props.models);
   await ensureManager(db, settings, props.models);
 
+  let models = props.models;
+  if (!models) {
+    const pathModels = path.join(__dirname, 'models');
+    const stat = await fs.stat(pathModels);
+
+    if (!stat.isDirectory()) {
+      throw new Error('Impossible define models, verify docs and try again.');
+    }
+
+    models = await system.getAllDefaultFromDir(pathModels);
+  }
+
+  let controllers = props.controllers;
+  if (!controllers) {
+    const pathControllers = path.join(__dirname, 'controllers');
+    try {
+      const stat = await fs.stat(pathControllers);
+      if (!stat.isDirectory()) {
+        throw new Error('Impossible define controllers, verify docs and try again.');
+      }
+
+      controllers = await system.getAllDefaultFromDir(pathControllers);
+    } catch (error) {
+      controllers = [];
+    }
+  }
+
+  let schedules = props.schedules;
+  if (!schedules) {
+    const pathSchedules = path.join(__dirname, 'schedules');
+    try {
+      const stat = await fs.stat(pathSchedules);
+      if (!stat.isDirectory()) {
+        throw new Error('Impossible define schedules, verify docs and try again.');
+      }
+
+      schedules = await system.getAllDefaultFromDir(pathSchedules);
+    } catch (error) {
+      schedules = [];
+    }
+  }
+
   // Store database in server context
   Context.set('db', db);
-  Context.set('models', props.models);
-  Context.set('controllers', props.controllers);
+  Context.set('models', models);
+  Context.set('controllers', controllers);
 
   console.log('-> Initializing scheduler.');
-  await scheduler.initialize(props.schedules);
+  await scheduler.initialize(schedules);
   scheduler.start();
 
   console.log('-> Initializing core server.');

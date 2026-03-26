@@ -1,6 +1,11 @@
 import { Middleware } from "../index.js";
 
-export default function cors(options?: { origin: string | string[] }): Middleware {
+export default function cors(options?: {
+  origin: string | string[];
+  credentials?: boolean;
+  methods?: string[];
+  allowedHeaders?: string[];
+}): Middleware {
   return (req, res, next) => {
     const originHeader = req.headers.origin;
     let allowedOrigin = "*";
@@ -18,9 +23,19 @@ export default function cors(options?: { origin: string | string[] }): Middlewar
     }
 
     res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, opposer-key");
-    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      options?.methods?.join(", ") || "GET, POST, PUT, DELETE, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      options?.allowedHeaders?.join(", ") ||
+        "Content-Type, Authorization, opposer-key"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Credentials",
+      options?.credentials !== undefined ? String(options.credentials) : "true"
+    );
 
     if (req.method === "OPTIONS") {
       res.statusCode = 204;

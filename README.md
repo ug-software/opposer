@@ -53,6 +53,16 @@ O motor de servidor do Opposer utiliza le conceito de Controllers. Cada Controll
 | OPPOSER_PORT | Porta onde o servidor HTTP irá rodar. | 3838 |
 | OPPOSER_URL | Caminho base para as requisições POST. | /opposer |
 
+### Configuração de CORS
+O Opposer permite configurar o compartilhamento de recursos entre origens de forma detalhada.
+
+| Propriedade | Tipo | Descrição |
+| :--- | :--- | :--- |
+| origin | string \| string[] | Origens permitidas (Ex: "*", "http://localhost:3000"). |
+| credentials | boolean | Habilita o envio de cookies/auth nas requisições (Padrão: true). |
+| methods | string[] | Métodos HTTP permitidos (Padrão: GET, POST, PUT, DELETE, OPTIONS). |
+| allowedHeaders | string[] | Cabeçalhos permitidos (Padrão: Content-Type, Authorization, opposer-key). |
+
 ### Componentes do Servidor
 Todos os componentes abaixo podem ser importados de "@ug.software/opposer/server".
 
@@ -182,11 +192,11 @@ export default class Product {
 ### Query Builder O-API (JSON)
 O Opposer permite realizar todas as operações de banco de dados enviando apenas JSON para o endpoint central.
 
-#### 📝 Diferença entre Filter e Find
+#### Diferença entre Filter e Find
 - **`filter`**: Retorna sempre uma **lista** (array) de objetos que satisfazem os critérios.
 - **`find`**: Retorna apenas o **primeiro** objeto encontrado (objeto único) ou `null`.
 
-#### 🧩 Outros Tipos de Consulta
+#### Outros Tipos de Consulta
 Além de buscar registros, você pode realizar operações de verificação e estatísticas.
 
 **1. Contagem (`count`)**
@@ -483,6 +493,8 @@ const app = await Server({
 
 app.initialize();
 ```
+
+obs: na falta da declaração do path das models e controllers o opposer buscara a partir de seu arquivo a pasta models, controllers e schedules.
 
 ---
 

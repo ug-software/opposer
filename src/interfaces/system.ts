@@ -12,6 +12,9 @@ export interface OpposerSystemConfigOptions {
   logger?: boolean;
   cors?: {
     origin: string | string[];
+    credentials?: boolean;
+    methods?: string[];
+    allowedHeaders?: string[];
   };
   rateLimit?: {
     windowMs: number;

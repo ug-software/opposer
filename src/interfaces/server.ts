@@ -4,6 +4,9 @@ import { ClassType } from "./system.js";
 export interface CreateServerProps {
   cors?: {
     origin: string | string[];
+    credentials?: boolean;
+    methods?: string[];
+    allowedHeaders?: string[];
   };
   models?: string | ClassType<unknown>[];
   controllers?: string | ClassType<unknown>[];

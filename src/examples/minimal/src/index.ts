@@ -4,6 +4,9 @@ import Server from "../../../server/index.js";
   var app = await Server({
     cors: {
       origin: "*",
+      //credentials: true,
+      //methods: ["POST", "OPTIONS"],
+      //allowedHeaders: ["Content-Type", "opposer-key", "Authorization"]
     },
   });
 

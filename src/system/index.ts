@@ -2,6 +2,7 @@ import { OpposerSystemConfigOptions, ClassType, ModelDefinition } from '../inter
 import { pathToFileURL } from 'url';
 import path from 'path';
 import fs from 'fs';
+import fsAsync from 'node:fs/promises';
 import ChangeRequestPassword from '../server/security/models/crp.js';
 import Key from '../server/security/models/ke.js';
 import Role from '../server/security/models/rl.js';
@@ -224,6 +225,29 @@ export class OpposerSystem {
     return fs.writeFileSync(configPath, JSON.stringify(settings, null, 2), {
       encoding: 'utf8',
     });
+  }
+
+  async getAllDefaultFromDir(dir: string) {
+    const files = await fsAsync.readdir(dir);
+
+    const classes = [];
+
+    for (const file of files) {
+      // filtra só .js (ou .ts se estiver em runtime compatível)
+      if (!file.endsWith('.js')) continue;
+
+      const fullPath = path.join(dir, file);
+
+      // import dinâmico precisa de URL
+      //@ts-ignore
+      const module = await import(pathToFileURL(fullPath).href);
+
+      if (module.default) {
+        classes.push(module.default);
+      }
+    }
+
+    return classes;
   }
 }
 
