@@ -79,13 +79,6 @@
       "default": "./lib/esm/orm/driver/sqlite.js"
     }
   },
-  "scripts": {
-    "build": "gulp build",
-    "release": "RELEASE=3.0.15 DESC='Modular transports and lean build' npx gulp release",
-    "full-app": "npx tsx ./src/examples/full-app/index.ts",
-    "build:playground": "gulp buildWithPlayground",
-    "test": "vitest run"
-  },
   "files": [
     "lib"
   ],
@@ -111,30 +104,5 @@
     "sqlite3": {
       "optional": true
     }
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/cookie-parser": "^1.4.10",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.5",
-    "@types/gulp": "^4.0.17",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^22.19.15",
-    "@types/node-cron": "^3.0.11",
-    "@types/pg": "^8.18.0",
-    "@types/yargs": "^17.0.33",
-    "del": "^8.0.1",
-    "gulp": "^5.0.1",
-    "gulp-typescript": "^6.0.0-alpha.1",
-    "jest": "^30.2.0",
-    "merge-stream": "^2.0.0",
-    "mysql2": "^3.12.0",
-    "pg": "^8.14.1",
-    "sqlite3": "^5.1.7",
-    "ts-jest": "^29.4.6",
-    "ts-node": "^10.9.2",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.3",
-    "vitest": "^3.0.7"
   }
 }
