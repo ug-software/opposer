@@ -75,7 +75,8 @@ export const copyCli = () => {
   return gulp.src(paths.cli).pipe(gulp.dest(`${paths.dist}/bin`));
 };
 
-export const build = gulp.series(clean, gulp.parallel(buildEsm), copyCli, playground);
+export const build = gulp.series(clean, gulp.parallel(buildEsm), copyCli);
+export const buildWithPlayground = gulp.series(build, playground);
 
 /*------ build --------*/
 

@@ -1,7 +1,14 @@
 import http from "http";
 import { ClassType } from "./system.js";
+import type { TransportName } from '../transports/types.js';
 
 export interface CreateServerProps {
+  /** Response transports enabled by the server. Defaults to ['json', 'stream']. */
+  transports?: TransportName[];
+  /** Enables the bundled development playground. Defaults to false. */
+  playground?: boolean;
+  /** Enables schedules and the internal scheduler API. Defaults to true. */
+  scheduler?: boolean;
   cors?: {
     origin: string | string[];
     credentials?: boolean;

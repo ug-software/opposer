@@ -3,15 +3,15 @@ import { pathToFileURL } from 'url';
 import path from 'path';
 import fs from 'fs';
 import fsAsync from 'node:fs/promises';
-import ChangeRequestPassword from '../server/security/models/crp.js';
-import Key from '../server/security/models/ke.js';
-import Role from '../server/security/models/rl.js';
-import Session from '../server/security/models/se.js';
-import User from '../server/security/models/usr.js';
-import ScheduleHistory from '../scheduler/models/history.js';
 import { MetadataStore } from '../orm/metadata.js';
 
 export class OpposerSystem {
+  private features = { scheduler: true };
+
+  configureFeatures(features: Partial<{ scheduler: boolean }>) {
+    this.features = { ...this.features, ...features };
+  }
+
   getFileName(filePath: string, withExtension: boolean = true): string {
     if (withExtension) {
       return path.basename(filePath);
@@ -42,7 +42,7 @@ export class OpposerSystem {
     }
 
     const allEntities = MetadataStore.getAllEntities();
-    const authModels = this.getAuthModels(settings);
+    const authModels = await this.getAuthModels(settings);
 
     const models: ModelDefinition[] = allEntities.map((meta) => ({
       name: meta.name,
@@ -59,9 +59,16 @@ export class OpposerSystem {
     return models;
   }
 
-  private getAuthModels(settings: OpposerSystemConfigOptions): ModelDefinition[] {
+  private async getAuthModels(settings: OpposerSystemConfigOptions): Promise<ModelDefinition[]> {
     const models: ModelDefinition[] = [];
     if (settings.auth) {
+      const [{ default: ChangeRequestPassword }, { default: Key }, { default: Role }, { default: Session }, { default: User }] = await Promise.all([
+        import('../server/security/models/crp.js'),
+        import('../server/security/models/ke.js'),
+        import('../server/security/models/rl.js'),
+        import('../server/security/models/se.js'),
+        import('../server/security/models/usr.js'),
+      ]);
       models.push(
         { name: 'crp', entity: ChangeRequestPassword as unknown as ClassType<unknown> },
         { name: 'ke', entity: Key as unknown as ClassType<unknown> },
@@ -70,8 +77,10 @@ export class OpposerSystem {
         { name: 'usr', entity: User as unknown as ClassType<unknown> },
       );
     }
-    // Always include ScheduleHistory as it's a core feature
-    models.push({ name: 'sh', entity: ScheduleHistory as unknown as ClassType<unknown> });
+    if (this.features.scheduler) {
+      const ScheduleHistory = (await import('../scheduler/models/history.js')).default;
+      models.push({ name: 'sh', entity: ScheduleHistory as unknown as ClassType<unknown> });
+    }
     return models;
   }
 
@@ -80,8 +89,11 @@ export class OpposerSystem {
     const root = process.cwd();
 
     // Dynamic import to avoid circular dependency
-    const SchedulerController = (await import('../scheduler/controllers/index.js')).default;
-    const internalControllers: ClassType<unknown>[] = [SchedulerController as unknown as ClassType<unknown>];
+    const internalControllers: ClassType<unknown>[] = [];
+    if (this.features.scheduler) {
+      const SchedulerController = (await import('../scheduler/controllers/index.js')).default;
+      internalControllers.push(SchedulerController as unknown as ClassType<unknown>);
+    }
 
     if (Array.isArray(customControllers)) {
       return [...internalControllers, ...customControllers];

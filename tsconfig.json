@@ -11,6 +11,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true
   },
-  "include": ["src", "src/examples"],
-  "exclude": ["src/bin", "src/test", "src/playground/src", "src/playground/public", "src/playground/react-router.config.ts", "src/playground/vite.config.ts"]
+  "include": ["src"],
+  "exclude": ["src/bin", "src/test", "src/examples", "src/playground/src", "src/playground/public", "src/playground/react-router.config.ts", "src/playground/vite.config.ts"]
 }

@@ -61,7 +61,76 @@ O Opposer permite configurar o compartilhamento de recursos entre origens de for
 | origin | string \| string[] | Origens permitidas (Ex: "*", "http://localhost:3000"). |
 | credentials | boolean | Habilita o envio de cookies/auth nas requisições (Padrão: true). |
 | methods | string[] | Métodos HTTP permitidos (Padrão: GET, POST, PUT, DELETE, OPTIONS). |
-| allowedHeaders | string[] | Cabeçalhos permitidos (Padrão: Content-Type, Authorization, opposer-key). |
+| allowedHeaders | string[] | Cabeçalhos permitidos (Padrão: Content-Type, Accept, Authorization, opposer-key, x-opposer-transport). |
+
+### Transportes JSON e stream
+
+O servidor aceita os transportes `json` e `stream` por padrão. Ambos usam a mesma URL, payload, schemas, autenticação e permissões; o cabeçalho da requisição define apenas como a resposta será entregue.
+
+```typescript
+const app = await Server({
+  models: "./src/models",
+  controllers: "./src/controllers",
+  transports: ["json", "stream"]
+});
+```
+
+Para restringir a API, informe somente `["json"]` ou `["stream"]`. Com os dois habilitados, uma requisição sem negociação explícita continua usando JSON REST.
+
+A mesma opção pode ser declarada em `opposer-settings.json` como `"transports": ["json", "stream"]`; a opção passada para `Server` tem prioridade.
+
+#### REST/JSON
+
+```typescript
+const response = await fetch("https://api.exemplo.com/opposer", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ model: "Book", method: "get", query: {} })
+});
+
+const books = await response.json();
+```
+
+#### Stream NDJSON em uma SPA
+
+Solicite `application/x-ndjson`. Cada linha recebida é um JSON completo: respostas em lista geram um evento `data` por item e terminam com um evento `end`. Erros HTTP são enviados como evento `error` antes de `end`.
+
+```typescript
+const response = await fetch("https://api.exemplo.com/opposer", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/x-ndjson",
+    "Authorization": `Bearer ${token}`
+  },
+  body: JSON.stringify({ model: "Book", method: "get", query: {} })
+});
+
+if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`);
+
+const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+let pending = "";
+
+while (true) {
+  const { value = "", done } = await reader.read();
+  pending += value;
+  const lines = pending.split("\n");
+  pending = lines.pop() ?? "";
+
+  for (const line of lines) {
+    if (!line) continue;
+    const message = JSON.parse(line);
+    if (message.event === "data") console.log(message.data);
+    if (message.event === "error") console.error(message.data);
+  }
+
+  if (done) break;
+}
+```
+
+Como alternativa ao `Accept`, use `x-opposer-transport: stream`. Se CORS tiver `allowedHeaders` customizado, inclua `Accept` e `x-opposer-transport` nessa lista.
+
+Streaming reduz a necessidade de manter toda a resposta em memória e permite processar itens assim que chegam, mas não cifra os dados por si só. Para proteger a transferência em produção, use sempre HTTPS/TLS, autenticação e uma política CORS restrita.
 
 ### Componentes do Servidor
 Todos os componentes abaixo podem ser importados de "@ug.software/opposer/server".
@@ -488,7 +557,9 @@ import { Server } from "@ug.software/opposer";
 const app = await Server({
     models: "./src/models",
     controllers: "./src/controllers",
-    schedules: "./src/schedules"
+    schedules: "./src/schedules",
+    scheduler: true,
+    playground: false
 });
 
 app.initialize();
@@ -505,7 +576,28 @@ Interface visual nativa para exploração e gestão.
 - Explorar Models: Veja o mapa de dados e relacionamentos.
 - Segurança: Gestão de usuários e geração de API Keys.
 
-Acesso padrão: http://localhost:3838/playground
+Para manter a biblioteca base pequena, o Playground fica desabilitado por padrão. Habilite-o na configuração:
+
+```typescript
+const app = await Server({
+  playground: true
+});
+```
+
+Ao gerar uma distribuição que precisa incluir os assets React do Playground, use:
+
+```bash
+npm run build:playground
+```
+
+A build comum (`npm run build`) não instala nem copia esses assets. Depois de habilitado e compilado, o acesso é `http://localhost:3838/playground`.
+
+### Builds modulares
+
+- `npm run build`: compila o servidor, ORM, scheduler, persistência e transportes sem o frontend do Playground.
+- `npm run build:playground`: gera a biblioteca e também compila/copia o frontend do Playground.
+- Os arquivos de `src/examples` não fazem parte do pacote publicado.
+- Drivers podem ser importados diretamente por `@ug.software/opposer/drivers/postgres`, `@ug.software/opposer/drivers/mysql` ou `@ug.software/opposer/drivers/sqlite`.
 
 ---
 

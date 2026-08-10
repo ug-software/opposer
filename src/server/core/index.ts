@@ -3,6 +3,7 @@ import { OpposerSystemConfigOptions } from '../../interfaces/system.js';
 import system from '../../system/index.js';
 import Context from '../../persistent/context/index.js';
 import { type Request, type Response, type NextFunction, OpposerServer as IOpposerServer } from '../../interfaces/server.js';
+import { resolveTransport, type TransportName } from '../../transports/index.js';
 
 export { Request, Response, NextFunction };
 
@@ -11,6 +12,7 @@ export type Middleware = (req: Request, res: Response, next: NextFunction) => Pr
 export class OpposerServer implements IOpposerServer {
   private middlewares: Middleware[] = [];
   private settings: OpposerSystemConfigOptions;
+  private enabledTransports: TransportName[] = ['json', 'stream'];
 
   constructor() {
     this.settings = system.getSettingsFile();
@@ -18,6 +20,12 @@ export class OpposerServer implements IOpposerServer {
 
   use(middleware: Middleware) {
     this.middlewares.push(middleware);
+    return this;
+  }
+
+  configureTransports(enabled: TransportName[]) {
+    if (enabled.length === 0) throw new Error('[server] At least one transport must be enabled.');
+    this.enabledTransports = [...new Set(enabled)];
     return this;
   }
 
@@ -52,8 +60,14 @@ export class OpposerServer implements IOpposerServer {
 
       extendedRes.json = (data: any) => {
         if (!res.writableEnded) {
-          extendedRes.setHeader('Content-Type', 'application/json');
-          extendedRes.end(JSON.stringify(data));
+          const transport = resolveTransport(extendedReq, this.enabledTransports);
+          if (!transport) {
+            extendedRes.statusCode = 406;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(JSON.stringify({ message: 'No response transport is available for this request.' }));
+            return;
+          }
+          transport.send(extendedReq, extendedRes, data);
         }
       };
 

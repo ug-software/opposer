@@ -1,6 +1,6 @@
 {
   "name": "@ug.software/opposer",
-  "version": "1.0.0",
+  "version": "3.0.15",
   "description": "Ecossistema modular para construção de aplicações modernas focado em alta produtividade e organização por Domínios.",
   "type": "module",
   "module": "./lib/esm/index.js",
@@ -28,6 +28,7 @@
   ],
   "author": "UG Software",
   "license": "MIT",
+  "sideEffects": false,
   "bugs": {
     "url": "https://github.com/ug-software/opposer/issues"
   },
@@ -60,13 +61,29 @@
     "./system": {
       "types": "./lib/esm/system/index.d.ts",
       "default": "./lib/esm/system/index.js"
+    },
+    "./transports": {
+      "types": "./lib/esm/transports/index.d.ts",
+      "default": "./lib/esm/transports/index.js"
+    },
+    "./drivers/postgres": {
+      "types": "./lib/esm/orm/driver/postgres.d.ts",
+      "default": "./lib/esm/orm/driver/postgres.js"
+    },
+    "./drivers/mysql": {
+      "types": "./lib/esm/orm/driver/mysql.d.ts",
+      "default": "./lib/esm/orm/driver/mysql.js"
+    },
+    "./drivers/sqlite": {
+      "types": "./lib/esm/orm/driver/sqlite.d.ts",
+      "default": "./lib/esm/orm/driver/sqlite.js"
     }
   },
   "scripts": {
     "build": "gulp build",
-    "release": "RELEASE=1.0.4 DESC='Latest version' npx gulp release",
+    "release": "RELEASE=3.0.15 DESC='Modular transports and lean build' npx gulp release",
     "full-app": "npx tsx ./src/examples/full-app/index.ts",
-    "build-playground": "cd src/playground/ && npx react-router build && cd ../../",
+    "build:playground": "gulp buildWithPlayground",
     "test": "vitest run"
   },
   "files": [

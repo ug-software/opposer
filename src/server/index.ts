@@ -5,8 +5,7 @@ import { ClassType } from '../interfaces/system.js';
 import permission from './security/middleware/permission.js';
 import autorization from './security/middleware/autorization.js';
 import Auth from './security/controller/auth.js';
-import scheduler from '../scheduler/index.js';
-import { OpposerDatabase, PostgresDriver, SQLiteDriver, MySQLDriver } from '../orm/index.js';
+import { OpposerDatabase } from '../orm/opposer.js';
 import path from 'path';
 import fs from 'node:fs/promises';
 
@@ -16,9 +15,6 @@ import corsMiddleware from './core/middleware/cors.js';
 import bodyParser from './core/middleware/body-parser.js';
 import loggerMiddleware from './core/middleware/logger.js';
 import Context from './context/index.js';
-
-// Playground
-import Playground from '../playground/index.js';
 
 const __filename = process.argv[1];
 const __dirname = path.dirname(__filename);
@@ -33,13 +29,13 @@ async function initializeDatabase(props: any, models?: string | ClassType<unknow
 
   switch (type) {
     case 'postgres':
-      driver = new PostgresDriver(props);
+      driver = new (await import('../orm/driver/postgres.js')).PostgresDriver(props);
       break;
     case 'sqlite':
-      driver = new SQLiteDriver(props);
+      driver = new (await import('../orm/driver/sqlite.js')).SQLiteDriver(props);
       break;
     case 'mysql':
-      driver = new MySQLDriver(props);
+      driver = new (await import('../orm/driver/mysql.js')).MySQLDriver(props);
       break;
     default:
       throw new Error(`[database] Unsupported database type: ${type}`);
@@ -104,6 +100,10 @@ async function ensureManager(db: OpposerDatabase, settings: any, models?: string
 export default async function Server(props: CreateServerProps): Promise<ServerInstance> {
   console.log('-> Initializing database connection.');
   const settings = system.getSettingsFile();
+  const schedulerEnabled = props.scheduler ?? settings.scheduler ?? true;
+  const playgroundEnabled = props.playground ?? settings.playground ?? false;
+  system.configureFeatures({ scheduler: schedulerEnabled });
+  opposerServer.configureTransports(props.transports || settings.transports || ['json', 'stream']);
 
   if (!settings.database) {
     throw new Error('-> It is necessary to inform database properties.');
@@ -139,8 +139,8 @@ export default async function Server(props: CreateServerProps): Promise<ServerIn
     }
   }
 
-  let schedules = props.schedules;
-  if (!schedules) {
+  let schedules = schedulerEnabled ? props.schedules : [];
+  if (schedulerEnabled && !schedules) {
     const pathSchedules = path.join(__dirname, 'schedules');
     try {
       const stat = await fs.stat(pathSchedules);
@@ -159,9 +159,12 @@ export default async function Server(props: CreateServerProps): Promise<ServerIn
   Context.set('models', models);
   Context.set('controllers', controllers);
 
-  console.log('-> Initializing scheduler.');
-  await scheduler.initialize(schedules);
-  scheduler.start();
+  if (schedulerEnabled) {
+    console.log('-> Initializing scheduler.');
+    const scheduler = (await import('../scheduler/index.js')).default;
+    await scheduler.initialize(schedules);
+    scheduler.start();
+  }
 
   console.log('-> Initializing core server.');
   let url = '/opposer';
@@ -182,8 +185,11 @@ export default async function Server(props: CreateServerProps): Promise<ServerIn
   // 3. Body Parser
   opposerServer.use(bodyParser());
 
-  // 4. Playground
-  opposerServer.use(Playground);
+  // 4. Optional Playground
+  if (playgroundEnabled) {
+    const Playground = (await import('../playground/index.js')).default;
+    opposerServer.use(Playground);
+  }
 
   // 5. Auth/Security Middlewares
   if (settings.auth) {

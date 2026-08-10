@@ -6,7 +6,7 @@ import { getMethodMetadata, getPayloadMetadata, getFieldsMetadata, getController
 import { MetadataStore } from '../orm/index.js';
 import type { ClassType } from '../interfaces/system.js';
 import type { Request, Response } from '../interfaces/server.js';
-import { Context } from '../server/index.js';
+import Context from '../server/context/index.js';
 
 // @ts-ignore
 const _dirname =

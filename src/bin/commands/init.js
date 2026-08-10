@@ -38,7 +38,7 @@ export const handler = async () => {
           origin: "*",
           //credentials: true,
           //methods: ["POST", "OPTIONS"],
-          //allowedHeaders: ["Content-Type", "opposer-key", "Authorization"]
+          //allowedHeaders: ["Content-Type", "Accept", "opposer-key", "Authorization", "x-opposer-transport"]
       }
   });
   
@@ -82,6 +82,8 @@ export default class Example {
   const settingsContent = `{
   "port": 3838,
   "url": "/opposer",
+  "playground": false,
+  "scheduler": true,
   "database": {
     "type": "sqlite",
     "database": "./database.sqlite",

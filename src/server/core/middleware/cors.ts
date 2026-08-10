@@ -30,7 +30,7 @@ export default function cors(options?: {
     res.setHeader(
       "Access-Control-Allow-Headers",
       options?.allowedHeaders?.join(", ") ||
-        "Content-Type, Authorization, opposer-key"
+        "Content-Type, Accept, Authorization, opposer-key, x-opposer-transport"
     );
     res.setHeader(
       "Access-Control-Allow-Credentials",

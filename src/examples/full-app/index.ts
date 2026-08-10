@@ -25,6 +25,7 @@ async function runFullExample() {
     // 2. Start Opposer Server
     // Passing the local models and schedules path so initialization can find our entities
     const { initialize } = await Server({
+      playground: true,
       cors: {
         origin: '*',
         //credentials: true,
