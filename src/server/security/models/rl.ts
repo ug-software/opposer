@@ -9,6 +9,10 @@ import {
 } from "../../../orm/index.js";
 import User from "./usr.js";
 
+// Keep the relation strongly typed without emitting `design:type = User`.
+// Emitting the class here evaluates User during the circular User <-> Role load.
+interface RelatedUser extends User {}
+
 @Entity("rl")
 export default class Role {
   @PrimaryColumn({ type: "uuid" })
@@ -31,5 +35,5 @@ export default class Role {
     target: () => User,
     inverseSide: "rl"
   })
-  usr!: User;
+  usr!: RelatedUser;
 }

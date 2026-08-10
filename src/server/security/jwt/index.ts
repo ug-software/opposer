@@ -4,9 +4,9 @@ import { ErrorJwt, ForgetJwt, SignJwt } from '../../../interfaces/jwt.js';
 import system from '../../../system/index.js';
 
 const settings = system.getSettingsFile();
-const accessJwt = process.env.OPPOSER_JWT_ACCESS ? process.env.OPPOSER_JWT_ACCESS : settings.jwt.access;
-const refreshJwt = process.env.OPPOSER_JWT_REFRESH ? process.env.OPPOSER_JWT_REFRESH : settings.jwt.refresh;
-const recoverJwt = process.env.OPPOSER_JWT_RECOVER ? process.env.OPPOSER_JWT_RECOVER : settings.jwt.recover;
+const accessJwt = process.env.OPPOSER_JWT_ACCESS || settings.jwt?.access;
+const refreshJwt = process.env.OPPOSER_JWT_REFRESH || settings.jwt?.refresh;
+const recoverJwt = process.env.OPPOSER_JWT_RECOVER || settings.jwt?.recover;
 
 async function access(token: string) {
   if (!accessJwt) {
@@ -94,7 +94,7 @@ async function recover(token: string) {
 
 async function verify(token: string) {
   try {
-    const secret = process.env.OPPOSER_JWT_ACCESS ? process.env.OPPOSER_JWT_ACCESS : settings.jwt;
+    const secret = process.env.OPPOSER_JWT_ACCESS || settings.jwt?.access;
     jwt.verify(token, secret as any);
     return true;
   } catch (err) {

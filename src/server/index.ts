@@ -8,6 +8,7 @@ import Auth from './security/controller/auth.js';
 import { OpposerDatabase } from '../orm/opposer.js';
 import path from 'path';
 import fs from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 
 // Core
 import opposerServer from './core/index.js';
@@ -16,7 +17,7 @@ import bodyParser from './core/middleware/body-parser.js';
 import loggerMiddleware from './core/middleware/logger.js';
 import Context from './context/index.js';
 
-const __filename = process.argv[1];
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function initializeDatabase(props: any, models?: string | ClassType<unknown>[]): Promise<OpposerDatabase> {
